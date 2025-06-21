@@ -1,103 +1,188 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import axios from "axios"
+import { GoogleLogin } from "@react-oauth/google"
+import SignUpModal from "@/components/signup-modal"
+
+export default function LoginPage() {
+  const [usernameOrEmail, setUsernameOrEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const router = useRouter()
+
+  const handleLogin = async () => {
+    if (!usernameOrEmail || !password) {
+      setError("Please fill in all fields")
+      return
+    }
+
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const response = await axios.post("https://d3kv9nj5wp3sq6.cloudfront.net/auth/login", {
+        usernameOrEmail,
+        password,
+      })
+
+      const access_token = response.data.access_token
+      localStorage.setItem("token", access_token)
+
+      const user = response.data.user
+      const profileuser = await axios.get(`https://d3kv9nj5wp3sq6.cloudfront.net/profileusers/${user.username}`)
+
+      // Store user data in localStorage for now (you can implement proper state management later)
+      localStorage.setItem("user", JSON.stringify(profileuser.data))
+
+      if (response.data.access_token) {
+        router.push("/")
+      }
+    } catch (error: any) {
+      console.error("Login error:", error.response ? error.response.data : error.message)
+      setError("Invalid username/email or password")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleLoginSuccess = async (credentialResponse: any) => {
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const token = credentialResponse.credential
+      const response = await axios.post("https://d3kv9nj5wp3sq6.cloudfront.net/auth/google", { token })
+
+      const access_token = response.data.access_token
+      localStorage.setItem("token", access_token)
+
+      const profileuser = await axios.get(
+        `https://d3kv9nj5wp3sq6.cloudfront.net/profileusers/${response.data.user.username}`,
+      )
+
+      localStorage.setItem("user", JSON.stringify(profileuser.data))
+      router.push("/home")
+    } catch (error: any) {
+      console.error("Google Login error:", error.response ? error.response.data : error.message)
+      setError("Google login failed. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleKeyPress = (e: any) => {
+    if (e.key === "Enter") {
+      handleLogin()
+    }
+  }
+
+  // useEffect(() => {
+  //   const adjustIframeWidth = () => {
+  //     const iframe = document.querySelector(".google-login-button iframe")
+  //     if (iframe) {
+  //       iframe.style.width = "100%"
+  //     }
+  //   }
+
+  //   adjustIframeWidth()
+  //   window.addEventListener("resize", adjustIframeWidth)
+
+  //   return () => {
+  //     window.removeEventListener("resize", adjustIframeWidth)
+  //   }
+  // }, [])
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">
+      {/* Left Section - Brand */}
+      <div className="text-center mb-8 lg:mb-16">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-purple-600 mb-4">Opinio^nth</h1>
+        <p className="text-lg md:text-xl lg:text-2xl text-gray-900 max-w-2xl mx-auto leading-relaxed">
+          Opinio^nth helps you connect
+          <br />
+          and share perspectives on events and objects
+          <br />
+          with people in your life.
+        </p>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      {/* Right Section - Login Form */}
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          {error && <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>}
+
+          <div className="space-y-3">
+            <input
+              type="text"
+              placeholder="Username or Email address"
+              value={usernameOrEmail}
+              onChange={(e) => setUsernameOrEmail(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="w-full px-4 py-3 border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              disabled={isLoading}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="w-full px-4 py-3 border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              disabled={isLoading}
+            />
+
+            <button
+              onClick={handleLogin}
+              disabled={isLoading}
+              className="w-full py-3 bg-purple-600 text-white text-lg font-medium rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? "Logging in..." : "Log in"}
+            </button>
+          </div>
+
+          <div className="text-center mt-3">
+            <a href="#" className="text-sm text-blue-600 hover:underline" onClick={(e) => e.preventDefault()}>
+              Forgotten password?
+            </a>
+          </div>
+
+          <div className="flex items-center my-5">
+            <div className="flex-1 border-t border-gray-300"></div>
+            <span className="px-3 text-gray-500 text-sm">or</span>
+            <div className="flex-1 border-t border-gray-300"></div>
+          </div>
+
+          {/* Google Login Button */}
+          <div className="google-login-button w-full flex justify-center mb-5">
+            <GoogleLogin
+              onSuccess={handleGoogleLoginSuccess}
+              onError={() => {
+                console.log("Google Login Failed")
+                setError("Google login failed. Please try again.")
+              }}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="border-t border-gray-300 mb-5"></div>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            disabled={isLoading}
+            className="w-full py-3 bg-green-600 text-white text-base font-medium rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Read our docs
-          </a>
+            Create new account
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      {/* Signup Modal */}
+      {isModalOpen && <SignUpModal closeModal={() => setIsModalOpen(false)} />}
     </div>
-  );
+  )
 }
