@@ -165,7 +165,6 @@ export default function LoginPage() {
                 console.log("Google Login Failed")
                 setError("Google login failed. Please try again.")
               }}
-              disabled={isLoading}
             />
           </div>
 

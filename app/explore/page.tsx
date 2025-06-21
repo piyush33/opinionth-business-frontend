@@ -140,7 +140,7 @@ export default function ExplorePage() {
     }
 
     useEffect(() => {
-        let filtered = homeFeed.filter((item) => {
+        const filtered = homeFeed.filter((item) => {
             // Privacy check
             const isAllowedToView = (item.privacy === true && item.username === user?.username) || item.privacy === false
 
@@ -170,7 +170,7 @@ export default function ExplorePage() {
         })
 
         // Sort filtered results
-        filtered = sortCards(filtered, sortBy)
+        // filtered = sortCards(filtered, sortBy)
 
         filtered.sort((a, b) => b.id - a.id)  // Sort by id descending
 
@@ -208,24 +208,24 @@ export default function ExplorePage() {
         }
     }
 
-    const sortCards = (cards: CardItem[], sortType: string) => {
-        const sorted = [...cards]
+    // const sortCards = (cards: CardItem[], sortType: string) => {
+    //     const sorted = [...cards]
 
-        switch (sortType) {
-            case "recent":
-                return sorted.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-            case "popular":
-                return sorted.sort((a, b) => (b.likes || 0) + (b.views || 0) - ((a.likes || 0) + (a.views || 0)))
-            case "liked":
-                return sorted.sort((a, b) => (b.likes || 0) - (a.likes || 0))
-            case "viewed":
-                return sorted.sort((a, b) => (b.views || 0) - (a.views || 0))
-            case "alphabetical":
-                return sorted.sort((a, b) => (a.title || "").localeCompare(b.title || ""))
-            default:
-                return sorted
-        }
-    }
+    //     switch (sortType) {
+    //         case "recent":
+    //             return sorted.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    //         case "popular":
+    //             return sorted.sort((a, b) => (b.likes || 0) + (b.views || 0) - ((a.likes || 0) + (a.views || 0)))
+    //         case "liked":
+    //             return sorted.sort((a, b) => (b.likes || 0) - (a.likes || 0))
+    //         case "viewed":
+    //             return sorted.sort((a, b) => (b.views || 0) - (a.views || 0))
+    //         case "alphabetical":
+    //             return sorted.sort((a, b) => (a.title || "").localeCompare(b.title || ""))
+    //         default:
+    //             return sorted
+    //     }
+    // }
 
     const handleCardClick = (item: CardItem) => {
         router.push(`/event/${item.id}`)
