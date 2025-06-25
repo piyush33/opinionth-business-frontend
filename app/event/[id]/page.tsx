@@ -36,7 +36,7 @@ import SettingsPopup from "@/components/popups/settings-popup"
 import NotificationsPopup from "@/components/popups/notifications-popup"
 import MasonryGrid from "@/components/masonry-grid"
 
-interface CardItem {
+export interface CardItem {
     id: number
     title: string
     description: string
@@ -44,13 +44,13 @@ interface CardItem {
     image?: string
     username: string
     picture?: string
-    parent: number
+    parent: string
     weblink?: string
     lock?: boolean
     privacy?: boolean
 }
 
-interface InteractionState {
+export interface InteractionState {
     id: number
     hasLiked?: boolean
     hasReposted?: boolean
@@ -405,6 +405,25 @@ export default function EventPage() {
         }
     }
 
+    const handleUserTagClick = (username: string) => {
+        if (username === user?.username) {
+            router.push("/profile")
+        } else {
+            localStorage.setItem("profileUsername", username)
+            router.push("/profile/user")
+        }
+    }
+
+    const handleCardTagClick = (cardId: number) => {
+        const cardElement = document.getElementById(`card-${cardId}`)
+        if (cardElement) {
+            cardElement.scrollIntoView({ behavior: "smooth", block: "center" })
+            setSelectedCard(homeFeed.find((c) => c.id === cardId) || null)
+            console.log("selectedCard:", selectedCard);
+        }
+    }
+
+
     const handleShare = (e: React.MouseEvent, item: CardItem) => {
         e.stopPropagation()
         const url = `${window.location.origin}/event/${item.id}`
@@ -458,8 +477,7 @@ export default function EventPage() {
     const stats = getCollectionStats()
     const contributors = getUniqueContributors()
 
-    const handleCardClick = (e: React.MouseEvent, item: CardItem) => {
-        e.stopPropagation()
+    const handleCardClick = (item: CardItem) => {
         localStorage.setItem("expandedCard", JSON.stringify(item))
         router.push(`/card/${item.id}`);
     }
@@ -852,168 +870,21 @@ export default function EventPage() {
                                             text={item.text}
                                             image={item.image}
                                             picture={item.picture}
-                                            selected={Number(cardId) === item.id}
-                                            onClick={() => { }}
-                                        />
-
-                                        {/* Mobile Card Top Overlay - User Info */}
-                                        <div className="md:hidden absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent rounded-t-2xl p-3 z-10">
-                                            <div className="flex items-center justify-between">
-                                                <button
-                                                    onClick={(e) => handleUserClick(e, item)}
-                                                    className="flex items-center space-x-2 bg-white/95 backdrop-blur-sm text-gray-900 px-3 py-1.5 rounded-full text-xs font-medium hover:bg-white transition-all duration-200 shadow-lg"
-                                                >
-                                                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
-                                                        <span className="text-white font-bold text-xs">
-                                                            {item.username.charAt(0).toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                    <span className="truncate">@{item.username}</span>
-                                                </button>
-
-                                                {item.weblink && (
-                                                    <a
-                                                        href={item.weblink}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="bg-purple-500/95 backdrop-blur-sm text-white p-2 rounded-full hover:bg-purple-600 transition-all duration-200 shadow-lg flex-shrink-0"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    >
-                                                        <ExternalLink className="w-4 h-4" />
-                                                    </a>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Desktop Hover Overlay - Fixed Version */}
-                                        <div
-                                            className="hidden md:flex absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-2xl flex-col justify-between p-4 z-10 min-h-full"
-                                            onClick={(e) => handleCardClick(e, item)}
-                                        >
-                                            {/* Top Section - User info and external link */}
-                                            <div className="flex items-start justify-between w-full">
-                                                <button
-                                                    onClick={(e) => handleUserClick(e, item)}
-                                                    className="bg-white/95 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-full text-sm font-medium hover:bg-white transition-all duration-200 shadow-lg whitespace-nowrap"
-                                                >
-                                                    @{item.username}
-                                                </button>
-
-                                                {item.weblink && (
-                                                    <a
-                                                        href={item.weblink}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="bg-purple-500/95 backdrop-blur-sm text-white p-2 rounded-full hover:bg-purple-600 transition-all duration-200 shadow-lg flex-shrink-0"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    >
-                                                        <ExternalLink className="w-5 h-5" />
-                                                    </a>
-                                                )}
-                                            </div>
-
-                                            {/* Spacer - This will take up the remaining space */}
-                                            <div className="flex-1"></div>
-
-                                            {/* Bottom Section - Action buttons */}
-                                            <div className="flex items-center justify-start space-x-3 w-full">
-                                                <button
-                                                    onClick={(e) => handleLike(e, item)}
-                                                    className={`p-3 rounded-full backdrop-blur-sm transition-all duration-200 shadow-lg transform hover:scale-110 flex-shrink-0 ${isLiked(item.id)
-                                                            ? "bg-red-500 text-white"
-                                                            : "bg-white/95 text-gray-700 hover:bg-red-50 hover:text-red-500"
-                                                        }`}
-                                                >
-                                                    <Heart className={`w-5 h-5 ${isLiked(item.id) ? "fill-current" : ""}`} />
-                                                </button>
-
-                                                <button
-                                                    onClick={(e) => handleRepost(e, item)}
-                                                    className={`p-3 rounded-full backdrop-blur-sm transition-all duration-200 shadow-lg transform hover:scale-110 flex-shrink-0 ${isReposted(item.id)
-                                                            ? "bg-green-500 text-white"
-                                                            : "bg-white/95 text-gray-700 hover:bg-green-50 hover:text-green-500"
-                                                        }`}
-                                                >
-                                                    <Repeat2 className="w-5 h-5" />
-                                                </button>
-
-                                                <button
-                                                    onClick={(e) => handleSave(e, item)}
-                                                    className={`p-3 rounded-full backdrop-blur-sm transition-all duration-200 shadow-lg transform hover:scale-110 flex-shrink-0 ${isSaved(item.id)
-                                                            ? "bg-blue-500 text-white"
-                                                            : "bg-white/95 text-gray-700 hover:bg-blue-50 hover:text-blue-500"
-                                                        }`}
-                                                >
-                                                    <Bookmark className={`w-5 h-5 ${isSaved(item.id) ? "fill-current" : ""}`} />
-                                                </button>
-
-                                                <button
-                                                    onClick={(e) => handleShare(e, item)}
-                                                    className="p-3 rounded-full bg-white/95 backdrop-blur-sm text-gray-700 hover:bg-purple-50 hover:text-purple-500 transition-all duration-200 shadow-lg transform hover:scale-110 flex-shrink-0"
-                                                >
-                                                    <Share className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Mobile Card Footer - Action Buttons Only */}
-                                        <div className="md:hidden absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 rounded-b-2xl p-3 z-10">
-                                            {/* Action Buttons - Two Rows */}
-                                            <div className="space-y-2">
-                                                {/* First Row - Like and Repost */}
-                                                <div className="flex items-center space-x-2">
-                                                    <button
-                                                        onClick={(e) => handleLike(e, item)}
-                                                        className={`flex-1 flex items-center justify-center space-x-1 py-2 px-3 rounded-lg transition-all duration-200 ${isLiked(item.id)
-                                                            ? "bg-red-50 text-red-600"
-                                                            : "bg-gray-50 text-gray-600 hover:bg-red-50 hover:text-red-600"
-                                                            }`}
-                                                    >
-                                                        <Heart className={`w-4 h-4 ${isLiked(item.id) ? "fill-current" : ""}`} />
-                                                        <span className="text-xs font-medium">Like</span>
-                                                    </button>
-
-                                                    <button
-                                                        onClick={(e) => handleRepost(e, item)}
-                                                        className={`flex-1 flex items-center justify-center space-x-1 py-2 px-3 rounded-lg transition-all duration-200 ${isReposted(item.id)
-                                                            ? "bg-green-50 text-green-600"
-                                                            : "bg-gray-50 text-gray-600 hover:bg-green-50 hover:text-green-600"
-                                                            }`}
-                                                    >
-                                                        <Repeat2 className="w-4 h-4" />
-                                                        <span className="text-xs font-medium">Repost</span>
-                                                    </button>
-                                                </div>
-
-                                                {/* Second Row - Save and Share */}
-                                                <div className="flex items-center space-x-2">
-                                                    <button
-                                                        onClick={(e) => handleSave(e, item)}
-                                                        className={`flex-1 flex items-center justify-center space-x-1 py-2 px-3 rounded-lg transition-all duration-200 ${isSaved(item.id)
-                                                            ? "bg-blue-50 text-blue-600"
-                                                            : "bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-                                                            }`}
-                                                    >
-                                                        <Bookmark className={`w-4 h-4 ${isSaved(item.id) ? "fill-current" : ""}`} />
-                                                        <span className="text-xs font-medium">Save</span>
-                                                    </button>
-
-                                                    <button
-                                                        onClick={(e) => handleShare(e, item)}
-                                                        className="flex-1 flex items-center justify-center space-x-1 py-2 px-3 rounded-lg bg-gray-50 text-gray-600 hover:bg-purple-50 hover:text-purple-600 transition-all duration-200"
-                                                    >
-                                                        <Share className="w-4 h-4" />
-                                                        <span className="text-xs font-medium">Share</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Mobile Card Click Area - Excludes Top and Bottom Overlays */}
-                                        <div
-                                            className="md:hidden absolute inset-0 z-10"
-                                            style={{ top: "50px", bottom: "90px" }} // Excludes both top and bottom overlay areas
-                                            onClick={(e) => handleCardClick(e, item)}
+                                            selected={(selectedCard?.id || Number(cardId)) === item.id}
+                                            onClick={() => handleCardClick(item)}
+                                            onUserTagClick={handleUserTagClick}
+                                            onCardTagClick={handleCardTagClick}
+                                            showActions={true}
+                                            onLike={handleLike}
+                                            onRepost={handleRepost}
+                                            onSave={handleSave}
+                                            onShare={handleShare}
+                                            isLiked={isLiked(item.id)}
+                                            isReposted={isReposted(item.id)}
+                                            isSaved={isSaved(item.id)}
+                                            cardData={item}
+                                            weblink={item.weblink}
+                                            onUserClick={handleUserClick}
                                         />
                                     </div>
                                 </div>

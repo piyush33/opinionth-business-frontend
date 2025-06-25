@@ -105,6 +105,19 @@ export default function HomePage() {
         )
     }
 
+    const handleUserTagClick = (username: string) => {
+        if (username === user?.username) {
+            router.push("/profile")
+        } else {
+            localStorage.setItem("profileUsername", username)
+            router.push("/profile/user")
+        }
+    }
+
+    const handleCardTagClick = (cardId: number) => {
+        const cardElement = document.getElementById(`card-${cardId}`)
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Desktop Navbar - Hidden on Mobile */}
@@ -344,6 +357,8 @@ export default function HomePage() {
                                         picture={item.picture}
                                         reposted={item.reposted}
                                         onClick={() => handleCardClick(item)}
+                                        onUserTagClick={handleUserTagClick}
+                                        onCardTagClick={handleCardTagClick}
                                     />
                                 ))}
                             </MasonryGrid>
