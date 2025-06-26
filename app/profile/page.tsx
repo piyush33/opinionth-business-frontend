@@ -470,7 +470,7 @@ export default function ProfilePage() {
                                         height={128}
                                         className="w-full h-full object-cover"
                                     /> :
-                                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
+                                        <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
                                             <span className="text-white font-bold text-2xl">
                                                 {user.name.charAt(0).toUpperCase()}
                                             </span>

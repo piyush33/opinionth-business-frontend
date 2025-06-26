@@ -101,7 +101,7 @@ export default function NewMessagePopup({ isOpen, onClose, onBackToInbox }: NewM
         <div className="fixed inset-0 z-[60] overflow-hidden">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
 
-            <div className="absolute right-4 top-20 w-96 h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+            <div className="absolute right-4 top-20 w-[calc(100%-2rem)] max-w-md  h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50 flex-shrink-0">
                     <div className="flex items-center space-x-3">

@@ -557,7 +557,7 @@ export default function ProfileUserPage() {
                         onClick={() => setShowChatInterface(false)}
                     ></div>
 
-                    <div className="absolute right-4 top-20 w-96 h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+                    <div className="absolute right-4 top-20 w-[calc(100%-2rem)] max-w-md h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
                         {/* Chat Header */}
                         <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-purple-50">
                             <div className="flex items-center space-x-3">
