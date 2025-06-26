@@ -402,6 +402,18 @@ export default function CreatePage() {
                                 <MessageCircle className="w-5 h-5 text-gray-600" />
                                 <span className="text-gray-900">Messages</span>
                             </button>
+                            <Link
+                                href="/"
+                                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
+                                onClick={() => {
+                                    localStorage.removeItem("token");
+                                    localStorage.removeItem("user");
+                                    setIsMobileMenuOpen(false)
+                                }}
+                            >
+                                <User className="w-5 h-5 text-gray-600" />
+                                <span className="text-gray-900">Logout</span>
+                            </Link>
                         </div>
                     </div>
                 </div>
