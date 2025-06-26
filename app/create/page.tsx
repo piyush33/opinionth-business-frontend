@@ -220,6 +220,19 @@ export default function CreatePage() {
         return Object.keys(obj).length === 0
     }
 
+    const handleUserTagClick = (username: string) => {
+        if (username === user?.username) {
+            router.push("/profile")
+        } else {
+            localStorage.setItem("profileUsername", username)
+            router.push("/profile/user")
+        }
+    }
+
+    const handleCardTagClick = (cardId: number) => {
+        const cardElement = document.getElementById(`card-${cardId}`)
+    }
+
     const hasContent = title || description || modalText || imageUrl || !isEmptyObject(linkData)
 
     if (!user) {
@@ -467,6 +480,8 @@ export default function CreatePage() {
                                     image={imageUrl || linkData.image}
                                     picture={user.image}
                                     onClick={() => { }}
+                                    onCardTagClick={handleCardTagClick}
+                                    onUserTagClick={handleUserTagClick}
                                 />
                             </div>
                         </div>
@@ -562,6 +577,8 @@ export default function CreatePage() {
                                     image={imageUrl || linkData.image}
                                     picture={user.image}
                                     onClick={() => { }}
+                                    onCardTagClick={handleCardTagClick}
+                                    onUserTagClick={handleUserTagClick}
                                 />
                             </div>
                         </div>
@@ -605,12 +622,12 @@ export default function CreatePage() {
                         </div>
 
                         {/* Modal Body */}
-                        <div className="flex-1 p-4 md:p-6">
+                        <div className="flex-1 p-4 md:p-6 text-black">
                             <textarea
                                 value={modalText}
                                 onChange={(e) => setModalText(e.target.value)}
                                 placeholder="Share your thoughts, ideas, or story..."
-                                className="w-full h-full resize-none border-0 focus:outline-none text-base md:text-lg leading-relaxed placeholder-gray-400"
+                                className="w-full h-full resize-none border-0 focus:outline-none text-base md:text-lg leading-relaxed  text-black placeholder-gray-400"
                             />
                         </div>
 

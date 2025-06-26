@@ -24,7 +24,7 @@ export default function SettingsPopup({ isOpen, onClose }: SettingsPopupProps) {
     const handleLogout = () => {
         localStorage.removeItem("token")
         localStorage.removeItem("user")
-        router.push("/login")
+        router.push("/")
         onClose()
     }
 
@@ -81,13 +81,17 @@ export default function SettingsPopup({ isOpen, onClose }: SettingsPopupProps) {
                 {user && (
                     <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50">
                         <div className="flex items-center space-x-3">
-                            <Image
+                            {user.image ? <Image
                                 src={user.image || "/placeholder.svg?height=56&width=56"}
                                 alt={user.name}
                                 width={56}
                                 height={56}
                                 className="rounded-full ring-3 ring-white shadow-md"
-                            />
+                            /> : <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
+                                <span className="text-white font-bold text-2xl">
+                                    {user.name.charAt(0).toUpperCase()}
+                                </span>
+                            </div>}
                             <div className="flex-1">
                                 <p className="font-semibold text-gray-900">{user.name}</p>
                                 <p className="text-sm text-gray-600">{user.email}</p>
