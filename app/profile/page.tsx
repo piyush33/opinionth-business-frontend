@@ -205,7 +205,7 @@ export default function ProfilePage() {
         try {
             const token = localStorage.getItem("token")
             // Fetch homefeed to find the corresponding item
-            const response = await fetch(`https://d3kv9nj5wp3sq6.cloudfront.net/homefeed/${user.username}`, {
+            const response = await fetch(`https://d3kv9nj5wp3sq6.cloudfront.net/homefeed`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             const homefeedData = await response.json()

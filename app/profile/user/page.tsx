@@ -238,7 +238,7 @@ export default function ProfileUserPage() {
         try {
             const token = localStorage.getItem("token")
             // Fetch homefeed to find the corresponding item
-            const response = await fetch(`https://d3kv9nj5wp3sq6.cloudfront.net/homefeed/${user.username}`, {
+            const response = await fetch(`https://d3kv9nj5wp3sq6.cloudfront.net/homefeed`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             const homefeedData = await response.json()
@@ -248,9 +248,13 @@ export default function ProfileUserPage() {
                 (homefeedItem: any) =>
                     homefeedItem.title === item.title &&
                     homefeedItem.description === item.description &&
-                    homefeedItem.parent === item.parent &&
                     homefeedItem.username === item.username,
             )
+
+            console.log("matching:", matchingHomefeedItem);
+            console.log("item:", item);
+            console.log("homefeed:", homefeedData);
+
 
             if (matchingHomefeedItem) {
                 router.push(`/event/${matchingHomefeedItem.id}`)
