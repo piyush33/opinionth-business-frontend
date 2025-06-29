@@ -135,22 +135,90 @@ const createApiService = (getAuthHeaders: () => Record<string, string>) => ({
         return response.json()
     },
 
-    deleteCard: async (cardId: number, username: string) => {
-        const deletePromises = [
-            `${API_BASE_URL}/profilefeed/${username}/created/${cardId}`,
-            `${API_BASE_URL}/profilefeed/${username}/reposted/${cardId}`,
-            `${API_BASE_URL}/profilefeed/${username}/liked/${cardId}`,
-            `${API_BASE_URL}/profilefeed/${username}/saved/${cardId}`,
-            `${API_BASE_URL}/homefeed/${cardId}`,
-        ].map((url) =>
-            fetch(url, {
-                method: "DELETE",
-                headers: getAuthHeaders(),
-            }).catch((err) => console.warn(`Failed to delete from ${url}:`, err)),
-        )
+    deleteCardByContent: async (card: CardData, username: string) => {
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
 
-        await Promise.allSettled(deletePromises)
-    },
+        try {
+            // Fetch all profile feeds
+            const [createdResponse, repostedResponse, likedResponse, savedResponse] = await Promise.allSettled([
+                axios.get(`${API_BASE_URL}/profilefeed/${username}/created`, { headers }),
+                axios.get(`${API_BASE_URL}/profilefeed/${username}/reposted`, { headers }),
+                axios.get(`${API_BASE_URL}/profilefeed/${username}/liked`, { headers }),
+                axios.get(`${API_BASE_URL}/profilefeed/${username}/saved`, { headers })
+            ]);
+
+            const deletePromises = [];
+
+            // Find and delete from created feed
+            if (createdResponse.status === 'fulfilled') {
+                const createdItem = createdResponse.value.data.find((item: any) =>
+                    item.title === card.title &&
+                    item.description === card.description &&
+                    item.parent === card.parent
+                );
+                if (createdItem) {
+                    deletePromises.push(
+                        axios.delete(`${API_BASE_URL}/profilefeed/${username}/created/${createdItem.id}`, { headers })
+                    );
+                }
+            }
+
+            // Find and delete from reposted feed
+            if (repostedResponse.status === 'fulfilled') {
+                const repostedItem = repostedResponse.value.data.find((item: any) =>
+                    item.title === card.title &&
+                    item.description === card.description &&
+                    item.parent === card.parent
+                );
+                if (repostedItem) {
+                    deletePromises.push(
+                        axios.delete(`${API_BASE_URL}/profilefeed/${username}/reposted/${repostedItem.id}`, { headers })
+                    );
+                }
+            }
+
+            // Find and delete from liked feed
+            if (likedResponse.status === 'fulfilled') {
+                const likedItem = likedResponse.value.data.find((item: any) =>
+                    item.title === card.title &&
+                    item.description === card.description &&
+                    item.parent === card.parent
+                );
+                if (likedItem) {
+                    deletePromises.push(
+                        axios.delete(`${API_BASE_URL}/profilefeed/${username}/liked/${likedItem.id}`, { headers })
+                    );
+                }
+            }
+
+            // Find and delete from saved feed
+            if (savedResponse.status === 'fulfilled') {
+                const savedItem = savedResponse.value.data.find((item: any) =>
+                    item.title === card.title &&
+                    item.description === card.description &&
+                    item.parent === card.parent
+                );
+                if (savedItem) {
+                    deletePromises.push(
+                        axios.delete(`${API_BASE_URL}/profilefeed/${username}/saved/${savedItem.id}`, { headers })
+                    );
+                }
+            }
+
+            // Delete from homefeed using original card ID
+            deletePromises.push(
+                axios.delete(`${API_BASE_URL}/homefeed/${card.id}`, { headers })
+            );
+
+            // Execute all delete operations
+            await Promise.allSettled(deletePromises);
+
+        } catch (error) {
+            console.error("Error in deleteCardByContent:", error);
+            throw error;
+        }
+    }
 })
 
 export default function CardExpansionPage() {
@@ -336,7 +404,7 @@ export default function CardExpansionPage() {
         if (!card || !userProfile) return
 
         try {
-            await apiService.deleteCard(card.id, userProfile.username)
+            await apiService.deleteCardByContent(card, userProfile.username)
             setShowPopupMenu(false)
             router.push("/home")
         } catch (err) {
