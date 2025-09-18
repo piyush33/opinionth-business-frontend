@@ -32,12 +32,20 @@ import {
   Database,
   ChevronRight,
   FolderOpen,
+  LucideIcon,
+  Home,
+  Compass,
 } from "lucide-react";
 import Card from "@/components/card";
 import InboxPopup from "@/components/popups/inbox-popup";
 import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
 import MasonryGrid from "@/components/masonry-grid";
+import {
+  getSavedCustomCats,
+  ensureSaved,
+  hydrateForUI,
+} from "@/utils/customCategories";
 
 interface CardItem {
   id: number;
@@ -48,6 +56,7 @@ interface CardItem {
   username: string;
   picture?: string;
   parent: number;
+  layer: Record<string, any>;
   weblink?: string;
   privacy?: boolean;
   createdAt?: string;
@@ -57,13 +66,139 @@ interface CardItem {
 interface Category {
   id: string;
   name: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;
   bgColor: string;
   description: string;
   count?: number;
   isCustom?: boolean;
 }
+
+const DEFAULT_CATEGORIES: Category[] = [
+  {
+    id: "all",
+    name: "All Categories",
+    icon: FolderOpen,
+    color: "text-gray-700",
+    bgColor: "bg-gray-100",
+    description: "View all whiteboards across all categories",
+  },
+  {
+    id: "company-os",
+    name: "Company OS",
+    icon: Building2,
+    color: "text-amber-700",
+    bgColor: "bg-amber-100",
+    description: "Company-wide processes and operations",
+  },
+  {
+    id: "product",
+    name: "Product",
+    icon: Target,
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+    description: "Product development and strategy",
+  },
+  {
+    id: "roadmap",
+    name: "Roadmap",
+    icon: MapPin,
+    color: "text-indigo-700",
+    bgColor: "bg-indigo-100",
+    description: "Strategic planning and roadmaps",
+  },
+  {
+    id: "docs",
+    name: "Documentation",
+    icon: FileText,
+    color: "text-slate-700",
+    bgColor: "bg-slate-100",
+    description: "Technical and process documentation",
+  },
+  {
+    id: "engineering",
+    name: "Engineering",
+    icon: Code,
+    color: "text-red-700",
+    bgColor: "bg-red-100",
+    description: "Technical discussions and architecture",
+  },
+  {
+    id: "marketing",
+    name: "Marketing",
+    icon: Megaphone,
+    color: "text-orange-700",
+    bgColor: "bg-orange-100",
+    description: "Marketing campaigns and strategies",
+  },
+  {
+    id: "design",
+    name: "Design",
+    icon: Palette,
+    color: "text-purple-700",
+    bgColor: "bg-purple-100",
+    description: "Design systems and creative work",
+  },
+  {
+    id: "operations",
+    name: "Operations",
+    icon: Settings,
+    color: "text-emerald-700",
+    bgColor: "bg-emerald-100",
+    description: "Business operations and workflows",
+  },
+  {
+    id: "meetings",
+    name: "Meetings",
+    icon: Calendar,
+    color: "text-cyan-700",
+    bgColor: "bg-cyan-100",
+    description: "Meeting notes and collaborative sessions",
+  },
+  {
+    id: "data",
+    name: "Data & Analytics",
+    icon: Database,
+    color: "text-pink-700",
+    bgColor: "bg-pink-100",
+    description: "Data analysis and reporting",
+  },
+];
+
+// Common aliases → your default ids (extend as you like)
+const CATEGORY_ALIASES: Record<string, string> = {
+  "company-os": "company-os",
+  "company operating system": "company-os",
+  product: "product",
+  roadmap: "roadmap",
+  documentation: "docs",
+  docs: "docs",
+  engineering: "engineering",
+  marketing: "marketing",
+  design: "design",
+  operations: "operations",
+  ops: "operations",
+  meetings: "meetings",
+  data: "data",
+  "data-analytics": "data",
+  "data & analytics": "data",
+  data_and_analytics: "data",
+};
+
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const normalizeCategoryId = (raw?: string | null) => {
+  const s = (raw ?? "").trim();
+  if (!s) return "uncategorized";
+  const slug = slugify(s);
+  return CATEGORY_ALIASES[slug] ?? slug;
+};
 
 export default function ExplorePage() {
   const router = useRouter();
@@ -90,108 +225,8 @@ export default function ExplorePage() {
   const [dateFilter, setDateFilter] = useState("all");
   const [contentTypeFilter, setContentTypeFilter] = useState("all");
   const [engagementFilter, setEngagementFilter] = useState("all");
-
-  const categories: Category[] = [
-    {
-      id: "all",
-      name: "All Categories",
-      icon: FolderOpen,
-      color: "text-gray-700",
-      bgColor: "bg-gray-100",
-      description: "View all whiteboards across all categories",
-      count: 0,
-    },
-    {
-      id: "company-os",
-      name: "Company OS",
-      icon: Building2,
-      color: "text-amber-700",
-      bgColor: "bg-amber-100",
-      description: "Company-wide processes and operations",
-      count: 0,
-    },
-    {
-      id: "product",
-      name: "Product",
-      icon: Target,
-      color: "text-blue-700",
-      bgColor: "bg-blue-100",
-      description: "Product development and strategy",
-      count: 0,
-    },
-    {
-      id: "roadmap",
-      name: "Roadmap",
-      icon: MapPin,
-      color: "text-indigo-700",
-      bgColor: "bg-indigo-100",
-      description: "Strategic planning and roadmaps",
-      count: 0,
-    },
-    {
-      id: "docs",
-      name: "Documentation",
-      icon: FileText,
-      color: "text-slate-700",
-      bgColor: "bg-slate-100",
-      description: "Technical and process documentation",
-      count: 0,
-    },
-    {
-      id: "engineering",
-      name: "Engineering",
-      icon: Code,
-      color: "text-red-700",
-      bgColor: "bg-red-100",
-      description: "Technical discussions and architecture",
-      count: 0,
-    },
-    {
-      id: "marketing",
-      name: "Marketing",
-      icon: Megaphone,
-      color: "text-orange-700",
-      bgColor: "bg-orange-100",
-      description: "Marketing campaigns and strategies",
-      count: 0,
-    },
-    {
-      id: "design",
-      name: "Design",
-      icon: Palette,
-      color: "text-purple-700",
-      bgColor: "bg-purple-100",
-      description: "Design systems and creative work",
-      count: 0,
-    },
-    {
-      id: "operations",
-      name: "Operations",
-      icon: Settings,
-      color: "text-emerald-700",
-      bgColor: "bg-emerald-100",
-      description: "Business operations and workflows",
-      count: 0,
-    },
-    {
-      id: "meetings",
-      name: "Meetings",
-      icon: Calendar,
-      color: "text-cyan-700",
-      bgColor: "bg-cyan-100",
-      description: "Meeting notes and collaborative sessions",
-      count: 0,
-    },
-    {
-      id: "data",
-      name: "Data & Analytics",
-      icon: Database,
-      color: "text-pink-700",
-      bgColor: "bg-pink-100",
-      description: "Data analysis and reporting",
-      count: 0,
-    },
-  ];
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const sortOptions = [
     { id: "recent", name: "Most Recent", icon: Clock },
@@ -203,11 +238,91 @@ export default function ExplorePage() {
 
   useEffect(() => {
     // Get user from localStorage
-    const userData = localStorage.getItem("user");
+    const userData = localStorage.getItem("profileUser");
     if (userData) {
       setUser(JSON.parse(userData));
     }
   }, []);
+
+  // NEW helpers
+  const PALETTE = [
+    { color: "text-gray-700", bgColor: "bg-gray-100" },
+    { color: "text-emerald-700", bgColor: "bg-emerald-100" },
+    { color: "text-blue-700", bgColor: "bg-blue-100" },
+    { color: "text-indigo-700", bgColor: "bg-indigo-100" },
+    { color: "text-orange-700", bgColor: "bg-orange-100" },
+    { color: "text-purple-700", bgColor: "bg-purple-100" },
+    { color: "text-pink-700", bgColor: "bg-pink-100" },
+    { color: "text-cyan-700", bgColor: "bg-cyan-100" },
+    { color: "text-red-700", bgColor: "bg-red-100" },
+    { color: "text-amber-700", bgColor: "bg-amber-100" },
+    { color: "text-slate-700", bgColor: "bg-slate-100" },
+  ];
+
+  const hashCode = (str: string) => {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = (h << 5) - h + str.charCodeAt(i);
+      h |= 0;
+    }
+    return Math.abs(h);
+  };
+
+  const toTitleCase = (id: string) =>
+    id.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  const makeCustomCategory = (id: string): Category => {
+    const palette = PALETTE[hashCode(id) % PALETTE.length];
+    return {
+      id,
+      name: toTitleCase(id),
+      icon: FolderOpen,
+      color: palette.color,
+      bgColor: palette.bgColor,
+      description: "Custom category",
+      isCustom: true,
+      count: 0,
+    };
+  };
+
+  type ActiveOrg = { id: number; name: string; slug: string } | null;
+
+  const getActiveOrgId = (): number | null => {
+    const raw = localStorage.getItem("activeOrg");
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw) as ActiveOrg | number;
+      // handle both shapes: whole object or just an id
+      if (typeof parsed === "number") return parsed || null;
+      return parsed?.id ?? null;
+    } catch {
+      // fallback: maybe an id as plain string
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : null;
+    }
+  };
+
+  async function refreshUnread() {
+    const orgId = getActiveOrgId();
+    if (!orgId || !user) return;
+    try {
+      const res = await fetch(
+        `/nest-api/orgs/${orgId}/notifications/user/${user.username}/unread-count`
+      );
+      const { count } = await res.json();
+      setUnreadCount(count || 0);
+    } catch (e) {
+      console.error("unread-count failed", e);
+    }
+  }
+
+  // poll occasionally (optional) and on mount/user change
+  useEffect(() => {
+    if (!user) return;
+    refreshUnread();
+    const id = setInterval(refreshUnread, 30000);
+    return () => clearInterval(id);
+  }, [user]);
 
   useEffect(() => {
     const fetchHomeFeedData = async () => {
@@ -216,8 +331,9 @@ export default function ExplorePage() {
       setIsLoading(true);
       try {
         const token = localStorage.getItem("token");
+        const orgId = getActiveOrgId();
         const response = await fetch(
-          `https://d3kv9nj5wp3sq6.cloudfront.net/homefeed`,
+          `/nest-api/orgs/${orgId}/homefeed/user/${user.username}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -231,13 +347,15 @@ export default function ExplorePage() {
 
         const data = await response.json();
 
-        const enrichedData = data.map((item: any) => ({
-          ...item,
-          category: getRandomCategory(),
-          createdAt: new Date(
-            Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-        }));
+        const enrichedData = data.map((item: any) => {
+          const normalized = normalizeCategoryId(item.category);
+          return {
+            ...item,
+            _rawCategory: item.category ?? null, // optional: keep original for UI if needed
+            category: normalized, // the id we use everywhere
+            createdAt: item.createdAt,
+          };
+        });
 
         setHomeFeed(enrichedData);
       } catch (error) {
@@ -250,40 +368,91 @@ export default function ExplorePage() {
     fetchHomeFeedData();
   }, [user]);
 
-  const getRandomCategory = () => {
-    const cats = [
-      "company-os",
-      "product",
-      "roadmap",
-      "docs",
-      "engineering",
-      "marketing",
-      "design",
-      "operations",
-      "meetings",
-      "data",
-    ];
-    return cats[Math.floor(Math.random() * cats.length)];
-  };
+  const DEFAULT_IDS = new Set<string>(
+    DEFAULT_CATEGORIES.map((c) => c.id).concat(["uncategorized"])
+  );
 
+  // NEW: derive categories from defaults + cookie + feed, and persist new ones
   useEffect(() => {
-    categories.forEach((category) => {
-      if (category.id === "all") {
-        category.count = homeFeed.length;
-      } else {
-        category.count = homeFeed.filter(
-          (item) => item.category === category.id
-        ).length;
+    // Collect category ids from feed (fallback to 'uncategorized')
+    const idsFromFeed = new Set<string>(
+      homeFeed.map(
+        (item) =>
+          (item.category && String(item.category).trim()) || "uncategorized"
+      )
+    );
+
+    // Persist any *new* non-default ids from feed into the cookie (dedup handled inside helper)
+    const toSave = [...idsFromFeed].filter((id) => id && !DEFAULT_IDS.has(id));
+    if (toSave.length) {
+      ensureSaved(toSave); // writes only what’s missing
+    }
+
+    // Pull the full saved list (now includes any just-saved ids) and hydrate with FolderOpen icon for Explore
+    const savedCustomHydrated = hydrateForUI(getSavedCustomCats(), FolderOpen);
+
+    // Start with defaults + saved customs; dedupe by id
+    const dedup = new Map<string, Category>();
+    [...DEFAULT_CATEGORIES, ...savedCustomHydrated].forEach((c) =>
+      dedup.set(c.id, c)
+    );
+    const base = Array.from(dedup.values());
+
+    // Ensure 'uncategorized' exists
+    if (!base.some((c) => c.id === "uncategorized")) {
+      base.push({
+        id: "uncategorized",
+        name: "Uncategorized",
+        icon: FolderOpen,
+        color: "text-gray-700",
+        bgColor: "bg-gray-100",
+        description: "Items without a category",
+        count: 0,
+      });
+    }
+
+    // Add any remaining feed categories that aren’t in base yet (these will also have been saved above)
+    idsFromFeed.forEach((id) => {
+      if (!base.some((c) => c.id === id)) {
+        base.push(makeCustomCategory(id));
       }
     });
-  }, [homeFeed]);
+
+    // Recalculate counts immutably
+    const withCounts = base.map((cat) => ({
+      ...cat,
+      count:
+        cat.id === "all"
+          ? homeFeed.length
+          : homeFeed.filter(
+              (i) =>
+                ((i.category && String(i.category).trim()) ||
+                  "uncategorized") === cat.id
+            ).length,
+    }));
+
+    setCategories(withCounts);
+
+    // Keep selection valid
+    if (!withCounts.some((c) => c.id === selectedCategory)) {
+      setSelectedCategory("all");
+    }
+  }, [homeFeed, selectedCategory]);
 
   useEffect(() => {
     const filtered = homeFeed.filter((item) => {
       // Privacy check
       const isAllowedToView =
-        (item.privacy === true && item.username === user?.username) ||
-        item.privacy === false;
+        item.privacy === true ? item.username === user?.username : true;
+
+      console.log(
+        "item:",
+        item,
+        "isAllowedToView:",
+        isAllowedToView,
+        "user:",
+        user
+      );
 
       if (!isAllowedToView) return false;
 
@@ -388,6 +557,7 @@ export default function ExplorePage() {
   // }
 
   const handleCardClick = (item: CardItem) => {
+    localStorage.setItem("lastVisitedCardLayerid", item.layer.id);
     router.push(`/event/${item.id}`);
   };
 
@@ -430,7 +600,11 @@ export default function ExplorePage() {
   };
 
   const selectedCategoryData =
-    categories.find((cat) => cat.id === selectedCategory) || categories[0];
+    categories.find((cat) => cat.id === selectedCategory) ||
+    categories[0] ||
+    DEFAULT_CATEGORIES[0];
+
+  const SelectedIcon = selectedCategoryData.icon;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -500,7 +674,9 @@ export default function ExplorePage() {
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200 relative"
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+                )}
               </button>
 
               <button
@@ -662,12 +838,6 @@ export default function ExplorePage() {
                   </button>
                 );
               })}
-
-              {/* Add Custom Category Button */}
-              <button className="w-full mt-4 p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors text-base font-medium">
-                <Plus className="w-5 h-5 inline mr-2" />
-                Add Custom Category
-              </button>
             </div>
           </div>
         </div>
@@ -767,23 +937,15 @@ export default function ExplorePage() {
                 );
               })}
             </div>
-
-            {/* Add Custom Category Button */}
-            {isCategorySidebarOpen && (
-              <button className="w-full mt-4 p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors text-sm font-medium">
-                <Plus className="w-4 h-4 inline mr-2" />
-                Add Custom Category
-              </button>
-            )}
           </div>
         </aside>
 
         <main
-          className={`flex-1 transition-all duration-300 mt-25 md:mt-0 ${
+          className={`flex-1 min-w-0 transition-all duration-300 mt-25 md:mt-0 ${
             isCategorySidebarOpen ? "md:ml-80" : "md:ml-16"
           }`}
         >
-          <div className="p-4 md:p-6">
+          <div className="p-4 md:p-6 ">
             <div className="mb-6 md:mb-8">
               <div className="flex items-center space-x-3 md:space-x-4 mb-3 md:mb-4">
                 <div
@@ -961,22 +1123,24 @@ export default function ExplorePage() {
                 ))}
               </div>
             ) : filteredFeed.length > 0 ? (
-              <MasonryGrid>
-                {filteredFeed.map((item) => (
-                  <Card
-                    key={item.id}
-                    user={item.username}
-                    title={item.title}
-                    description={item.description}
-                    text={item.text}
-                    image={item.image}
-                    picture={item.picture}
-                    onClick={() => handleCardClick(item)}
-                    onUserTagClick={handleUserTagClick}
-                    onCardTagClick={handleCardTagClick}
-                  />
-                ))}
-              </MasonryGrid>
+              <div className="w-full overflow-x-hidden">
+                <MasonryGrid>
+                  {filteredFeed.map((item) => (
+                    <Card
+                      key={item.id}
+                      user={item.username}
+                      title={item.title}
+                      description={item.description}
+                      text={item.text}
+                      image={item.image}
+                      picture={item.picture}
+                      onClick={() => handleCardClick(item)}
+                      onUserTagClick={handleUserTagClick}
+                      onCardTagClick={handleCardTagClick}
+                    />
+                  ))}
+                </MasonryGrid>
+              </div>
             ) : (
               <div className="text-center py-12 md:py-16 px-4">
                 <div
@@ -1012,6 +1176,99 @@ export default function ExplorePage() {
             )}
           </div>
         </main>
+
+        {/* Mobile Menu Overlay */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 z-50">
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setIsMobileMenuOpen(false)}
+            ></div>
+            <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-xl">
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-gray-900">Menu</span>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full"
+                  >
+                    <X className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+              <div className="p-4 space-y-4">
+                <Link
+                  href="/home"
+                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Home className="w-5 h-5 text-gray-600" />
+                  <span className="text-gray-900">Home</span>
+                </Link>
+                <Link
+                  href="/explore"
+                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Compass className="w-5 h-5 text-gray-600" />
+                  <span className="text-gray-900">Explore</span>
+                </Link>
+                <Link
+                  href="/create"
+                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Plus className="w-5 h-5 text-gray-600" />
+                  <span className="text-gray-900">Create</span>
+                </Link>
+                <Link
+                  href="/profile"
+                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User className="w-5 h-5 text-gray-600" />
+                  <span className="text-gray-900">Profile</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    setIsNotificationsPopupOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
+                >
+                  <Bell className="w-5 h-5 text-gray-600" />
+                  <span className="text-gray-900">Notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="ml-auto w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsInboxPopupOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
+                >
+                  <MessageCircle className="w-5 h-5 text-gray-600" />
+                  <span className="text-gray-900">Messages</span>
+                  <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></span>
+                </button>
+                <Link
+                  href="/"
+                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
+                  onClick={() => {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <User className="w-5 h-5 text-gray-600" />
+                  <span className="text-gray-900">Logout</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Popups */}
         <InboxPopup

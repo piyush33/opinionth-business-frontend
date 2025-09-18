@@ -23,22 +23,122 @@ import {
   Compass,
   Tag,
   Check,
+  Building2,
+  Target,
+  MapPin,
+  FileText,
+  Code,
+  Megaphone,
+  Palette,
+  Settings,
+  Calendar,
+  Database,
+  LucideIcon,
 } from "lucide-react";
 import axios from "axios";
 import Card from "@/components/card";
 import InboxPopup from "@/components/popups/inbox-popup";
 import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
+import {
+  getSavedCustomCats,
+  upsertSavedCustomCat,
+  hydrateForUI,
+  slugify,
+} from "@/utils/customCategories";
+import LayerLockModal from "@/components/modals/LayerLockModal";
 
-const DEFAULT_CATEGORIES = [
-  { id: "company-os", name: "Company OS", icon: "🏢", color: "bg-orange-500" },
-  { id: "product", name: "Product", icon: "📦", color: "bg-blue-500" },
-  { id: "engineering", name: "Engineering", icon: "⚙️", color: "bg-red-500" },
-  { id: "marketing", name: "Marketing", icon: "📢", color: "bg-yellow-500" },
-  { id: "design", name: "Design", icon: "🎨", color: "bg-purple-500" },
-  { id: "roadmap", name: "Roadmap", icon: "🗺️", color: "bg-blue-600" },
-  { id: "docs", name: "Docs", icon: "📚", color: "bg-gray-500" },
-  { id: "home", name: "Home", icon: "🏠", color: "bg-green-500" },
+type Category = {
+  id: string;
+  name: string;
+  icon: LucideIcon;
+  color: string; // text color class
+  bgColor: string; // bg color class
+  description: string;
+  isCustom?: boolean;
+};
+
+const DEFAULT_CATEGORIES: Category[] = [
+  {
+    id: "company-os",
+    name: "Company OS",
+    icon: Building2,
+    color: "text-amber-700",
+    bgColor: "bg-amber-100",
+    description: "Company-wide processes and operations",
+  },
+  {
+    id: "product",
+    name: "Product",
+    icon: Target,
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+    description: "Product development and strategy",
+  },
+  {
+    id: "engineering",
+    name: "Engineering",
+    icon: Code,
+    color: "text-red-700",
+    bgColor: "bg-red-100",
+    description: "Technical discussions and architecture",
+  },
+  {
+    id: "marketing",
+    name: "Marketing",
+    icon: Megaphone,
+    color: "text-orange-700",
+    bgColor: "bg-orange-100",
+    description: "Marketing campaigns and strategies",
+  },
+  {
+    id: "design",
+    name: "Design",
+    icon: Palette,
+    color: "text-purple-700",
+    bgColor: "bg-purple-100",
+    description: "Design systems and creative work",
+  },
+  {
+    id: "roadmap",
+    name: "Roadmap",
+    icon: MapPin,
+    color: "text-indigo-700",
+    bgColor: "bg-indigo-100",
+    description: "Strategic planning and roadmaps",
+  },
+  {
+    id: "docs",
+    name: "Documentation",
+    icon: FileText,
+    color: "text-slate-700",
+    bgColor: "bg-slate-100",
+    description: "Technical and process documentation",
+  },
+  {
+    id: "operations",
+    name: "Operations",
+    icon: Settings,
+    color: "text-emerald-700",
+    bgColor: "bg-emerald-100",
+    description: "Business operations and workflows",
+  },
+  {
+    id: "meetings",
+    name: "Meetings",
+    icon: Calendar,
+    color: "text-cyan-700",
+    bgColor: "bg-cyan-100",
+    description: "Meeting notes and collaborative sessions",
+  },
+  {
+    id: "data",
+    name: "Data & Analytics",
+    icon: Database,
+    color: "text-pink-700",
+    bgColor: "bg-pink-100",
+    description: "Data analysis and reporting",
+  },
 ];
 
 export default function CreatePage() {
@@ -56,7 +156,9 @@ export default function CreatePage() {
   const [isLockSelected, setIsLockSelected] = useState(false);
   const [isPrivacySelected, setIsPrivacySelected] = useState(false);
 
-  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null
+  );
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [customCategoryName, setCustomCategoryName] = useState("");
   const [isCreatingCustomCategory, setIsCreatingCustomCategory] =
@@ -74,11 +176,63 @@ export default function CreatePage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
+  const [customCategories, setCustomCategories] = useState<Category[]>([]);
+  const [lockModalOpen, setLockModalOpen] = useState(false);
+  const [allowedMemberIds, setAllowedMemberIds] = useState<number[]>([]);
+  const [orgId, setOrgId] = useState<number | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    setOrgId(getActiveOrgId());
+  }, []);
+
+  type ActiveOrg = { id: number; name: string; slug: string } | null;
+
+  // add this helper inside your component file
+  const getActiveOrgId = (): number | null => {
+    if (typeof window === "undefined") return null; // guard SSR
+    const raw = window.localStorage.getItem("activeOrg");
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw) as { id: number } | number;
+      return typeof parsed === "number" ? parsed || null : parsed?.id ?? null;
+    } catch {
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : null;
+    }
+  };
+
+  async function refreshUnread() {
+    const orgId = getActiveOrgId();
+    if (!orgId || !user) return;
+    try {
+      const res = await fetch(
+        `/nest-api/orgs/${orgId}/notifications/user/${user.username}/unread-count`
+      );
+      const { count } = await res.json();
+      setUnreadCount(count || 0);
+    } catch (e) {
+      console.error("unread-count failed", e);
+    }
+  }
+
+  // poll occasionally (optional) and on mount/user change
+  useEffect(() => {
+    if (!user) return;
+    refreshUnread();
+    const id = setInterval(refreshUnread, 30000);
+    return () => clearInterval(id);
+  }, [user]);
+
+  useEffect(() => {
+    setCustomCategories(hydrateForUI(getSavedCustomCats(), Tag));
+  }, []);
+
   useEffect(() => {
     window.scrollTo(0, 0);
 
     // Get user from localStorage
-    const userData = localStorage.getItem("user");
+    const userData = localStorage.getItem("profileUser");
     if (userData) {
       setUser(JSON.parse(userData));
     }
@@ -88,10 +242,26 @@ export default function CreatePage() {
     if (selectedCardData) {
       const card = JSON.parse(selectedCardData);
       setSelectedCard(card);
-      setIsLockSelected(card.lock || false);
+      setIsLockSelected(card.layer.isLocked || false);
       setIsPrivacySelected(card.privacy || false);
       if (card.category) {
-        setSelectedCategory(card.category);
+        const match = DEFAULT_CATEGORIES.find(
+          (c) => c.id === String(card.category)
+        );
+        if (match) {
+          setSelectedCategory(match);
+        } else {
+          // fallback: treat it as a custom category
+          setSelectedCategory({
+            id: String(card.category),
+            name: String(card.category),
+            icon: Tag,
+            color: "text-indigo-700",
+            bgColor: "bg-indigo-100",
+            description: "Custom category",
+            isCustom: true,
+          });
+        }
       }
     }
   }, []);
@@ -145,19 +315,22 @@ export default function CreatePage() {
 
   const createHomefeedData = async (parentId: number) => {
     const token = localStorage.getItem("token");
+    const orgId = getActiveOrgId();
 
     return axios.post(
-      `https://d3kv9nj5wp3sq6.cloudfront.net/homefeed/${user.username}`,
+      `http://localhost:3001/orgs/${orgId}/homefeed/user/${user.username}`,
       {
         title: title || linkData.title,
         description: description || linkData.description,
         image: imageUrl || linkData.image,
         text: modalText,
-        parent: parentId,
+        layerKey: parentId,
         username: user.username,
         picture: user.image,
         weblink: webLink,
-        lock: selectedCard?.lock || isLockSelected,
+        visibility: isLockSelected ? "layer" : "org",
+        lock: !!isLockSelected, // ask backend to lock the layer
+        allowedMemberIds,
         privacy: selectedCard?.privacy || isPrivacySelected,
         category: selectedCategory?.id || selectedCategory?.name || null,
       },
@@ -172,19 +345,22 @@ export default function CreatePage() {
 
   const createProfilefeedData = async (parentId: number) => {
     const token = localStorage.getItem("token");
+    const orgId = getActiveOrgId();
 
     return axios.post(
-      `https://d3kv9nj5wp3sq6.cloudfront.net/profilefeed/${user.username}/created`,
+      `http://localhost:3001/orgs/${orgId}/profilefeed/${user.username}/created`,
       {
         title: title || linkData.title,
         description: description || linkData.description,
         image: imageUrl || linkData.image,
         text: modalText,
-        parent: parentId,
+        layerKey: parentId,
         username: user.username,
         picture: user.image,
         weblink: webLink,
         lock: selectedCard?.lock || isLockSelected,
+        visibility: isLockSelected ? "layer" : "org",
+        allowedMemberIds,
         privacy: selectedCard?.privacy || isPrivacySelected,
         category: selectedCategory?.id || selectedCategory?.name || null,
       },
@@ -201,7 +377,8 @@ export default function CreatePage() {
     setIsCreating(true);
     try {
       // Use existing parent if adding to collection, otherwise generate unique one
-      const parentId = selectedCard?.parent || (await generateUniqueParent());
+      const parentId =
+        selectedCard?.layer.key || (await generateUniqueParent());
 
       await Promise.all([
         createHomefeedData(parentId),
@@ -279,19 +456,21 @@ export default function CreatePage() {
   };
 
   const handleCreateCustomCategory = () => {
-    if (customCategoryName.trim()) {
-      const customCategory = {
-        id: customCategoryName.toLowerCase().replace(/\s+/g, "-"),
-        name: customCategoryName.trim(),
-        icon: "📝",
-        color: "bg-indigo-500",
-        isCustom: true,
-      };
-      setSelectedCategory(customCategory);
-      setIsCategoryModalOpen(false);
-      setIsCreatingCustomCategory(false);
-      setCustomCategoryName("");
-    }
+    const raw = customCategoryName.trim();
+    if (!raw) return;
+
+    const id = slugify(raw);
+    upsertSavedCustomCat(id, raw); // persist to cookie (and localStorage fallback)
+
+    const hydrated = hydrateForUI([{ id, name: raw }], Tag)[0];
+    setCustomCategories((prev) =>
+      prev.some((c) => c.id === id) ? prev : [...prev, hydrated]
+    );
+
+    setSelectedCategory(hydrated);
+    setIsCategoryModalOpen(false);
+    setIsCreatingCustomCategory(false);
+    setCustomCategoryName("");
   };
 
   const hasContent =
@@ -368,7 +547,9 @@ export default function CreatePage() {
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200 relative"
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+                )}
               </button>
 
               <button
@@ -473,6 +654,9 @@ export default function CreatePage() {
               >
                 <Bell className="w-5 h-5 text-gray-600" />
                 <span className="text-gray-900">Notifications</span>
+                {unreadCount > 0 && (
+                  <span className="ml-auto w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
               </button>
               <button
                 onClick={() => {
@@ -537,7 +721,10 @@ export default function CreatePage() {
               <div className="flex items-center justify-center space-x-3">
                 {selectedCategory ? (
                   <>
-                    <span className="text-2xl">{selectedCategory.icon}</span>
+                    {(() => {
+                      const Icon = selectedCategory.icon;
+                      return <Icon className="w-5 h-5 text-white" />;
+                    })()}
                     <span className="text-white font-medium">
                       {selectedCategory.name}
                     </span>
@@ -587,20 +774,15 @@ export default function CreatePage() {
               />
             </label>
             <button
-              onClick={() => setIsLockSelected(!isLockSelected)}
-              className={`mx-2.5 cursor-pointer h-6 w-6 transition-opacity duration-300 ${
+              onClick={() => {
+                // if the card is in an existing locked layer, you could prefill initialSelected here
+                setLockModalOpen(true);
+              }}
+              className={`mx-2.5 cursor-pointer h-6 w-6 ${
                 isLockSelected ? "opacity-100" : "opacity-50"
               }`}
             >
               <Lock />
-            </button>
-            <button
-              onClick={() => setIsPrivacySelected(!isPrivacySelected)}
-              className={`mx-2.5 cursor-pointer h-6 w-6 transition-opacity duration-300 ${
-                isPrivacySelected ? "opacity-100" : "opacity-50"
-              }`}
-            >
-              {isPrivacySelected ? <EyeOff /> : <Eye />}
             </button>
           </div>
         </div>
@@ -664,7 +846,11 @@ export default function CreatePage() {
               <div className="flex items-center justify-center space-x-3">
                 {selectedCategory ? (
                   <>
-                    <span className="text-xl">{selectedCategory.icon}</span>
+                    {(() => {
+                      const Icon = selectedCategory.icon;
+                      return <Icon className="w-5 h-5 text-white" />;
+                    })()}
+
                     <span className="text-white font-medium">
                       {selectedCategory.name}
                     </span>
@@ -721,7 +907,7 @@ export default function CreatePage() {
               </label>
 
               <button
-                onClick={() => setIsLockSelected(!isLockSelected)}
+                onClick={() => setLockModalOpen(true)}
                 className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${
                   isLockSelected
                     ? "bg-purple-600 text-white"
@@ -730,22 +916,6 @@ export default function CreatePage() {
               >
                 <Lock className="h-5 w-5 mb-1" />
                 <span className="text-xs">Lock</span>
-              </button>
-
-              <button
-                onClick={() => setIsPrivacySelected(!isPrivacySelected)}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${
-                  isPrivacySelected
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                }`}
-              >
-                {isPrivacySelected ? (
-                  <EyeOff className="h-5 w-5 mb-1" />
-                ) : (
-                  <Eye className="h-5 w-5 mb-1" />
-                )}
-                <span className="text-xs">Privacy</span>
               </button>
             </div>
           </div>
@@ -871,6 +1041,38 @@ export default function CreatePage() {
             {/* Modal Body */}
             <div className="flex-1 p-4 md:p-6 overflow-y-auto">
               <div className="space-y-4">
+                {customCategories.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                      Your Custom Categories
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {customCategories.map((category) => (
+                        <button
+                          key={category.id}
+                          onClick={() => handleCategorySelect(category)}
+                          className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all duration-200 ${
+                            selectedCategory?.id === category.id
+                              ? "border-purple-500 bg-purple-50"
+                              : "border-gray-200 hover:border-purple-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {(() => {
+                            const Icon = category.icon;
+                            return <Icon className="w-4 h-4 text-gray-700" />;
+                          })()}
+                          <span className="flex-1 text-left font-medium text-gray-900">
+                            {category.name}
+                          </span>
+                          {selectedCategory?.id === category.id && (
+                            <Check className="w-4 h-4 text-purple-600" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Default Categories */}
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-3">
@@ -887,7 +1089,11 @@ export default function CreatePage() {
                             : "border-gray-200 hover:border-purple-300 hover:bg-gray-50"
                         }`}
                       >
-                        <span className="text-xl">{category.icon}</span>
+                        {(() => {
+                          const Icon = category.icon;
+                          return <Icon className="w-4 h-4 text-gray-700" />;
+                        })()}
+
                         <span className="flex-1 text-left font-medium text-gray-900">
                           {category.name}
                         </span>
@@ -976,7 +1182,22 @@ export default function CreatePage() {
       <NotificationsPopup
         isOpen={isNotificationsPopupOpen}
         onClose={() => setIsNotificationsPopupOpen(false)}
+        onAllRead={() => setUnreadCount(0)}
       />
+
+      {lockModalOpen && orgId && (
+        <LayerLockModal
+          orgId={orgId}
+          currentUserId={user.id}
+          initialSelected={allowedMemberIds}
+          onClose={() => setLockModalOpen(false)}
+          onSave={(ids) => {
+            setAllowedMemberIds(ids);
+            setIsLockSelected(true); // mark locked
+            setLockModalOpen(false);
+          }}
+        />
+      )}
     </>
   );
 }

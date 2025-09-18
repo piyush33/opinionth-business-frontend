@@ -1,15 +1,20 @@
+// next.config.ts
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",     // matches any hostname
-        port: "",
-        pathname: "/**",     // matches any path
-      },
+      { protocol: "https", hostname: "d3kv9nj5wp3sq6.cloudfront.net", pathname: "/**" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com", pathname: "/**" },
+      { protocol: "https", hostname: "**.amazonaws.com", pathname: "/**" },
     ],
+    formats: ["image/avif", "image/webp"],
+  },
+
+  async rewrites() {
+    return [
+      { source: "/nest-api/:path*", destination: "http://localhost:3001/:path*" },
+    ];
   },
 };
 

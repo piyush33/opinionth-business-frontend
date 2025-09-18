@@ -1,45 +1,38 @@
-"use client"
+"use client";
+import { useEffect, useState } from "react";
 
-import type React from "react"
+export default function MasonryGrid({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [columns, setColumns] = useState(4);
 
-import { useEffect, useState } from "react"
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w < 640) setColumns(2);
+      else if (w < 768) setColumns(2);
+      else if (w < 1024) setColumns(3);
+      else setColumns(4);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
-interface MasonryGridProps {
-    children: React.ReactNode
-}
+  const arr = Array.isArray(children) ? children : [children];
+  const cols = Array.from({ length: columns }, () => [] as React.ReactNode[]);
+  arr.forEach((child, i) => cols[i % columns].push(child));
 
-export default function MasonryGrid({ children }: MasonryGridProps) {
-    const [columns, setColumns] = useState(4)
-
-    useEffect(() => {
-        const updateColumns = () => {
-            const width = window.innerWidth
-            if (width < 640) setColumns(2)
-            else if (width < 768) setColumns(2)
-            else if (width < 1024) setColumns(3)
-            else setColumns(4)
-        }
-
-        updateColumns()
-        window.addEventListener("resize", updateColumns)
-        return () => window.removeEventListener("resize", updateColumns)
-    }, [])
-
-    const childrenArray = Array.isArray(children) ? children : [children]
-    const columnArrays = Array.from({ length: columns }, () => [] as React.ReactNode[])
-
-    childrenArray.forEach((child, index) => {
-        const columnIndex = index % columns
-        columnArrays[columnIndex].push(child)
-    })
-
-    return (
-        <div className="flex gap-2 items-start">
-            {columnArrays.map((column, columnIndex) => (
-                <div key={columnIndex} className="flex-1 space-y-2 min-w-0">
-                    {column}
-                </div>
-            ))}
+  return (
+    // NOTE: no gap here; we use -mx-2 / px-2 to create gutters without overflow
+    <div className="-mx-2 flex w-full max-w-full box-border overflow-x-clip items-start">
+      {cols.map((col, i) => (
+        <div key={i} className="px-2 flex-1 min-w-0">
+          <div className="space-y-2">{col}</div>
         </div>
-    )
+      ))}
+    </div>
+  );
 }
