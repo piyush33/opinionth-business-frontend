@@ -189,7 +189,7 @@ export default function LoginPageClient({
       {/* Brand */}
       <div className="text-center mb-8 lg:mb-16">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-purple-600 mb-4">
-          Opinio^nth
+          Collabrr
         </h1>
         <p className="text-lg md:text-xl lg:text-2xl text-gray-900 max-w-2xl mx-auto leading-relaxed">
           helps you brainstorm

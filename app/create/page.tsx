@@ -506,7 +506,7 @@ export default function CreatePage() {
                   <span className="text-white font-bold text-sm">O</span>
                 </div>
                 <span className="font-bold text-xl text-gray-900">
-                  Opinio^nth
+                  Collabrr
                 </span>
               </Link>
             </div>
@@ -590,7 +590,7 @@ export default function CreatePage() {
 
           <div className="flex items-center space-x-2">
             <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-blue-600 rounded-md flex items-center justify-center">
-              <span className="text-white font-bold text-xs">O</span>
+              <span className="text-white font-bold text-xs">C</span>
             </div>
             <span className="font-bold text-lg text-gray-900">Create</span>
           </div>

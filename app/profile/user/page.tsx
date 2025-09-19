@@ -453,12 +453,12 @@ export default function ProfileUserPage() {
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
-              <Link href="/home" className="flex items-center space-x-2">
+              <Link href="/explore" className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">O</span>
                 </div>
                 <span className="font-bold text-xl text-gray-900">
-                  Opinio^nth
+                  Collabrr
                 </span>
               </Link>
             </div>
@@ -544,9 +544,9 @@ export default function ProfileUserPage() {
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
-              <Link href="/home" className="flex items-center space-x-2">
+              <Link href="/explore" className="flex items-center space-x-2">
                 <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-blue-600 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">O</span>
+                  <span className="text-white font-bold text-xs">C</span>
                 </div>
                 <span className="font-bold text-lg text-gray-900">
                   {profileUser?.name || "Profile"}

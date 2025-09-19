@@ -186,12 +186,12 @@ export default function HomePage() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center space-x-4">
-              <Link href="/home" className="flex items-center space-x-2">
+              <Link href="/explore" className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">O</span>
+                  <span className="text-white font-bold text-sm">C</span>
                 </div>
                 <span className="font-bold text-xl text-gray-900">
-                  Opinio^nth
+                  Collabrr
                 </span>
               </Link>
             </div>
@@ -270,13 +270,11 @@ export default function HomePage() {
         <div className="px-4 py-3 space-y-3">
           {/* Top Row - Logo and Menu */}
           <div className="flex items-center justify-between">
-            <Link href="/home" className="flex items-center space-x-2">
+            <Link href="/explore" className="flex items-center space-x-2">
               <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-blue-600 rounded-md flex items-center justify-center">
-                <span className="text-white font-bold text-xs">O</span>
+                <span className="text-white font-bold text-xs">C</span>
               </div>
-              <span className="font-bold text-lg text-gray-900">
-                Opinio^nth
-              </span>
+              <span className="font-bold text-lg text-gray-900">Collabrr</span>
             </Link>
 
             <button
