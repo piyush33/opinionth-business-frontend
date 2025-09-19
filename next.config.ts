@@ -4,8 +4,16 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "d3kv9nj5wp3sq6.cloudfront.net", pathname: "/**" },
-      { protocol: "https", hostname: "lh3.googleusercontent.com", pathname: "/**" },
+      {
+        protocol: "https",
+        hostname: "d3kv9nj5wp3sq6.cloudfront.net",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
       { protocol: "https", hostname: "**.amazonaws.com", pathname: "/**" },
     ],
     formats: ["image/avif", "image/webp"],
@@ -13,7 +21,10 @@ const nextConfig: NextConfig = {
 
   async rewrites() {
     return [
-      { source: "/nest-api/:path*", destination: "http://localhost:3001/:path*" },
+      {
+        source: "/nest-api/:path*",
+        destination: "https://dn2h1x2q2afc3.cloudfront.net/:path*",
+      },
     ];
   },
 };

@@ -2,10 +2,10 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "http://localhost:3001",
+  baseURL: "https://dn2h1x2q2afc3.cloudfront.net",
 });
 
-const BASE = "http://localhost:3001";
+const BASE = "https://dn2h1x2q2afc3.cloudfront.net";
 
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {

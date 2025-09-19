@@ -77,7 +77,7 @@ interface InteractionState {
 }
 
 // Constants
-const API_BASE_URL = "http://localhost:3001";
+const API_BASE_URL = "https://dn2h1x2q2afc3.cloudfront.net";
 
 type ActiveOrg = { id: number; name: string; slug: string } | null;
 

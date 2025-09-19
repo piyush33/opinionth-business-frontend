@@ -318,7 +318,7 @@ export default function CreatePage() {
     const orgId = getActiveOrgId();
 
     return axios.post(
-      `http://localhost:3001/orgs/${orgId}/homefeed/user/${user.username}`,
+      `https://dn2h1x2q2afc3.cloudfront.net/orgs/${orgId}/homefeed/user/${user.username}`,
       {
         title: title || linkData.title,
         description: description || linkData.description,
@@ -348,7 +348,7 @@ export default function CreatePage() {
     const orgId = getActiveOrgId();
 
     return axios.post(
-      `http://localhost:3001/orgs/${orgId}/profilefeed/${user.username}/created`,
+      `https://dn2h1x2q2afc3.cloudfront.net/orgs/${orgId}/profilefeed/${user.username}/created`,
       {
         title: title || linkData.title,
         description: description || linkData.description,
