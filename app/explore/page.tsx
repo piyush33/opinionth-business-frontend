@@ -616,7 +616,7 @@ export default function ExplorePage() {
             <div className="flex items-center space-x-4">
               <Link href="/explore" className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">O</span>
+                  <span className="text-white font-bold text-sm">C</span>
                 </div>
                 <span className="font-bold text-xl text-gray-900">
                   Collabrr
