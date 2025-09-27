@@ -150,9 +150,19 @@ export default function EventPage() {
     if (!token || !orgId || !user) return;
 
     if (shouldLike) {
+      const profileFeedResponse = await axios.get(
+        `nest-api/orgs/${orgId}/profilefeed`
+      );
+
+      const likedItem = profileFeedResponse.data.find(
+        (likedPost: any) =>
+          likedPost.title === item.title &&
+          likedPost.description === item.description &&
+          likedPost.layerKey === item.layer.key
+      );
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked`,
-        { ...item },
+        { feedItemId: likedItem.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await axios.post(
@@ -193,9 +203,18 @@ export default function EventPage() {
     if (!token || !orgId || !user) return;
 
     if (shouldRepost) {
+      const profileFeedResponse = await axios.get(
+        `nest-api/orgs/${orgId}/profilefeed`
+      );
+      const repostedItem = profileFeedResponse.data.find(
+        (repostedPost: any) =>
+          repostedPost.title === item.title &&
+          repostedPost.description === item.description &&
+          repostedPost.layerKey === item.layer.key
+      );
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted`,
-        { ...item },
+        { feedItemId: repostedItem.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await axios.post(
@@ -235,9 +254,19 @@ export default function EventPage() {
     if (!token || !orgId || !user) return;
 
     if (shouldSave) {
+      const profileFeedResponse = await axios.get(
+        `nest-api/orgs/${orgId}/profilefeed`
+      );
+      const savedItem = profileFeedResponse.data.find(
+        (savedPost: any) =>
+          savedPost.title === item.title &&
+          savedPost.description === item.description &&
+          savedPost.layerKey === item.layer.key
+      );
+
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved`,
-        { ...item },
+        { feedItemId: savedItem.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await axios.post(
