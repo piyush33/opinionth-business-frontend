@@ -343,12 +343,15 @@ export default function CreatePage() {
     );
   };
 
-  const createProfilefeedData = async (parentId: number) => {
+  const createProfilefeedData = async (
+    parentId: number,
+    homefeedId?: number
+  ) => {
     const token = localStorage.getItem("token");
     const orgId = getActiveOrgId();
 
     return axios.post(
-      `https://dn2h1x2q2afc3.cloudfront.net/orgs/${orgId}/profilefeed/${user.username}/created`,
+      `/nest-api/orgs/${orgId}/profilefeed/${user.username}/created`,
       {
         title: title || linkData.title,
         description: description || linkData.description,
@@ -363,27 +366,24 @@ export default function CreatePage() {
         allowedMemberIds,
         privacy: selectedCard?.privacy || isPrivacySelected,
         category: selectedCategory?.id || selectedCategory?.name || null,
+        homefeedItemId: homefeedId ?? undefined, // <-- NEW
       },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
   };
 
   const handleCreate = async () => {
     setIsCreating(true);
     try {
-      // Use existing parent if adding to collection, otherwise generate unique one
       const parentId =
         selectedCard?.layer.key || (await generateUniqueParent());
 
-      await Promise.all([
-        createHomefeedData(parentId),
-        createProfilefeedData(parentId),
-      ]);
+      // 1) create homefeed first — capture its id
+      const homeRes = await createHomefeedData(parentId);
+      const homefeedId = homeRes.data?.id; // ensure backend returns the id
+
+      // 2) create linked profilefeed with homefeedItemId
+      await createProfilefeedData(parentId, homefeedId);
 
       localStorage.removeItem("selectedCard");
       router.back();

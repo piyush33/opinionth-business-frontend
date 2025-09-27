@@ -49,6 +49,7 @@ export interface CardItem {
   weblink?: string;
   lock?: boolean;
   privacy?: boolean;
+  profileItemId?: number;
 }
 
 export interface InteractionState {
@@ -150,19 +151,9 @@ export default function EventPage() {
     if (!token || !orgId || !user) return;
 
     if (shouldLike) {
-      const profileFeedResponse = await axios.get(
-        `nest-api/orgs/${orgId}/profilefeed`
-      );
-
-      const likedItem = profileFeedResponse.data.find(
-        (likedPost: any) =>
-          likedPost.title === item.title &&
-          likedPost.description === item.description &&
-          likedPost.layerKey === item.layer.key
-      );
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked`,
-        { feedItemId: likedItem.id },
+        { feedItemId: item.profileItemId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await axios.post(
@@ -175,25 +166,11 @@ export default function EventPage() {
         `/nest-api/likes/homefeed/${user.username}/${item.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // optional cleanup in profilefeed liked (same as your current code)
-      try {
-        const profileLikedResponse = await axios.get(
-          `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const likedItem = profileLikedResponse.data.find(
-          (likedPost: any) =>
-            likedPost.title === item.title &&
-            likedPost.description === item.description &&
-            likedPost.layerKey === item.layer.key
-        );
-        if (likedItem) {
-          await axios.delete(
-            `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked/${likedItem.id}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-        }
-      } catch {}
+
+      await axios.delete(
+        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked/${item.profileItemId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
     }
   }
 
@@ -203,18 +180,9 @@ export default function EventPage() {
     if (!token || !orgId || !user) return;
 
     if (shouldRepost) {
-      const profileFeedResponse = await axios.get(
-        `nest-api/orgs/${orgId}/profilefeed`
-      );
-      const repostedItem = profileFeedResponse.data.find(
-        (repostedPost: any) =>
-          repostedPost.title === item.title &&
-          repostedPost.description === item.description &&
-          repostedPost.layerKey === item.layer.key
-      );
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted`,
-        { feedItemId: repostedItem.id },
+        { feedItemId: item.profileItemId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await axios.post(
@@ -227,24 +195,11 @@ export default function EventPage() {
         `/nest-api/reposts/homefeed/${user.username}/${item.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      try {
-        const profileRepostedResponse = await axios.get(
-          `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const repostedItem = profileRepostedResponse.data.find(
-          (repostedPost: any) =>
-            repostedPost.title === item.title &&
-            repostedPost.description === item.description &&
-            repostedPost.layerKey === item.layer.key
-        );
-        if (repostedItem) {
-          await axios.delete(
-            `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted/${repostedItem.id}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-        }
-      } catch {}
+
+      await axios.delete(
+        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted/${item.profileItemId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
     }
   }
 
@@ -254,19 +209,9 @@ export default function EventPage() {
     if (!token || !orgId || !user) return;
 
     if (shouldSave) {
-      const profileFeedResponse = await axios.get(
-        `nest-api/orgs/${orgId}/profilefeed`
-      );
-      const savedItem = profileFeedResponse.data.find(
-        (savedPost: any) =>
-          savedPost.title === item.title &&
-          savedPost.description === item.description &&
-          savedPost.layerKey === item.layer.key
-      );
-
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved`,
-        { feedItemId: savedItem.id },
+        { feedItemId: item.profileItemId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await axios.post(
@@ -279,24 +224,11 @@ export default function EventPage() {
         `/nest-api/saves/homefeed/${user.username}/${item.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      try {
-        const profileSavedResponse = await axios.get(
-          `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const savedItem = profileSavedResponse.data.find(
-          (savedPost: any) =>
-            savedPost.title === item.title &&
-            savedPost.description === item.description &&
-            savedPost.layerKey === item.layer.key
-        );
-        if (savedItem) {
-          await axios.delete(
-            `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved/${savedItem.id}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-        }
-      } catch {}
+
+      await axios.delete(
+        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved/${item.profileItemId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
     }
   }
 
