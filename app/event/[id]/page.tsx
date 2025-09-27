@@ -49,7 +49,7 @@ export interface CardItem {
   weblink?: string;
   lock?: boolean;
   privacy?: boolean;
-  profileItemId?: number;
+  profileFeedItemId?: number;
 }
 
 export interface InteractionState {
@@ -153,7 +153,7 @@ export default function EventPage() {
     if (shouldLike) {
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked`,
-        { feedItemId: item.profileItemId },
+        { feedItemId: item.profileFeedItemId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await axios.post(
@@ -168,7 +168,7 @@ export default function EventPage() {
       );
 
       await axios.delete(
-        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked/${item.profileItemId}`,
+        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked/${item.profileFeedItemId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
     }
@@ -182,7 +182,7 @@ export default function EventPage() {
     if (shouldRepost) {
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted`,
-        { feedItemId: item.profileItemId },
+        { feedItemId: item.profileFeedItemId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await axios.post(
@@ -197,7 +197,7 @@ export default function EventPage() {
       );
 
       await axios.delete(
-        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted/${item.profileItemId}`,
+        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted/${item.profileFeedItemId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
     }
@@ -211,7 +211,7 @@ export default function EventPage() {
     if (shouldSave) {
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved`,
-        { feedItemId: item.profileItemId },
+        { feedItemId: item.profileFeedItemId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await axios.post(
@@ -226,7 +226,7 @@ export default function EventPage() {
       );
 
       await axios.delete(
-        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved/${item.profileItemId}`,
+        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved/${item.profileFeedItemId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
     }
