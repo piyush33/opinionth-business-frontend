@@ -1196,21 +1196,21 @@ export default function CardExpansionPage() {
                     )}
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">
+                    <p className="font-semibold text-gray-700 text-sm">
                       {card.username}
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <h1 className="text-white font-bold text-lg leading-tight">
+                  <h1 className="text-gray-700 font-bold text-lg leading-tight">
                     {card.title}
                   </h1>
-                  <p className="text-white/90 text-sm leading-relaxed">
+                  <p className="text-gray-700 text-sm leading-relaxed">
                     {card.description}
                   </p>
                   {card.text && (
-                    <p className="text-white/80 text-sm leading-relaxed">
+                    <p className="text-gray-700 text-sm leading-relaxed">
                       {card.text}
                     </p>
                   )}
