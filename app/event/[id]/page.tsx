@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -83,6 +83,193 @@ export default function EventPage() {
   const [orgId, setOrgId] = useState<number | null>(null);
   const [layerId, setLayerId] = useState<number>(0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const debounceTimersRef = useRef<
+    Record<string, ReturnType<typeof setTimeout>>
+  >({});
+  const lastCommittedRef = useRef<Record<string, boolean>>({});
+
+  // Build a stable action key per card/action
+  const keyOf = (action: "like" | "repost" | "save", cardId: number) =>
+    `${action}:${cardId}`;
+
+  // Schedule a trailing commit after 3s; coalesce updates within the window
+  function scheduleCommit(
+    action: "like" | "repost" | "save",
+    card: CardItem,
+    desired: boolean
+  ) {
+    const k = keyOf(action, card.id);
+
+    // Clear any existing timer & set the latest desired state into ref
+    if (debounceTimersRef.current[k])
+      clearTimeout(debounceTimersRef.current[k]);
+    // Stash latest desired state so the timer closure can read it
+    (scheduleCommit as any)[k] = desired;
+
+    debounceTimersRef.current[k] = setTimeout(async () => {
+      const finalDesired: boolean = (scheduleCommit as any)[k];
+
+      // Avoid redundant calls if server already matches
+      const last = lastCommittedRef.current[k];
+      if (last === finalDesired) return;
+
+      try {
+        if (action === "like") {
+          await commitLike(card, finalDesired);
+        } else if (action === "repost") {
+          await commitRepost(card, finalDesired);
+        } else {
+          await commitSave(card, finalDesired);
+        }
+        lastCommittedRef.current[k] = finalDesired; // mark as synced
+      } catch (e) {
+        console.error(`Commit failed for ${k}`, e);
+        // Roll back optimistic UI to lastCommitted
+        if (action === "like") {
+          setLikedCards((prev) =>
+            prev.map((c) => (c.id === card.id ? { ...c, hasLiked: last } : c))
+          );
+        } else if (action === "repost") {
+          setRepostedCards((prev) =>
+            prev.map((c) =>
+              c.id === card.id ? { ...c, hasReposted: last } : c
+            )
+          );
+        } else {
+          setSavedCards((prev) =>
+            prev.map((c) => (c.id === card.id ? { ...c, hasSaved: last } : c))
+          );
+        }
+      }
+    }, 3000);
+  }
+
+  async function commitLike(item: CardItem, shouldLike: boolean) {
+    const token = localStorage.getItem("token");
+    const orgId = getActiveOrgId();
+    if (!token || !orgId || !user) return;
+
+    if (shouldLike) {
+      await axios.post(
+        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked`,
+        { ...item },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await axios.post(
+        `/nest-api/likes/homefeed/${user.username}/${item.id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } else {
+      await axios.delete(
+        `/nest-api/likes/homefeed/${user.username}/${item.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // optional cleanup in profilefeed liked (same as your current code)
+      try {
+        const profileLikedResponse = await axios.get(
+          `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const likedItem = profileLikedResponse.data.find(
+          (likedPost: any) =>
+            likedPost.title === item.title &&
+            likedPost.description === item.description &&
+            likedPost.layerKey === item.layer.key
+        );
+        if (likedItem) {
+          await axios.delete(
+            `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked/${likedItem.id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+      } catch {}
+    }
+  }
+
+  async function commitRepost(item: CardItem, shouldRepost: boolean) {
+    const token = localStorage.getItem("token");
+    const orgId = getActiveOrgId();
+    if (!token || !orgId || !user) return;
+
+    if (shouldRepost) {
+      await axios.post(
+        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted`,
+        { ...item },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await axios.post(
+        `/nest-api/reposts/homefeed/${user.username}/${item.id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } else {
+      await axios.delete(
+        `/nest-api/reposts/homefeed/${user.username}/${item.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      try {
+        const profileRepostedResponse = await axios.get(
+          `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const repostedItem = profileRepostedResponse.data.find(
+          (repostedPost: any) =>
+            repostedPost.title === item.title &&
+            repostedPost.description === item.description &&
+            repostedPost.layerKey === item.layer.key
+        );
+        if (repostedItem) {
+          await axios.delete(
+            `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted/${repostedItem.id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+      } catch {}
+    }
+  }
+
+  async function commitSave(item: CardItem, shouldSave: boolean) {
+    const token = localStorage.getItem("token");
+    const orgId = getActiveOrgId();
+    if (!token || !orgId || !user) return;
+
+    if (shouldSave) {
+      await axios.post(
+        `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved`,
+        { ...item },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await axios.post(
+        `/nest-api/saves/homefeed/${user.username}/${item.id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } else {
+      await axios.delete(
+        `/nest-api/saves/homefeed/${user.username}/${item.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      try {
+        const profileSavedResponse = await axios.get(
+          `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const savedItem = profileSavedResponse.data.find(
+          (savedPost: any) =>
+            savedPost.title === item.title &&
+            savedPost.description === item.description &&
+            savedPost.layerKey === item.layer.key
+        );
+        if (savedItem) {
+          await axios.delete(
+            `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved/${savedItem.id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+      } catch {}
+    }
+  }
 
   type ActiveOrg = { id: number; name: string; slug: string } | null;
 
@@ -244,6 +431,14 @@ export default function EventPage() {
         setLikedCards(likedResults);
         setRepostedCards(repostedResults);
         setSavedCards(savedResults);
+
+        const m: Record<string, boolean> = {};
+        likedCards.forEach((c) => (m[keyOf("like", c.id)] = !!c.hasLiked));
+        repostedCards.forEach(
+          (c) => (m[keyOf("repost", c.id)] = !!c.hasReposted)
+        );
+        savedCards.forEach((c) => (m[keyOf("save", c.id)] = !!c.hasSaved));
+        lastCommittedRef.current = { ...lastCommittedRef.current, ...m };
       } catch (error) {
         console.error("Error fetching interaction states:", error);
       }
@@ -253,226 +448,56 @@ export default function EventPage() {
   }, [user, displayCards]);
 
   // Interaction handlers
-  const handleLike = async (e: React.MouseEvent, item: CardItem) => {
+  const handleLike = (e: React.MouseEvent, item: CardItem) => {
     e.stopPropagation();
     if (!user) return;
 
-    const isCurrentlyLiked = isLiked(item.id);
-    const token = localStorage.getItem("token");
-    const orgId = getActiveOrgId();
+    const current = isLiked(item.id);
+    const desired = !current;
 
-    // Optimistic update
+    // optimistic UI
     setLikedCards((prev) =>
-      prev.map((card) =>
-        card.id === item.id ? { ...card, hasLiked: !isCurrentlyLiked } : card
-      )
+      prev.some((c) => c.id === item.id)
+        ? prev.map((c) => (c.id === item.id ? { ...c, hasLiked: desired } : c))
+        : [...prev, { id: item.id, hasLiked: desired }]
     );
 
-    try {
-      if (!isCurrentlyLiked) {
-        // Like the item
-        await axios.post(
-          `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked`,
-          { ...item },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        await axios.post(
-          `/nest-api/likes/homefeed/${user.username}/${item.id}`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } else {
-        // Unlike the item - delete from both endpoints
-        await axios.delete(
-          `/nest-api/likes/homefeed/${user.username}/${item.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        // Delete from profilefeed liked as well
-        try {
-          const profileLikedResponse = await axios.get(
-            `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          const likedItem = profileLikedResponse.data.find(
-            (likedPost: any) =>
-              likedPost.title === item.title &&
-              likedPost.description === item.description &&
-              likedPost.layerKey === item.layer.key
-          );
-          if (likedItem) {
-            await axios.delete(
-              `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked/${likedItem.id}`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            );
-          }
-        } catch (error) {
-          console.error("Error deleting from profilefeed liked:", error);
-        }
-      }
-    } catch (error) {
-      console.error("Error handling like:", error);
-      // Rollback on error
-      setLikedCards((prev) =>
-        prev.map((card) =>
-          card.id === item.id ? { ...card, hasLiked: isCurrentlyLiked } : card
-        )
-      );
-    }
+    // debounce the server commit
+    scheduleCommit("like", item, desired);
   };
 
-  const handleRepost = async (e: React.MouseEvent, item: CardItem) => {
+  const handleRepost = (e: React.MouseEvent, item: CardItem) => {
     e.stopPropagation();
     if (!user) return;
 
-    const isCurrentlyReposted = isReposted(item.id);
-    const token = localStorage.getItem("token");
-    const orgId = getActiveOrgId();
+    const current = isReposted(item.id);
+    const desired = !current;
 
-    // Optimistic update
     setRepostedCards((prev) =>
-      prev.map((card) =>
-        card.id === item.id
-          ? { ...card, hasReposted: !isCurrentlyReposted }
-          : card
-      )
+      prev.some((c) => c.id === item.id)
+        ? prev.map((c) =>
+            c.id === item.id ? { ...c, hasReposted: desired } : c
+          )
+        : [...prev, { id: item.id, hasReposted: desired }]
     );
 
-    try {
-      if (!isCurrentlyReposted) {
-        await axios.post(
-          `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted`,
-          { ...item },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        await axios.post(
-          `/nest-api/reposts/homefeed/${user.username}/${item.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      } else {
-        await axios.delete(
-          `/nest-api/reposts/homefeed/${user.username}/${item.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        // Delete from profilefeed reposted as well
-        try {
-          const profileRepostedResponse = await axios.get(
-            `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          const repostedItem = profileRepostedResponse.data.find(
-            (repostedPost: any) =>
-              repostedPost.title === item.title &&
-              repostedPost.description === item.description &&
-              repostedPost.layerKey === item.layer.key
-          );
-          if (repostedItem) {
-            await axios.delete(
-              `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted/${repostedItem.id}`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            );
-          }
-        } catch (error) {
-          console.error("Error deleting from profilefeed reposted:", error);
-        }
-      }
-    } catch (error) {
-      console.error("Error handling repost:", error);
-      setRepostedCards((prev) =>
-        prev.map((card) =>
-          card.id === item.id
-            ? { ...card, hasReposted: isCurrentlyReposted }
-            : card
-        )
-      );
-    }
+    scheduleCommit("repost", item, desired);
   };
 
-  const handleSave = async (e: React.MouseEvent, item: CardItem) => {
+  const handleSave = (e: React.MouseEvent, item: CardItem) => {
     e.stopPropagation();
     if (!user) return;
 
-    const isCurrentlySaved = isSaved(item.id);
-    const token = localStorage.getItem("token");
-    const orgId = getActiveOrgId();
+    const current = isSaved(item.id);
+    const desired = !current;
 
-    // Optimistic update
     setSavedCards((prev) =>
-      prev.map((card) =>
-        card.id === item.id ? { ...card, hasSaved: !isCurrentlySaved } : card
-      )
+      prev.some((c) => c.id === item.id)
+        ? prev.map((c) => (c.id === item.id ? { ...c, hasSaved: desired } : c))
+        : [...prev, { id: item.id, hasSaved: desired }]
     );
 
-    try {
-      if (!isCurrentlySaved) {
-        await axios.post(
-          `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved`,
-          { ...item },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        await axios.post(
-          `/nest-api/saves/homefeed/${user.username}/${item.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      } else {
-        await axios.delete(
-          `/nest-api/saves/homefeed/${user.username}/${item.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        // Delete from profilefeed saved as well
-        try {
-          const profileSavedResponse = await axios.get(
-            `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          const savedItem = profileSavedResponse.data.find(
-            (savedPost: any) =>
-              savedPost.title === item.title &&
-              savedPost.description === item.description &&
-              savedPost.layerKey === item.layer.key
-          );
-          if (savedItem) {
-            await axios.delete(
-              `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved/${savedItem.id}`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            );
-          }
-        } catch (error) {
-          console.error("Error deleting from profilefeed saved:", error);
-        }
-      }
-    } catch (error) {
-      console.error("Error handling save:", error);
-      setSavedCards((prev) =>
-        prev.map((card) =>
-          card.id === item.id ? { ...card, hasSaved: isCurrentlySaved } : card
-        )
-      );
-    }
+    scheduleCommit("save", item, desired);
   };
 
   const handleCreate = () => {
