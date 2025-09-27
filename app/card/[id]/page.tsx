@@ -1049,20 +1049,23 @@ export default function CardExpansionPage() {
               ) : (
                 <>
                   {/* Text-only Layout */}
-                  <div className="w-1/2 p-8 bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col justify-center">
-                    {card.text && (
-                      <div className="space-y-4">
-                        <div className="text-sm text-gray-500 uppercase tracking-wide font-medium">
-                          Content
+                  <div className="w-1/2 flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+                    <div className="flex-1 overflow-y-auto p-8">
+                      {card.text && (
+                        <div className="space-y-4">
+                          <div className="text-sm text-gray-500 uppercase tracking-wide font-medium">
+                            Content
+                          </div>
+                          <div className="prose prose-gray max-w-none">
+                            <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">
+                              {card.text}
+                            </p>
+                          </div>
                         </div>
-                        <div className="prose prose-gray max-w-none">
-                          <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">
-                            {card.text}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
+
                   <div className="w-1/2 flex flex-col">
                     <div className="p-6 border-b border-gray-100 flex-shrink-0">
                       <div className="flex items-start justify-between mb-4">
