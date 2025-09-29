@@ -70,6 +70,8 @@ export default function Card({
     }
   };
 
+  const dehtml = (s?: string | null) => s?.replaceAll("&amp;", "&") ?? null;
+
   function extractReferences(text: string | undefined | null) {
     const regex = /@(\w+)/g;
     const matches = text?.match(regex) || [];
@@ -257,8 +259,9 @@ export default function Card({
           {image && (
             <div className="relative rounded-xl overflow-hidden mb-3 w-full aspect-[4/3]">
               <Image
-                src={image}
+                src={dehtml(image)!}
                 alt="Post image"
+                referrerPolicy="no-referrer"
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className="object-cover"
