@@ -2,28 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "d3kv9nj5wp3sq6.cloudfront.net",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "lh7-us.googleusercontent.com", // 👈 new entry
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "**.amazonaws.com",
-        pathname: "/**",
-      },
-    ],
+    unoptimized: true,
     formats: ["image/avif", "image/webp"],
   },
 
