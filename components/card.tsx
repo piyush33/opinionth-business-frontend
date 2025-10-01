@@ -251,7 +251,14 @@ export default function Card({
         {/* Card Body */}
         <div className="relative px-3 sm:px-4 pb-2">
           {text && (
-            <p className="text-gray-800 text-sm sm:text-sm leading-relaxed mb-3">
+            <p
+              className="text-gray-800 text-sm sm:text-sm leading-relaxed mb-3 overflow-hidden text-ellipsis break-words"
+              style={{
+                display: "-webkit-box",
+                WebkitLineClamp: 12,
+                WebkitBoxOrient: "vertical",
+              }}
+            >
               {parseAndRenderText(text, onUserTagClick, onCardTagClick)}
             </p>
           )}
