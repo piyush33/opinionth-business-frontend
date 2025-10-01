@@ -255,7 +255,7 @@ export default function Card({
               className="text-gray-800 text-sm sm:text-sm leading-relaxed mb-3 overflow-hidden text-ellipsis break-words"
               style={{
                 display: "-webkit-box",
-                WebkitLineClamp: 12,
+                WebkitLineClamp: 36,
                 WebkitBoxOrient: "vertical",
               }}
             >
