@@ -88,6 +88,14 @@ export default function EventPage() {
     Record<string, ReturnType<typeof setTimeout>>
   >({});
   const lastCommittedRef = useRef<Record<string, boolean>>({});
+  const hasAutoScrolledRef = useRef(false);
+
+  const scrollToCard = (id: number, behavior: ScrollBehavior = "smooth") => {
+    if (typeof window === "undefined") return;
+    const el = document.getElementById(`card-${id}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior, block: "center", inline: "nearest" });
+  };
 
   // Build a stable action key per card/action
   const keyOf = (action: "like" | "repost" | "save", cardId: number) =>
@@ -494,13 +502,28 @@ export default function EventPage() {
   };
 
   const handleCardTagClick = (cardId: number) => {
-    const cardElement = document.getElementById(`card-${cardId}`);
-    if (cardElement) {
-      cardElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      setSelectedCard(homeFeed.find((c) => c.id === cardId) || null);
-      console.log("selectedCard:", selectedCard);
-    }
+    scrollToCard(cardId, "smooth");
+    setSelectedCard(homeFeed.find((c) => c.id === cardId) || null);
   };
+
+  useEffect(() => {
+    if (!selectedCard || !displayCards.length || hasAutoScrolledRef.current)
+      return;
+
+    // try immediately after paint, then again after small delays
+    const run = () => scrollToCard(selectedCard.id, "smooth");
+    const r1 = requestAnimationFrame(run);
+    const t1 = setTimeout(run, 300);
+    const t2 = setTimeout(run, 1000);
+
+    hasAutoScrolledRef.current = true;
+
+    return () => {
+      cancelAnimationFrame(r1);
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [selectedCard, displayCards.length]);
 
   const handleShare = (e: React.MouseEvent, item: CardItem) => {
     e.stopPropagation();
@@ -1002,7 +1025,11 @@ export default function EventPage() {
           ) : (
             <MasonryGrid>
               {displayCards.map((item, index) => (
-                <div key={item.id} className="group relative">
+                <div
+                  id={`card-${item.id}`}
+                  className="group relative scroll-mt-28 md:scroll-mt-28"
+                  key={item.id}
+                >
                   {/* Card Wrapper with hover detection */}
                   <div className="relative transition-all duration-300">
                     <Card
