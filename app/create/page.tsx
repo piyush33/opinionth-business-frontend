@@ -8,8 +8,6 @@ import {
   Type,
   ImageIcon,
   Lock,
-  Eye,
-  EyeOff,
   Plus,
   Bell,
   MessageCircle,
@@ -33,7 +31,7 @@ import {
   Settings,
   Calendar,
   Database,
-  LucideIcon,
+  type LucideIcon,
 } from "lucide-react";
 import axios from "axios";
 import Card from "@/components/card";
@@ -56,6 +54,18 @@ type Category = {
   bgColor: string; // bg color class
   description: string;
   isCustom?: boolean;
+};
+
+type Phase = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+type RoleType = {
+  id: string;
+  name: string;
+  description: string;
 };
 
 const DEFAULT_CATEGORIES: Category[] = [
@@ -141,6 +151,122 @@ const DEFAULT_CATEGORIES: Category[] = [
   },
 ];
 
+const PHASES: Phase[] = [
+  {
+    id: "seed-initial-discuss",
+    name: "Seed / Initial Discuss",
+    description: "Initial exploration and discussion",
+  },
+  {
+    id: "discovery-brainstorm",
+    name: "Discovery / Brainstorm",
+    description: "Exploring possibilities and ideas",
+  },
+  {
+    id: "hypothesis-options",
+    name: "Hypothesis / Options",
+    description: "Forming hypotheses and considering options",
+  },
+  {
+    id: "specs-solutioning",
+    name: "Specs / Solutioning",
+    description: "Defining specifications and solutions",
+  },
+  {
+    id: "decision",
+    name: "Decision",
+    description: "Making key decisions",
+  },
+  {
+    id: "task-execution",
+    name: "Task / Execution",
+    description: "Executing tasks and implementation",
+  },
+  {
+    id: "documentation-narrative",
+    name: "Documentation / Narrative",
+    description: "Documenting outcomes and narratives",
+  },
+  {
+    id: "retro-learning",
+    name: "Retro / Learning",
+    description: "Reflecting and learning from outcomes",
+  },
+];
+
+const ROLE_TYPES: RoleType[] = [
+  {
+    id: "question",
+    name: "Question",
+    description: "Asking questions",
+  },
+  {
+    id: "claim",
+    name: "Claim",
+    description: "Making claims",
+  },
+  {
+    id: "counter-claim",
+    name: "Counter-claim",
+    description: "Presenting counter-arguments",
+  },
+  {
+    id: "evidence",
+    name: "Evidence",
+    description: "Providing evidence",
+  },
+  {
+    id: "risk",
+    name: "Risk",
+    description: "Identifying risks",
+  },
+  {
+    id: "mitigation",
+    name: "Mitigation",
+    description: "Proposing mitigations",
+  },
+  {
+    id: "assumption",
+    name: "Assumption",
+    description: "Stating assumptions",
+  },
+  {
+    id: "decision-rationale",
+    name: "Decision Rationale",
+    description: "Explaining decision reasoning",
+  },
+  {
+    id: "customer-voice",
+    name: "Customer Voice",
+    description: "Sharing customer feedback",
+  },
+  {
+    id: "design-artifact",
+    name: "Design Artifact",
+    description: "Presenting design work",
+  },
+  {
+    id: "experiment",
+    name: "Experiment",
+    description: "Proposing or sharing experiments",
+  },
+  {
+    id: "blocker",
+    name: "Blocker",
+    description: "Identifying blockers",
+  },
+  {
+    id: "dependency",
+    name: "Dependency",
+    description: "Noting dependencies",
+  },
+  {
+    id: "status-update",
+    name: "Status Update",
+    description: "Providing status updates",
+  },
+];
+
 export default function CreatePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -163,6 +289,12 @@ export default function CreatePage() {
   const [customCategoryName, setCustomCategoryName] = useState("");
   const [isCreatingCustomCategory, setIsCreatingCustomCategory] =
     useState(false);
+
+  const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
+  const [isPhaseModalOpen, setIsPhaseModalOpen] = useState(false);
+
+  const [selectedRoleTypes, setSelectedRoleTypes] = useState<RoleType[]>([]);
+  const [isRoleTypeModalOpen, setIsRoleTypeModalOpen] = useState(false);
 
   // Modal and popup states
   const [isTextModalOpen, setIsTextModalOpen] = useState(false);
@@ -263,6 +395,18 @@ export default function CreatePage() {
           });
         }
       }
+      // Pre-fill phase and roleTypes if coming from an existing card
+      if (card.phase) {
+        const phaseMatch = PHASES.find((p) => p.id === card.phase);
+        if (phaseMatch) {
+          setSelectedPhase(phaseMatch);
+        }
+      }
+      if (card.roleTypes && Array.isArray(card.roleTypes)) {
+        setSelectedRoleTypes(
+          ROLE_TYPES.filter((rt) => card.roleTypes.includes(rt.id))
+        );
+      }
     }
   }, []);
 
@@ -333,6 +477,8 @@ export default function CreatePage() {
         allowedMemberIds,
         privacy: selectedCard?.privacy || isPrivacySelected,
         category: selectedCategory?.id || selectedCategory?.name || null,
+        phase: selectedPhase?.id || null,
+        roleTypes: selectedRoleTypes.map((rt) => rt.id),
       },
       {
         headers: {
@@ -367,12 +513,19 @@ export default function CreatePage() {
         privacy: selectedCard?.privacy || isPrivacySelected,
         category: selectedCategory?.id || selectedCategory?.name || null,
         homefeedItemId: homefeedId ?? undefined, // <-- NEW
+        phase: selectedPhase?.id || null,
+        roleTypes: selectedRoleTypes.map((rt) => rt.id),
       },
       { headers: { Authorization: `Bearer ${token}` } }
     );
   };
 
   const handleCreate = async () => {
+    if (!selectedPhase) {
+      alert("Please select a phase before creating.");
+      return;
+    }
+
     setIsCreating(true);
     try {
       const parentId =
@@ -471,6 +624,17 @@ export default function CreatePage() {
     setIsCategoryModalOpen(false);
     setIsCreatingCustomCategory(false);
     setCustomCategoryName("");
+  };
+
+  const handleRoleTypeToggle = (roleType: RoleType) => {
+    setSelectedRoleTypes((prev) => {
+      const exists = prev.find((rt) => rt.id === roleType.id);
+      if (exists) {
+        return prev.filter((rt) => rt.id !== roleType.id);
+      } else {
+        return [...prev, roleType];
+      }
+    });
   };
 
   const hasContent =
@@ -706,7 +870,8 @@ export default function CreatePage() {
         </div>
 
         <div className="flex justify-center mb-5">
-          <div className="w-3/5">
+          <div className="w-3/5 space-y-3">
+            {/* Category Selection */}
             <button
               onClick={() => !selectedCard && setIsCategoryModalOpen(true)}
               disabled={!!selectedCard}
@@ -741,6 +906,64 @@ export default function CreatePage() {
                   </>
                 )}
               </div>
+            </button>
+
+            {/* Phase Selection (Required) */}
+            <button
+              onClick={() => setIsPhaseModalOpen(true)}
+              className={`w-full p-4 rounded-lg border-2 border-dashed transition-all duration-200 ${
+                selectedPhase
+                  ? "border-blue-500 bg-gray-700"
+                  : "border-red-500 bg-gray-700 hover:border-red-400 hover:bg-gray-600"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Calendar className="w-5 h-5 text-white" />
+                  <span className="text-white font-medium">
+                    {selectedPhase ? selectedPhase.name : "Select Phase"}
+                  </span>
+                </div>
+                <span className="text-xs text-red-400 font-semibold">
+                  REQUIRED
+                </span>
+              </div>
+            </button>
+
+            {/* Role Type Selection (Multi-select) */}
+            <button
+              onClick={() => setIsRoleTypeModalOpen(true)}
+              className={`w-full p-4 rounded-lg border-2 border-dashed transition-all duration-200 ${
+                selectedRoleTypes.length > 0
+                  ? "border-green-500 bg-gray-700"
+                  : "border-gray-500 bg-gray-700 hover:border-green-400 hover:bg-gray-600"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Tag className="w-5 h-5 text-white" />
+                  <span className="text-white font-medium">
+                    {selectedRoleTypes.length > 0
+                      ? `${selectedRoleTypes.length} Role Type${
+                          selectedRoleTypes.length > 1 ? "s" : ""
+                        } Selected`
+                      : "Select Role Types"}
+                  </span>
+                </div>
+                <span className="text-xs text-gray-400">OPTIONAL</span>
+              </div>
+              {selectedRoleTypes.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {selectedRoleTypes.map((rt) => (
+                    <span
+                      key={rt.id}
+                      className="px-3 py-1 bg-green-600 text-white text-xs rounded-full"
+                    >
+                      {rt.name}
+                    </span>
+                  ))}
+                </div>
+              )}
             </button>
           </div>
         </div>
@@ -830,44 +1053,113 @@ export default function CreatePage() {
             />
           </div>
 
-          <div className="bg-gray-700 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-gray-300 mb-3">Category</h3>
-            <button
-              onClick={() => !selectedCard && setIsCategoryModalOpen(true)}
-              disabled={!!selectedCard}
-              className={`w-full p-3 rounded-lg border-2 border-dashed transition-all duration-200 ${
-                selectedCard
-                  ? "border-gray-600 bg-gray-800 cursor-not-allowed opacity-60"
-                  : selectedCategory
-                  ? "border-purple-500 bg-gray-600"
-                  : "border-gray-500 bg-gray-600 hover:border-purple-400 hover:bg-gray-500"
-              }`}
-            >
-              <div className="flex items-center justify-center space-x-3">
-                {selectedCategory ? (
-                  <>
-                    {(() => {
-                      const Icon = selectedCategory.icon;
-                      return <Icon className="w-5 h-5 text-white" />;
-                    })()}
+          <div className="space-y-3">
+            {/* Category */}
+            <div className="bg-gray-700 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-gray-300 mb-3">
+                Category
+              </h3>
+              <button
+                onClick={() => !selectedCard && setIsCategoryModalOpen(true)}
+                disabled={!!selectedCard}
+                className={`w-full p-3 rounded-lg border-2 border-dashed transition-all duration-200 ${
+                  selectedCard
+                    ? "border-gray-600 bg-gray-800 cursor-not-allowed opacity-60"
+                    : selectedCategory
+                    ? "border-purple-500 bg-gray-600"
+                    : "border-gray-500 bg-gray-600 hover:border-purple-400 hover:bg-gray-500"
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-3">
+                  {selectedCategory ? (
+                    <>
+                      {(() => {
+                        const Icon = selectedCategory.icon;
+                        return <Icon className="w-5 h-5 text-white" />;
+                      })()}
 
-                    <span className="text-white font-medium">
-                      {selectedCategory.name}
-                    </span>
-                    {selectedCard && (
-                      <span className="text-xs text-gray-400">(Auto)</span>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <Tag className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-400 text-sm">
-                      Select category
-                    </span>
-                  </>
-                )}
+                      <span className="text-white font-medium">
+                        {selectedCategory.name}
+                      </span>
+                      {selectedCard && (
+                        <span className="text-xs text-gray-400">(Auto)</span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Tag className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-400 text-sm">
+                        Select category
+                      </span>
+                    </>
+                  )}
+                </div>
+              </button>
+            </div>
+
+            {/* Phase (Required) */}
+            <div className="bg-gray-700 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-300">Phase</h3>
+                <span className="text-xs text-red-400 font-semibold">
+                  REQUIRED
+                </span>
               </div>
-            </button>
+              <button
+                onClick={() => setIsPhaseModalOpen(true)}
+                className={`w-full p-3 rounded-lg border-2 border-dashed transition-all duration-200 ${
+                  selectedPhase
+                    ? "border-blue-500 bg-gray-600"
+                    : "border-red-500 bg-gray-600 hover:border-red-400 hover:bg-gray-500"
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-3">
+                  <Calendar className="w-4 h-4 text-white" />
+                  <span className="text-white text-sm">
+                    {selectedPhase ? selectedPhase.name : "Select Phase"}
+                  </span>
+                </div>
+              </button>
+            </div>
+
+            {/* Role Types (Multi-select) */}
+            <div className="bg-gray-700 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-300">
+                  Role Types
+                </h3>
+                <span className="text-xs text-gray-400">OPTIONAL</span>
+              </div>
+              <button
+                onClick={() => setIsRoleTypeModalOpen(true)}
+                className={`w-full p-3 rounded-lg border-2 border-dashed transition-all duration-200 ${
+                  selectedRoleTypes.length > 0
+                    ? "border-green-500 bg-gray-600"
+                    : "border-gray-500 bg-gray-600 hover:border-green-400 hover:bg-gray-500"
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-3">
+                  <Tag className="w-4 h-4 text-white" />
+                  <span className="text-white text-sm">
+                    {selectedRoleTypes.length > 0
+                      ? `${selectedRoleTypes.length} Selected`
+                      : "Select Role Types"}
+                  </span>
+                </div>
+              </button>
+              {selectedRoleTypes.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {selectedRoleTypes.map((rt) => (
+                    <span
+                      key={rt.id}
+                      className="px-2 py-1 bg-green-600 text-white text-xs rounded-full"
+                    >
+                      {rt.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile Link Input */}
@@ -1149,6 +1441,143 @@ export default function CreatePage() {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isPhaseModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsPhaseModalOpen(false)}
+          ></div>
+          <div className="absolute inset-4 md:inset-8 lg:inset-16 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[80vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+              <h3 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <Calendar className="w-5 h-5 text-blue-600" />
+                <span>Select Phase</span>
+              </h3>
+              <button
+                onClick={() => setIsPhaseModalOpen(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 p-4 md:p-6 overflow-y-auto">
+              <p className="text-sm text-gray-600 mb-4">
+                Use this to cut the Explore feed into "where things are" in the
+                work cycle. Single selection required.
+              </p>
+              <div className="space-y-2">
+                {PHASES.map((phase, index) => (
+                  <button
+                    key={phase.id}
+                    onClick={() => {
+                      setSelectedPhase(phase);
+                      setIsPhaseModalOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-200 ${
+                      selectedPhase?.id === phase.id
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm font-semibold text-gray-500">
+                        {index + 1}.
+                      </span>
+                      <div className="text-left">
+                        <div className="font-medium text-gray-900">
+                          {phase.name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {phase.description}
+                        </div>
+                      </div>
+                    </div>
+                    {selectedPhase?.id === phase.id && (
+                      <Check className="w-5 h-5 text-blue-600" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isRoleTypeModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsRoleTypeModalOpen(false)}
+          ></div>
+          <div className="absolute inset-4 md:inset-8 lg:inset-16 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[80vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+              <h3 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <Tag className="w-5 h-5 text-green-600" />
+                <span>Select Role Types</span>
+              </h3>
+              <button
+                onClick={() => setIsRoleTypeModalOpen(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 p-4 md:p-6 overflow-y-auto">
+              <p className="text-sm text-gray-600 mb-4">
+                Use this to express what a card contributes. Multiple selections
+                allowed (optional).
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {ROLE_TYPES.map((roleType) => (
+                  <button
+                    key={roleType.id}
+                    onClick={() => handleRoleTypeToggle(roleType)}
+                    className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all duration-200 ${
+                      selectedRoleTypes.find((rt) => rt.id === roleType.id)
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-200 hover:border-green-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="text-left flex-1">
+                      <div className="font-medium text-gray-900 text-sm">
+                        {roleType.name}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {roleType.description}
+                      </div>
+                    </div>
+                    {selectedRoleTypes.find((rt) => rt.id === roleType.id) && (
+                      <Check className="w-4 h-4 text-green-600 ml-2" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 md:p-6 border-t border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  {selectedRoleTypes.length} selected
+                </div>
+                <button
+                  onClick={() => setIsRoleTypeModalOpen(false)}
+                  className="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Done
+                </button>
               </div>
             </div>
           </div>

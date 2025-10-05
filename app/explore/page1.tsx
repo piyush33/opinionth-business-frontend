@@ -6,6 +6,10 @@ import Link from "next/link";
 import {
   Search,
   Filter,
+  TrendingUp,
+  Clock,
+  Heart,
+  Eye,
   Grid3X3,
   List,
   SlidersHorizontal,
@@ -16,12 +20,21 @@ import {
   X,
   Plus,
   Menu,
+  Building2,
+  MapPin,
+  FileText,
+  Settings,
+  Palette,
+  Code,
+  Megaphone,
+  Target,
+  Calendar,
+  Database,
   ChevronRight,
+  FolderOpen,
+  LucideIcon,
   Home,
   Compass,
-  Workflow,
-  Tag,
-  Check,
 } from "lucide-react";
 import Card from "@/components/card";
 import InboxPopup from "@/components/popups/inbox-popup";
@@ -29,18 +42,10 @@ import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
 import MasonryGrid from "@/components/masonry-grid";
 import {
-  type Category,
-  DEFAULT_CATEGORIES,
-  checkDateFilter,
-  checkContentType,
-  sortOptions,
-} from "@/utils/filters";
-import {
   getSavedCustomCats,
   ensureSaved,
   hydrateForUI,
 } from "@/utils/customCategories";
-import { FolderOpen } from "lucide-react";
 
 interface CardItem {
   id: number;
@@ -56,40 +61,108 @@ interface CardItem {
   privacy?: boolean;
   createdAt?: string;
   category?: string;
-  phase?: string;
-  roleTypes?: string[];
 }
 
-export const PHASE_OPTIONS = [
-  { id: "seed-initial-discuss", name: "Seed / Initial Discuss", order: 1 },
-  { id: "discovery-brainstorm", name: "Discovery / Brainstorm", order: 2 },
-  { id: "hypothesis-options", name: "Hypothesis / Options", order: 3 },
-  { id: "specs-solutioning", name: "Specs / Solutioning", order: 4 },
-  { id: "decision", name: "Decision", order: 5 },
-  { id: "task-execution", name: "Task / Execution", order: 6 },
-  {
-    id: "documentation-narrative",
-    name: "Documentation / Narrative",
-    order: 7,
-  },
-  { id: "retro-learning", name: "Retro / Learning", order: 8 },
-];
+interface Category {
+  id: string;
+  name: string;
+  icon: LucideIcon;
+  color: string;
+  bgColor: string;
+  description: string;
+  count?: number;
+  isCustom?: boolean;
+}
 
-export const ROLE_TYPE_OPTIONS = [
-  { id: "question", name: "Question" },
-  { id: "claim", name: "Claim" },
-  { id: "counter-claim", name: "Counter-claim" },
-  { id: "evidence", name: "Evidence" },
-  { id: "risk", name: "Risk" },
-  { id: "mitigation", name: "Mitigation" },
-  { id: "assumption", name: "Assumption" },
-  { id: "decision-rationale", name: "Decision Rationale" },
-  { id: "customer-voice", name: "Customer Voice" },
-  { id: "design-artifact", name: "Design Artifact" },
-  { id: "experiment", name: "Experiment" },
-  { id: "blocker", name: "Blocker" },
-  { id: "dependency", name: "Dependency" },
-  { id: "status-update", name: "Status Update" },
+const DEFAULT_CATEGORIES: Category[] = [
+  {
+    id: "all",
+    name: "All Categories",
+    icon: FolderOpen,
+    color: "text-gray-700",
+    bgColor: "bg-gray-100",
+    description: "View all whiteboards across all categories",
+  },
+  {
+    id: "company-os",
+    name: "Company OS",
+    icon: Building2,
+    color: "text-amber-700",
+    bgColor: "bg-amber-100",
+    description: "Company-wide processes and operations",
+  },
+  {
+    id: "product",
+    name: "Product",
+    icon: Target,
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+    description: "Product development and strategy",
+  },
+  {
+    id: "roadmap",
+    name: "Roadmap",
+    icon: MapPin,
+    color: "text-indigo-700",
+    bgColor: "bg-indigo-100",
+    description: "Strategic planning and roadmaps",
+  },
+  {
+    id: "docs",
+    name: "Documentation",
+    icon: FileText,
+    color: "text-slate-700",
+    bgColor: "bg-slate-100",
+    description: "Technical and process documentation",
+  },
+  {
+    id: "engineering",
+    name: "Engineering",
+    icon: Code,
+    color: "text-red-700",
+    bgColor: "bg-red-100",
+    description: "Technical discussions and architecture",
+  },
+  {
+    id: "marketing",
+    name: "Marketing",
+    icon: Megaphone,
+    color: "text-orange-700",
+    bgColor: "bg-orange-100",
+    description: "Marketing campaigns and strategies",
+  },
+  {
+    id: "design",
+    name: "Design",
+    icon: Palette,
+    color: "text-purple-700",
+    bgColor: "bg-purple-100",
+    description: "Design systems and creative work",
+  },
+  {
+    id: "operations",
+    name: "Operations",
+    icon: Settings,
+    color: "text-emerald-700",
+    bgColor: "bg-emerald-100",
+    description: "Business operations and workflows",
+  },
+  {
+    id: "meetings",
+    name: "Meetings",
+    icon: Calendar,
+    color: "text-cyan-700",
+    bgColor: "bg-cyan-100",
+    description: "Meeting notes and collaborative sessions",
+  },
+  {
+    id: "data",
+    name: "Data & Analytics",
+    icon: Database,
+    color: "text-pink-700",
+    bgColor: "bg-pink-100",
+    description: "Data analysis and reporting",
+  },
 ];
 
 // Common aliases → your default ids (extend as you like)
@@ -152,10 +225,16 @@ export default function ExplorePage() {
   const [dateFilter, setDateFilter] = useState("all");
   const [contentTypeFilter, setContentTypeFilter] = useState("all");
   const [engagementFilter, setEngagementFilter] = useState("all");
-  const [selectedPhase, setSelectedPhase] = useState<string>("all");
-  const [selectedRoleTypes, setSelectedRoleTypes] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  const sortOptions = [
+    { id: "recent", name: "Most Recent", icon: Clock },
+    { id: "popular", name: "Most Popular", icon: TrendingUp },
+    { id: "liked", name: "Most Liked", icon: Heart },
+    { id: "viewed", name: "Most Viewed", icon: Eye },
+    { id: "alphabetical", name: "A-Z", icon: SlidersHorizontal },
+  ];
 
   useEffect(() => {
     // Get user from localStorage
@@ -306,7 +385,7 @@ export default function ExplorePage() {
     // Persist any *new* non-default ids from feed into the cookie (dedup handled inside helper)
     const toSave = [...idsFromFeed].filter((id) => id && !DEFAULT_IDS.has(id));
     if (toSave.length) {
-      ensureSaved(toSave); // writes only what's missing
+      ensureSaved(toSave); // writes only what’s missing
     }
 
     // Pull the full saved list (now includes any just-saved ids) and hydrate with FolderOpen icon for Explore
@@ -332,7 +411,7 @@ export default function ExplorePage() {
       });
     }
 
-    // Add any remaining feed categories that aren't in base yet (these will also have been saved above)
+    // Add any remaining feed categories that aren’t in base yet (these will also have been saved above)
     idsFromFeed.forEach((id) => {
       if (!base.some((c) => c.id === id)) {
         base.push(makeCustomCategory(id));
@@ -366,6 +445,15 @@ export default function ExplorePage() {
       const isAllowedToView =
         item.privacy === true ? item.username === user?.username : true;
 
+      console.log(
+        "item:",
+        item,
+        "isAllowedToView:",
+        isAllowedToView,
+        "user:",
+        user
+      );
+
       if (!isAllowedToView) return false;
 
       // Search filter
@@ -379,16 +467,6 @@ export default function ExplorePage() {
       // Category filter
       const matchesCategory =
         selectedCategory === "all" || item.category === selectedCategory;
-
-      // Phase filter
-      const matchesPhase =
-        selectedPhase === "all" || item.phase === selectedPhase;
-
-      // Role Types filter (multi-select - item must have at least one selected role type)
-      const matchesRoleTypes =
-        selectedRoleTypes.length === 0 ||
-        (item.roleTypes &&
-          selectedRoleTypes.some((rt) => item.roleTypes?.includes(rt)));
 
       // Date filter
       const matchesDate =
@@ -405,8 +483,6 @@ export default function ExplorePage() {
       return (
         matchesSearch &&
         matchesCategory &&
-        matchesPhase &&
-        matchesRoleTypes &&
         matchesDate &&
         matchesContentType &&
         matchesEngagement
@@ -421,8 +497,6 @@ export default function ExplorePage() {
     homeFeed,
     searchTerm,
     selectedCategory,
-    selectedPhase,
-    selectedRoleTypes,
     sortBy,
     dateFilter,
     contentTypeFilter,
@@ -430,13 +504,57 @@ export default function ExplorePage() {
     user,
   ]);
 
-  const toggleRoleType = (roleTypeId: string) => {
-    setSelectedRoleTypes((prev) =>
-      prev.includes(roleTypeId)
-        ? prev.filter((id) => id !== roleTypeId)
-        : [...prev, roleTypeId]
+  const checkDateFilter = (createdAt: string | undefined, filter: string) => {
+    if (!createdAt) return true;
+    const date = new Date(createdAt);
+    const now = new Date();
+    const diffDays = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
     );
+
+    switch (filter) {
+      case "today":
+        return diffDays === 0;
+      case "week":
+        return diffDays <= 7;
+      case "month":
+        return diffDays <= 30;
+      default:
+        return true;
+    }
   };
+
+  const checkContentType = (item: CardItem, filter: string) => {
+    switch (filter) {
+      case "images":
+        return !!item.image;
+      case "text":
+        return !!item.text && !item.image;
+      case "links":
+        return !!item.weblink;
+      default:
+        return true;
+    }
+  };
+
+  // const sortCards = (cards: CardItem[], sortType: string) => {
+  //     const sorted = [...cards]
+
+  //     switch (sortType) {
+  //         case "recent":
+  //             return sorted.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+  //         case "popular":
+  //             return sorted.sort((a, b) => (b.likes || 0) + (b.views || 0) - ((a.likes || 0) + (a.views || 0)))
+  //         case "liked":
+  //             return sorted.sort((a, b) => (b.likes || 0) - (a.likes || 0))
+  //         case "viewed":
+  //             return sorted.sort((a, b) => (b.views || 0) - (a.views || 0))
+  //         case "alphabetical":
+  //             return sorted.sort((a, b) => (a.title || "").localeCompare(b.title || ""))
+  //         default:
+  //             return sorted
+  //     }
+  // }
 
   const handleCardClick = (item: CardItem) => {
     localStorage.setItem("lastVisitedCardLayerid", item.layer.id);
@@ -450,8 +568,6 @@ export default function ExplorePage() {
     setDateFilter("all");
     setContentTypeFilter("all");
     setEngagementFilter("all");
-    setSelectedPhase("all");
-    setSelectedRoleTypes([]);
   };
 
   if (!user) {
@@ -489,13 +605,6 @@ export default function ExplorePage() {
     DEFAULT_CATEGORIES[0];
 
   const SelectedIcon = selectedCategoryData.icon;
-
-  const activeFilterCount = [
-    selectedPhase !== "all" ? 1 : 0,
-    selectedRoleTypes.length,
-    dateFilter !== "all" ? 1 : 0,
-    contentTypeFilter !== "all" ? 1 : 0,
-  ].reduce((a, b) => a + b, 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -900,11 +1009,6 @@ export default function ExplorePage() {
                     >
                       <Filter className="w-4 h-4 flex-shrink-0" />
                       <span>Filters</span>
-                      {activeFilterCount > 0 && (
-                        <span className="ml-1 px-1.5 py-0.5 bg-purple-600 text-white text-xs rounded-full">
-                          {activeFilterCount}
-                        </span>
-                      )}
                     </button>
                   </div>
 
@@ -938,100 +1042,10 @@ export default function ExplorePage() {
                 </div>
               </div>
 
+              {/* Advanced Filters */}
               {showFilters && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {/* Phase Filter */}
-                    <div className="sm:col-span-2 lg:col-span-1">
-                      <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                        <Workflow className="w-4 h-4 text-purple-600" />
-                        <span>Phase</span>
-                        <span className="text-xs text-gray-500 font-normal">
-                          (Work cycle stage)
-                        </span>
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={selectedPhase}
-                          onChange={(e) => setSelectedPhase(e.target.value)}
-                          className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none pr-10"
-                        >
-                          <option value="all">All Phases</option>
-                          {PHASE_OPTIONS.map((phase) => (
-                            <option key={phase.id} value={phase.id}>
-                              {phase.order}. {phase.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                      </div>
-                      {selectedPhase !== "all" && (
-                        <div className="mt-2 flex items-center justify-between text-xs">
-                          <span className="text-purple-600 font-medium">
-                            {
-                              PHASE_OPTIONS.find((p) => p.id === selectedPhase)
-                                ?.name
-                            }
-                          </span>
-                          <button
-                            onClick={() => setSelectedPhase("all")}
-                            className="text-gray-500 hover:text-gray-700"
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Role Type Filter */}
-                    <div className="sm:col-span-2 lg:col-span-2">
-                      <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                        <Tag className="w-4 h-4 text-blue-600" />
-                        <span>Role / Type</span>
-                        <span className="text-xs text-gray-500 font-normal">
-                          (What the card contributes)
-                        </span>
-                        {selectedRoleTypes.length > 0 && (
-                          <span className="ml-auto text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
-                            {selectedRoleTypes.length} selected
-                          </span>
-                        )}
-                      </label>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                        {ROLE_TYPE_OPTIONS.map((roleType) => {
-                          const isSelected = selectedRoleTypes.includes(
-                            roleType.id
-                          );
-                          return (
-                            <button
-                              key={roleType.id}
-                              onClick={() => toggleRoleType(roleType.id)}
-                              className={`relative flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
-                                isSelected
-                                  ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
-                                  : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
-                              }`}
-                            >
-                              <span className="truncate">{roleType.name}</span>
-                              {isSelected && (
-                                <Check className="w-3 h-3 flex-shrink-0 ml-1" />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {selectedRoleTypes.length > 0 && (
-                        <div className="mt-2 flex items-center justify-end">
-                          <button
-                            onClick={() => setSelectedRoleTypes([])}
-                            className="text-xs text-gray-500 hover:text-gray-700"
-                          >
-                            Clear all role types
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Date Range
@@ -1081,50 +1095,10 @@ export default function ExplorePage() {
                     </div>
                   </div>
 
-                  {/* Active Filter Badges */}
-                  <div className="flex justify-between items-center mt-4">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedPhase !== "all" && (
-                        <span className="inline-flex items-center space-x-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs">
-                          <Workflow className="w-3 h-3" />
-                          <span>
-                            {
-                              PHASE_OPTIONS.find((p) => p.id === selectedPhase)
-                                ?.name
-                            }
-                          </span>
-                          <button
-                            onClick={() => setSelectedPhase("all")}
-                            className="ml-1 hover:bg-purple-200 rounded-full p-0.5"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      )}
-                      {selectedRoleTypes.map((rtId) => {
-                        const roleType = ROLE_TYPE_OPTIONS.find(
-                          (rt) => rt.id === rtId
-                        );
-                        return (
-                          <span
-                            key={rtId}
-                            className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs"
-                          >
-                            <Tag className="w-3 h-3" />
-                            <span>{roleType?.name}</span>
-                            <button
-                              onClick={() => toggleRoleType(rtId)}
-                              className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </span>
-                        );
-                      })}
-                    </div>
+                  <div className="flex justify-end mt-4">
                     <button
                       onClick={clearAllFilters}
-                      className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors whitespace-nowrap"
+                      className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
                     >
                       Clear All Filters
                     </button>
