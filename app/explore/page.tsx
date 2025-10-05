@@ -60,7 +60,7 @@ interface CardItem {
   roleTypes?: string[];
 }
 
-export const PHASE_OPTIONS = [
+const PHASE_OPTIONS = [
   { id: "seed-initial-discuss", name: "Seed / Initial Discuss", order: 1 },
   { id: "discovery-brainstorm", name: "Discovery / Brainstorm", order: 2 },
   { id: "hypothesis-options", name: "Hypothesis / Options", order: 3 },
@@ -75,7 +75,7 @@ export const PHASE_OPTIONS = [
   { id: "retro-learning", name: "Retro / Learning", order: 8 },
 ];
 
-export const ROLE_TYPE_OPTIONS = [
+const ROLE_TYPE_OPTIONS = [
   { id: "question", name: "Question" },
   { id: "claim", name: "Claim" },
   { id: "counter-claim", name: "Counter-claim" },
