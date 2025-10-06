@@ -61,6 +61,7 @@ interface CardItem {
 }
 
 const PHASE_OPTIONS = [
+  { id: "backlog", name: "Backlog/ Pending", order: 0 },
   { id: "seed-initial-discuss", name: "Seed / Initial Discuss", order: 1 },
   { id: "discovery-brainstorm", name: "Discovery / Brainstorm", order: 2 },
   { id: "hypothesis-options", name: "Hypothesis / Options", order: 3 },
@@ -76,6 +77,8 @@ const PHASE_OPTIONS = [
 ];
 
 const ROLE_TYPE_OPTIONS = [
+  { id: "feature", name: "Feature" },
+  { id: "bug", name: "Bug" },
   { id: "question", name: "Question" },
   { id: "claim", name: "Claim" },
   { id: "counter-claim", name: "Counter-claim" },
@@ -877,17 +880,6 @@ export default function ExplorePage() {
                       <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                         Sort by:
                       </span>
-                      <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 md:py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-0 flex-1"
-                      >
-                        {sortOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.name}
-                          </option>
-                        ))}
-                      </select>
                     </div>
 
                     <button
@@ -915,34 +907,16 @@ export default function ExplorePage() {
                         {filteredFeed.length} results
                       </span>
                     </div>
-
-                    <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                      <button
-                        onClick={() => setViewMode("grid")}
-                        className={`p-1.5 md:p-1 rounded ${
-                          viewMode === "grid" ? "bg-white shadow-sm" : ""
-                        }`}
-                      >
-                        <Grid3X3 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setViewMode("list")}
-                        className={`p-1.5 md:p-1 rounded ${
-                          viewMode === "list" ? "bg-white shadow-sm" : ""
-                        }`}
-                      >
-                        <List className="w-4 h-4" />
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
 
               {showFilters && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {/* Phase Filter */}
-                    <div className="sm:col-span-2 lg:col-span-1">
+                  {/* 2 columns on sm+, Role/Type spans both on row 2 */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Phase Filter (left of first row) */}
+                    <div>
                       <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                         <Workflow className="w-4 h-4 text-purple-600" />
                         <span>Phase</span>
@@ -954,7 +928,7 @@ export default function ExplorePage() {
                         <select
                           value={selectedPhase}
                           onChange={(e) => setSelectedPhase(e.target.value)}
-                          className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none pr-10"
+                          className="w-full bg-gray-50 text-gray-500 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none pr-10"
                         >
                           <option value="all">All Phases</option>
                           {PHASE_OPTIONS.map((phase) => (
@@ -983,8 +957,25 @@ export default function ExplorePage() {
                       )}
                     </div>
 
-                    {/* Role Type Filter */}
-                    <div className="sm:col-span-2 lg:col-span-2">
+                    {/* Date Filter (right of first row) */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Date Range
+                      </label>
+                      <select
+                        value={dateFilter}
+                        onChange={(e) => setDateFilter(e.target.value)}
+                        className="w-full bg-gray-50 text-gray-500 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      >
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                      </select>
+                    </div>
+
+                    {/* Role / Type Filter (second row, spans both columns) */}
+                    <div className="sm:col-span-2">
                       <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                         <Tag className="w-4 h-4 text-blue-600" />
                         <span>Role / Type</span>
@@ -1030,54 +1021,6 @@ export default function ExplorePage() {
                           </button>
                         </div>
                       )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Date Range
-                      </label>
-                      <select
-                        value={dateFilter}
-                        onChange={(e) => setDateFilter(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      >
-                        <option value="all">All Time</option>
-                        <option value="today">Today</option>
-                        <option value="week">This Week</option>
-                        <option value="month">This Month</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Content Type
-                      </label>
-                      <select
-                        value={contentTypeFilter}
-                        onChange={(e) => setContentTypeFilter(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      >
-                        <option value="all">All Types</option>
-                        <option value="images">Images</option>
-                        <option value="text">Text Only</option>
-                        <option value="links">Links</option>
-                      </select>
-                    </div>
-
-                    <div className="sm:col-span-2 md:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Engagement
-                      </label>
-                      <select
-                        value={engagementFilter}
-                        onChange={(e) => setEngagementFilter(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      >
-                        <option value="all">All Levels</option>
-                        <option value="high">High Engagement</option>
-                        <option value="medium">Medium Engagement</option>
-                        <option value="low">Low Engagement</option>
-                      </select>
                     </div>
                   </div>
 

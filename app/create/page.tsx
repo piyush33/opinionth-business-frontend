@@ -153,6 +153,11 @@ const DEFAULT_CATEGORIES: Category[] = [
 
 const PHASES: Phase[] = [
   {
+    id: "backlog",
+    name: "Backlog/ Pending",
+    description: "Items pending from earlier workflow",
+  },
+  {
     id: "seed-initial-discuss",
     name: "Seed / Initial Discuss",
     description: "Initial exploration and discussion",
@@ -195,6 +200,8 @@ const PHASES: Phase[] = [
 ];
 
 const ROLE_TYPES: RoleType[] = [
+  { id: "feature", name: "Feature", description: "Proposing feature request" },
+  { id: "bug", name: "Bug", description: "Notifying/Solving a bug" },
   {
     id: "question",
     name: "Question",
@@ -313,6 +320,7 @@ export default function CreatePage() {
   const [allowedMemberIds, setAllowedMemberIds] = useState<number[]>([]);
   const [orgId, setOrgId] = useState<number | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showPhaseError, setShowPhaseError] = useState(false);
 
   useEffect(() => {
     setOrgId(getActiveOrgId());
@@ -522,6 +530,7 @@ export default function CreatePage() {
 
   const handleCreate = async () => {
     if (!selectedPhase) {
+      setShowPhaseError(true);
       alert("Please select a phase before creating.");
       return;
     }
@@ -667,7 +676,7 @@ export default function CreatePage() {
               </button>
               <Link href="/explore" className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">O</span>
+                  <span className="text-white font-bold text-sm">C</span>
                 </div>
                 <span className="font-bold text-xl text-gray-900">
                   Collabrr
@@ -908,63 +917,70 @@ export default function CreatePage() {
               </div>
             </button>
 
-            {/* Phase Selection (Required) */}
-            <button
-              onClick={() => setIsPhaseModalOpen(true)}
-              className={`w-full p-4 rounded-lg border-2 border-dashed transition-all duration-200 ${
-                selectedPhase
-                  ? "border-blue-500 bg-gray-700"
-                  : "border-red-500 bg-gray-700 hover:border-red-400 hover:bg-gray-600"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Calendar className="w-5 h-5 text-white" />
-                  <span className="text-white font-medium">
-                    {selectedPhase ? selectedPhase.name : "Select Phase"}
-                  </span>
-                </div>
-                <span className="text-xs text-red-400 font-semibold">
-                  REQUIRED
-                </span>
-              </div>
-            </button>
-
-            {/* Role Type Selection (Multi-select) */}
-            <button
-              onClick={() => setIsRoleTypeModalOpen(true)}
-              className={`w-full p-4 rounded-lg border-2 border-dashed transition-all duration-200 ${
-                selectedRoleTypes.length > 0
-                  ? "border-green-500 bg-gray-700"
-                  : "border-gray-500 bg-gray-700 hover:border-green-400 hover:bg-gray-600"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Tag className="w-5 h-5 text-white" />
-                  <span className="text-white font-medium">
-                    {selectedRoleTypes.length > 0
-                      ? `${selectedRoleTypes.length} Role Type${
-                          selectedRoleTypes.length > 1 ? "s" : ""
-                        } Selected`
-                      : "Select Role Types"}
-                  </span>
-                </div>
-                <span className="text-xs text-gray-400">OPTIONAL</span>
-              </div>
-              {selectedRoleTypes.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {selectedRoleTypes.map((rt) => (
-                    <span
-                      key={rt.id}
-                      className="px-3 py-1 bg-green-600 text-white text-xs rounded-full"
-                    >
-                      {rt.name}
+            {/* Phase + Role/Type in one row */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Phase (Required-on-submit) */}
+              <button
+                onClick={() => setIsPhaseModalOpen(true)}
+                className={`w-full p-4 rounded-lg border-2 border-dashed transition-all duration-200 ${
+                  selectedPhase
+                    ? "border-blue-500 bg-gray-700"
+                    : showPhaseError
+                    ? "border-red-500 bg-gray-700"
+                    : "border-gray-500 bg-gray-700 hover:border-blue-400 hover:bg-gray-600"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="w-5 h-5 text-white" />
+                    <span className="text-white font-medium">
+                      {selectedPhase ? selectedPhase.name : "Select Phase"}
                     </span>
-                  ))}
+                  </div>
+                  {!selectedPhase && showPhaseError && (
+                    <span className="text-xs text-red-400 font-semibold">
+                      REQUIRED
+                    </span>
+                  )}
                 </div>
-              )}
-            </button>
+              </button>
+
+              {/* Role Type (Multi-select) */}
+              <button
+                onClick={() => setIsRoleTypeModalOpen(true)}
+                className={`w-full p-4 rounded-lg border-2 border-dashed transition-all duration-200 ${
+                  selectedRoleTypes.length > 0
+                    ? "border-green-500 bg-gray-700"
+                    : "border-gray-500 bg-gray-700 hover:border-green-400 hover:bg-gray-600"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Tag className="w-5 h-5 text-white" />
+                    <span className="text-white font-medium">
+                      {selectedRoleTypes.length > 0
+                        ? `${selectedRoleTypes.length} Role Type${
+                            selectedRoleTypes.length > 1 ? "s" : ""
+                          } Selected`
+                        : "Select Role Types"}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-400">OPTIONAL</span>
+                </div>
+                {selectedRoleTypes.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {selectedRoleTypes.map((rt) => (
+                      <span
+                        key={rt.id}
+                        className="px-3 py-1 bg-green-600 text-white text-xs rounded-full"
+                      >
+                        {rt.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1479,6 +1495,7 @@ export default function CreatePage() {
                   <button
                     key={phase.id}
                     onClick={() => {
+                      setShowPhaseError(false);
                       setSelectedPhase(phase);
                       setIsPhaseModalOpen(false);
                     }}
@@ -1490,7 +1507,7 @@ export default function CreatePage() {
                   >
                     <div className="flex items-center space-x-3">
                       <span className="text-sm font-semibold text-gray-500">
-                        {index + 1}.
+                        {index}.
                       </span>
                       <div className="text-left">
                         <div className="font-medium text-gray-900">
