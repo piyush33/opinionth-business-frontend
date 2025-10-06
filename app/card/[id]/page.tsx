@@ -309,10 +309,6 @@ const createApiService = (
 export default function CardExpansionPage() {
   // Auth and API
   const { getAuthHeaders, getUser } = useAuth();
-  const apiService = useMemo(
-    () => createApiService(getAuthHeaders, getUser, handleUnauthorized),
-    [getAuthHeaders]
-  );
 
   // Router
   const router = useRouter();
@@ -359,6 +355,11 @@ export default function CardExpansionPage() {
     localStorage.removeItem("profileUser");
     setTimeout(() => router.replace("/"), 1000);
   }, [router]);
+
+  const apiService = useMemo(
+    () => createApiService(getAuthHeaders, getUser, handleUnauthorized),
+    [getAuthHeaders]
+  );
 
   // Initialize user and cleanup
   useEffect(() => {
