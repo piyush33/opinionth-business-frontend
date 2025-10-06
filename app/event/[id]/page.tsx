@@ -4,6 +4,7 @@ import type React from "react";
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Link from "next/link";
 import {
   Heart,
@@ -297,6 +298,8 @@ export default function EventPage() {
 
   // Fetch home feed data
   useEffect(() => {
+    const abort = new AbortController();
+
     const fetchHomeFeedData = async () => {
       if (!user) return;
 
@@ -305,16 +308,35 @@ export default function EventPage() {
 
       try {
         const token = localStorage.getItem("token");
-        const orgId = JSON.parse(localStorage.getItem("activeOrg") || "{}").id;
+        const org = JSON.parse(localStorage.getItem("activeOrg") || "{}");
+        const orgId = org?.id;
         const layerId = localStorage.getItem("lastVisitedCardLayerid");
+
         const response = await fetch(
           `/nest-api/orgs/${orgId}/homefeed/layers/${layerId}/cards?username=${user.username}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
+            signal: abort.signal,
           }
         );
+
+        if (response.status === 401) {
+          // session expired → toast + redirect
+          try {
+            toast.error("Session expired. Please sign in again.");
+          } catch {
+            alert("Session expired. Please sign in again.");
+          }
+
+          // clear auth
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          localStorage.removeItem("profileUser");
+
+          setIsLoading(false);
+          setTimeout(() => router.replace("/"), 1000);
+          return;
+        }
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -322,16 +344,19 @@ export default function EventPage() {
 
         const data = await response.json();
         setHomeFeed(data);
-      } catch (error) {
-        console.error("Error fetching home feed:", error);
-        setError("Failed to load cards");
+      } catch (err: any) {
+        if (err?.name !== "AbortError") {
+          console.error("Error fetching home feed:", err);
+          setError("Failed to load cards");
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchHomeFeedData();
-  }, [user]);
+    return () => abort.abort();
+  }, [user, router]);
 
   // Filter cards based on selected card's parent
   useEffect(() => {

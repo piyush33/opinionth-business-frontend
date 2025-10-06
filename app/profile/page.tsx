@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Link from "next/link";
 import {
   Search,
@@ -95,6 +96,13 @@ export default function ProfilePage() {
     return b.id - a.id;
   });
 
+  const handleUnauthorized = () => {
+    toast.error("Session expired. Please sign in again.");
+    localStorage.removeItem("token");
+    localStorage.removeItem("profileUser");
+    setTimeout(() => router.replace("/"), 1000);
+  };
+
   const tabs = [
     {
       id: "opinion",
@@ -161,57 +169,49 @@ export default function ProfilePage() {
       try {
         const token = localStorage.getItem("token");
         const orgId = getActiveOrgId();
+        const headers = { Authorization: `Bearer ${token}` };
 
-        // Fetch all profile data
-        const [
-          createdRes,
-          likedRes,
-          savedRes,
-          repostedRes,
-          followersRes,
-          followingRes,
-        ] = await Promise.all([
+        const requests = [
           fetch(
             `/nest-api/orgs/${orgId}/profilefeed/${user.username}/created`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+            { headers }
           ),
           fetch(`/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers,
           }),
           fetch(`/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers,
           }),
           fetch(
             `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+            { headers }
           ),
           fetch(
             `/nest-api/orgs/${orgId}/profileusers/${user.username}/followers`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+            { headers }
           ),
           fetch(
             `/nest-api/orgs/${orgId}/profileusers/${user.username}/following`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+            { headers }
           ),
-        ]);
+        ];
+
+        const responses = await Promise.all(requests);
+
+        // 🔐 If any call says unauthorized, show toast and redirect
+        if (responses.some((r) => r.status === 401)) {
+          handleUnauthorized();
+          return;
+        }
+
+        // Generic error handling for any non-OK
+        const bad = responses.find((r) => !r.ok);
+        if (bad) {
+          throw new Error(`HTTP error! status: ${bad.status}`);
+        }
 
         const [created, liked, saved, reposted, followersData, followingData] =
-          await Promise.all([
-            createdRes.json(),
-            likedRes.json(),
-            savedRes.json(),
-            repostedRes.json(),
-            followersRes.json(),
-            followingRes.json(),
-          ]);
+          await Promise.all(responses.map((r) => r.json()));
 
         setCreatedPosts(created);
         setLikedPosts(liked);
@@ -222,7 +222,7 @@ export default function ProfilePage() {
         setFollowers(followersData);
         setFollowing(followingData);
 
-        // Calculate stats
+        // Stats (demo calc)
         const totalPosts = created.length;
         const totalLikes = Math.floor(Math.random() * 1000) + 100;
         const totalViews = Math.floor(Math.random() * 5000) + 500;

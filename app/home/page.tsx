@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Link from "next/link";
 import {
   Bell,
@@ -110,6 +111,27 @@ export default function HomePage() {
             },
           }
         );
+
+        if (response.status === 401) {
+          // show toast & bounce to login
+          try {
+            toast.error("Session expired. Please sign in again.");
+          } catch {
+            // fallback if no toast system mounted
+            console.warn("Toast system not available");
+            alert("Session expired. Please sign in again.");
+          }
+
+          // clear auth bits
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          localStorage.removeItem("profileUser");
+
+          setIsLoading(false);
+          // small timeout ensures toast renders at least once before route change
+          setTimeout(() => router.replace("/"), 1000); // adjust path if needed
+          return;
+        }
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

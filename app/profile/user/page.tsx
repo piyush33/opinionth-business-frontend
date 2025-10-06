@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Link from "next/link";
 import {
   Search,
@@ -116,6 +117,13 @@ export default function ProfileUserPage() {
 
   type ActiveOrg = { id: number; name: string; slug: string } | null;
 
+  const handleUnauthorized = () => {
+    toast.error("Session expired. Please sign in again.");
+    localStorage.removeItem("token");
+    localStorage.removeItem("profileUser");
+    setTimeout(() => router.replace("/"), 1000);
+  };
+
   // Combined opinion posts (created + reposted)
   const opinionPosts = [...createdPosts, ...repostedPosts].sort((a, b) => {
     // Sort by creation date if available, otherwise by id
@@ -173,11 +181,17 @@ export default function ProfileUserPage() {
 
   const fetchProfileUser = async (username: string) => {
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.get(
-        `/nest-api/orgs/${orgId}/profileusers/${username}`
+        `/nest-api/orgs/${orgId}/profileusers/${username}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setProfileUser(response.data);
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       console.error("Error fetching profile user:", error);
       router.push("/profile");
     }

@@ -3,6 +3,7 @@
 import type React from "react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -117,7 +118,8 @@ const useAuth = () => {
 // API service
 const createApiService = (
   getAuthHeaders: () => Record<string, string>,
-  getUser: () => UserProfile | null
+  getUser: () => UserProfile | null,
+  onUnauthorized: () => void
 ) => ({
   fetchHomeFeed: async (): Promise<CardData[]> => {
     const orgId = getActiveOrgId();
@@ -129,6 +131,10 @@ const createApiService = (
         headers: getAuthHeaders(),
       }
     );
+    if (response.status === 401) {
+      onUnauthorized();
+      throw new Error("Unauthorized");
+    }
     if (!response.ok) throw new Error("Failed to fetch home feed");
     return response.json();
   },
@@ -304,7 +310,7 @@ export default function CardExpansionPage() {
   // Auth and API
   const { getAuthHeaders, getUser } = useAuth();
   const apiService = useMemo(
-    () => createApiService(getAuthHeaders, getUser),
+    () => createApiService(getAuthHeaders, getUser, handleUnauthorized),
     [getAuthHeaders]
   );
 
@@ -342,6 +348,17 @@ export default function CardExpansionPage() {
   const [savedCards, setSavedCards] = useState<InteractionState[]>([]);
   const [likesCount, setLikesCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Central handler
+  const handleUnauthorized = useCallback(() => {
+    try {
+      toast.error("Session expired. Please sign in again.");
+    } catch {}
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("profileUser");
+    setTimeout(() => router.replace("/"), 1000);
+  }, [router]);
 
   // Initialize user and cleanup
   useEffect(() => {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Link from "next/link";
 import {
   Search,
@@ -22,6 +23,7 @@ import {
   Workflow,
   Tag,
   Check,
+  Calendar,
 } from "lucide-react";
 import Card from "@/components/card";
 import InboxPopup from "@/components/popups/inbox-popup";
@@ -152,7 +154,11 @@ export default function ExplorePage() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Filter states
-  const [dateFilter, setDateFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState<
+    "all" | "today" | "week" | "month" | "custom"
+  >("all");
+  const [customStart, setCustomStart] = useState<string>(""); // YYYY-MM-DD
+  const [customEnd, setCustomEnd] = useState<string>("");
   const [contentTypeFilter, setContentTypeFilter] = useState("all");
   const [engagementFilter, setEngagementFilter] = useState("all");
   const [selectedPhase, setSelectedPhase] = useState<string>("all");
@@ -249,6 +255,8 @@ export default function ExplorePage() {
   }, [user]);
 
   useEffect(() => {
+    const abort = new AbortController();
+
     const fetchHomeFeedData = async () => {
       if (!user) return;
 
@@ -256,41 +264,64 @@ export default function ExplorePage() {
       try {
         const token = localStorage.getItem("token");
         const orgId = getActiveOrgId();
+
         const response = await fetch(
           `/nest-api/orgs/${orgId}/homefeed/user/${user.username}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
+            signal: abort.signal,
           }
         );
+
+        if (response.status === 401) {
+          // show toast & bounce to login
+          try {
+            toast.error("Session expired. Please sign in again.");
+          } catch {
+            // fallback if no toast system mounted
+            console.warn("Toast system not available");
+            alert("Session expired. Please sign in again.");
+          }
+
+          // clear auth bits
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          localStorage.removeItem("profileUser");
+
+          setIsLoading(false);
+          // small timeout ensures toast renders at least once before route change
+          setTimeout(() => router.replace("/"), 1000); // adjust path if needed
+          return;
+        }
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-
         const enrichedData = data.map((item: any) => {
           const normalized = normalizeCategoryId(item.category);
           return {
             ...item,
-            _rawCategory: item.category ?? null, // optional: keep original for UI if needed
-            category: normalized, // the id we use everywhere
+            _rawCategory: item.category ?? null,
+            category: normalized,
             createdAt: item.createdAt,
           };
         });
 
         setHomeFeed(enrichedData);
-      } catch (error) {
-        console.error("Error fetching home feed:", error);
+      } catch (error: any) {
+        if (error?.name !== "AbortError") {
+          console.error("Error fetching home feed:", error);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchHomeFeedData();
-  }, [user]);
+    return () => abort.abort();
+  }, [user, router]);
 
   const DEFAULT_IDS = new Set<string>(
     DEFAULT_CATEGORIES.map((c) => c.id).concat(["uncategorized"])
@@ -393,9 +424,26 @@ export default function ExplorePage() {
         (item.roleTypes &&
           selectedRoleTypes.some((rt) => item.roleTypes?.includes(rt)));
 
-      // Date filter
-      const matchesDate =
-        dateFilter === "all" || checkDateFilter(item.createdAt, dateFilter);
+      // Date filter (supports custom range)
+      const matchesDate = (() => {
+        if (dateFilter === "custom") {
+          if (!item.createdAt) return true; // no date -> don't exclude
+          const created = new Date(item.createdAt);
+
+          if (customStart) {
+            const start = new Date(`${customStart}T00:00:00`);
+            if (created < start) return false;
+          }
+          if (customEnd) {
+            const end = new Date(`${customEnd}T23:59:59.999`);
+            if (created > end) return false;
+          }
+          return true;
+        }
+        return (
+          dateFilter === "all" || checkDateFilter(item.createdAt, dateFilter)
+        );
+      })();
 
       // Content type filter
       const matchesContentType =
@@ -431,6 +479,8 @@ export default function ExplorePage() {
     contentTypeFilter,
     engagementFilter,
     user,
+    customStart,
+    customEnd,
   ]);
 
   const toggleRoleType = (roleTypeId: string) => {
@@ -455,6 +505,8 @@ export default function ExplorePage() {
     setEngagementFilter("all");
     setSelectedPhase("all");
     setSelectedRoleTypes([]);
+    setCustomStart("");
+    setCustomEnd("");
   };
 
   if (!user) {
@@ -496,7 +548,13 @@ export default function ExplorePage() {
   const activeFilterCount = [
     selectedPhase !== "all" ? 1 : 0,
     selectedRoleTypes.length,
-    dateFilter !== "all" ? 1 : 0,
+    dateFilter === "custom"
+      ? customStart || customEnd
+        ? 1
+        : 0
+      : dateFilter !== "all"
+      ? 1
+      : 0,
     contentTypeFilter !== "all" ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
 
@@ -964,14 +1022,65 @@ export default function ExplorePage() {
                       </label>
                       <select
                         value={dateFilter}
-                        onChange={(e) => setDateFilter(e.target.value)}
+                        onChange={(e) => {
+                          setDateFilter(e.target.value as any);
+                          // optional: clear previous custom dates when changing away from custom
+                          if (e.target.value !== "custom") {
+                            setCustomStart("");
+                            setCustomEnd("");
+                          }
+                        }}
                         className="w-full bg-gray-50 text-gray-500 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                       >
                         <option value="all">All Time</option>
                         <option value="today">Today</option>
                         <option value="week">This Week</option>
                         <option value="month">This Month</option>
+                        <option value="custom">Custom range…</option>{" "}
                       </select>
+
+                      {dateFilter === "custom" && (
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">
+                              From
+                            </label>
+                            <input
+                              type="date"
+                              value={customStart}
+                              max={customEnd || undefined}
+                              onChange={(e) => setCustomStart(e.target.value)}
+                              className="w-full bg-gray-50 text-gray-500 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">
+                              To
+                            </label>
+                            <input
+                              type="date"
+                              value={customEnd}
+                              min={customStart || undefined}
+                              max={new Date().toISOString().slice(0, 10)} // prevent future dates
+                              onChange={(e) => setCustomEnd(e.target.value)}
+                              className="w-full bg-gray-50 text-gray-500 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            />
+                          </div>
+                          {(customStart || customEnd) && (
+                            <div className="col-span-2 flex justify-end">
+                              <button
+                                onClick={() => {
+                                  setCustomStart("");
+                                  setCustomEnd("");
+                                }}
+                                className="text-xs text-gray-500 hover:text-gray-700"
+                              >
+                                Clear custom range
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Role / Type Filter (second row, spans both columns) */}
@@ -1064,6 +1173,31 @@ export default function ExplorePage() {
                           </span>
                         );
                       })}
+                      {dateFilter === "custom" &&
+                        (customStart || customEnd) && (
+                          <span className="inline-flex items-center space-x-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs">
+                            <Calendar className="w-3 h-3" />
+                            <span>
+                              {customStart
+                                ? new Date(customStart).toLocaleDateString()
+                                : "…"}{" "}
+                              –{" "}
+                              {customEnd
+                                ? new Date(customEnd).toLocaleDateString()
+                                : "…"}
+                            </span>
+                            <button
+                              onClick={() => {
+                                setDateFilter("all");
+                                setCustomStart("");
+                                setCustomEnd("");
+                              }}
+                              className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        )}
                     </div>
                     <button
                       onClick={clearAllFilters}
@@ -1092,7 +1226,7 @@ export default function ExplorePage() {
                 ))}
               </div>
             ) : filteredFeed.length > 0 ? (
-              <div className="w-full overflow-x-hidden">
+              <div className="w-full overflow-visible px-2 md:px-0">
                 <MasonryGrid>
                   {filteredFeed.map((item) => (
                     <Card
