@@ -4,13 +4,11 @@ import type React from "react";
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useMemo } from "react";
+import { FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import {
-  Heart,
-  Repeat2,
-  Bookmark,
-  Share,
   ExternalLink,
   Plus,
   Bell,
@@ -29,6 +27,12 @@ import {
   Compass,
   Menu,
   X,
+  FilterIcon,
+  SlidersHorizontal,
+  Workflow,
+  Tag,
+  Check,
+  Calendar,
 } from "lucide-react";
 import axios from "axios";
 import Card from "@/components/card";
@@ -37,6 +41,12 @@ import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
 import MasonryGrid from "@/components/masonry-grid";
 import LayerInviteModal from "@/components/modals/LayerInviteModal";
+import {
+  type Category,
+  DEFAULT_CATEGORIES,
+  checkDateFilter,
+  checkContentType,
+} from "@/utils/filters";
 
 export interface CardItem {
   id: number;
@@ -51,14 +61,112 @@ export interface CardItem {
   lock?: boolean;
   privacy?: boolean;
   profileFeedItemId?: number;
+  category?: string;
+  createdAt?: string;
+  phase?: string;
+  roleTypes?: string[];
 }
 
-export interface InteractionState {
+// Define InteractionState interface to fix the undeclared variable error
+interface InteractionState {
   id: number;
   hasLiked?: boolean;
   hasReposted?: boolean;
   hasSaved?: boolean;
 }
+
+// Small alias map to normalize common variations
+const CATEGORY_ALIASES: Record<string, string> = {
+  "company-os": "company-os",
+  "company operating system": "company-os",
+  product: "product",
+  roadmap: "roadmap",
+  documentation: "docs",
+  docs: "docs",
+  engineering: "engineering",
+  marketing: "marketing",
+  design: "design",
+  operations: "operations",
+  ops: "operations",
+  meetings: "meetings",
+  data: "data",
+  "data-analytics": "data",
+  "data & analytics": "data",
+  data_and_analytics: "data",
+};
+
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const normalizeCategoryId = (raw?: string | null) => {
+  const s = (raw ?? "").trim();
+  if (!s) return "uncategorized";
+  const slug = slugify(s);
+  return CATEGORY_ALIASES[slug] ?? slug;
+};
+
+// simple palette for custom categories
+const PALETTE = [
+  { color: "text-gray-700", bgColor: "bg-gray-100" },
+  { color: "text-emerald-700", bgColor: "bg-emerald-100" },
+  { color: "text-blue-700", bgColor: "bg-blue-100" },
+  { color: "text-indigo-700", bgColor: "bg-indigo-100" },
+  { color: "text-orange-700", bgColor: "bg-orange-100" },
+  { color: "text-purple-700", bgColor: "bg-purple-100" },
+  { color: "text-pink-700", bgColor: "bg-pink-100" },
+  { color: "text-cyan-700", bgColor: "bg-cyan-100" },
+  { color: "text-red-700", bgColor: "bg-red-100" },
+  { color: "text-amber-700", bgColor: "bg-amber-100" },
+  { color: "text-slate-700", bgColor: "bg-slate-100" },
+];
+
+const hashCode = (str: string) => {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+};
+
+const toTitleCase = (id: string) =>
+  id.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+const makeCustomCategory = (id: string): Category => {
+  const palette = PALETTE[hashCode(id) % PALETTE.length];
+  return {
+    id,
+    name: toTitleCase(id),
+    icon: FolderOpen,
+    color: palette.color,
+    bgColor: palette.bgColor,
+    description: "Custom category",
+    isCustom: true,
+    count: 0,
+  };
+};
+
+const getCategoryMeta = (idRaw?: string | null): Category => {
+  const id = normalizeCategoryId(idRaw);
+  if (id === "uncategorized") {
+    return {
+      id,
+      name: "Uncategorized",
+      icon: FolderOpen,
+      color: "text-gray-700",
+      bgColor: "bg-gray-100",
+      description: "Items without a category",
+      count: 0,
+    } as Category;
+  }
+  const found = DEFAULT_CATEGORIES.find((c) => c.id === id);
+  return found ?? makeCustomCategory(id);
+};
 
 export default function EventPage() {
   const params = useParams();
@@ -90,6 +198,78 @@ export default function EventPage() {
   >({});
   const lastCommittedRef = useRef<Record<string, boolean>>({});
   const hasAutoScrolledRef = useRef(false);
+
+  // Filters state
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedPhases, setSelectedPhases] = useState<Set<string>>(new Set());
+  const [selectedRoleTypes, setSelectedRoleTypes] = useState<Set<string>>(
+    new Set()
+  );
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
+    null,
+    null,
+  ]);
+  const [showExternalLinksOnly, setShowExternalLinksOnly] = useState(false);
+  const [showLockedOnly, setShowLockedOnly] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [dateFilter, setDateFilter] = useState<
+    "all" | "today" | "week" | "month" | "custom"
+  >("all");
+  const [customStart, setCustomStart] = useState<string>("");
+  const [customEnd, setCustomEnd] = useState<string>("");
+  const [contentTypeFilter, setContentTypeFilter] = useState("all");
+  const [engagementFilter, setEngagementFilter] = useState("all");
+  const [selectedPhase, setSelectedPhase] = useState<string>("all");
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+
+  const PHASE_OPTIONS = [
+    { id: "backlog", name: "Backlog/ Pending", order: 0 },
+    { id: "seed-initial-discuss", name: "Seed / Initial Discuss", order: 1 },
+    { id: "discovery-brainstorm", name: "Discovery / Brainstorm", order: 2 },
+    { id: "hypothesis-options", name: "Hypothesis / Options", order: 3 },
+    { id: "specs-solutioning", name: "Specs / Solutioning", order: 4 },
+    { id: "decision", name: "Decision", order: 5 },
+    { id: "task-execution", name: "Task / Execution", order: 6 },
+    {
+      id: "documentation-narrative",
+      name: "Documentation / Narrative",
+      order: 7,
+    },
+    { id: "retro-learning", name: "Retro / Learning", order: 8 },
+  ];
+
+  const ROLE_TYPE_OPTIONS = [
+    { id: "feature", name: "Feature" },
+    { id: "bug", name: "Bug" },
+    { id: "question", name: "Question" },
+    { id: "claim", name: "Claim" },
+    { id: "counter-claim", name: "Counter-claim" },
+    { id: "evidence", name: "Evidence" },
+    { id: "risk", name: "Risk" },
+    { id: "mitigation", name: "Mitigation" },
+    { id: "assumption", name: "Assumption" },
+    { id: "decision-rationale", name: "Decision Rationale" },
+    { id: "customer-voice", name: "Customer Voice" },
+    { id: "design-artifact", name: "Design Artifact" },
+    { id: "experiment", name: "Experiment" },
+    { id: "blocker", name: "Blocker" },
+    { id: "dependency", name: "Dependency" },
+    { id: "status-update", name: "Status Update" },
+  ];
+
+  // Pick the category from the selected card; if missing, fall back to the first card with a category.
+  const collectionCategory = useMemo(() => {
+    const fromSelected = selectedCard?.category;
+    const fromAny = homeFeed.find((c) => c.category)?.category;
+    return getCategoryMeta(fromSelected || fromAny || "");
+  }, [selectedCard?.category, homeFeed]);
+
+  const CategoryIcon = collectionCategory.icon;
 
   const scrollToCard = (id: number, behavior: ScrollBehavior = "smooth") => {
     if (typeof window === "undefined") return;
@@ -173,12 +353,16 @@ export default function EventPage() {
     } else {
       await axios.delete(
         `/nest-api/likes/homefeed/${user.username}/${item.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       await axios.delete(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked/${item.profileFeedItemId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
     }
   }
@@ -202,12 +386,16 @@ export default function EventPage() {
     } else {
       await axios.delete(
         `/nest-api/reposts/homefeed/${user.username}/${item.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       await axios.delete(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted/${item.profileFeedItemId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
     }
   }
@@ -231,12 +419,16 @@ export default function EventPage() {
     } else {
       await axios.delete(
         `/nest-api/saves/homefeed/${user.username}/${item.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       await axios.delete(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved/${item.profileFeedItemId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
     }
   }
@@ -367,6 +559,149 @@ export default function EventPage() {
     }
   }, [cardId, homeFeed]);
 
+  // Build categories similar to Explore (no cookie persistence needed here)
+  useEffect(() => {
+    const idsFromFeed = new Set<string>(
+      homeFeed.map(
+        (item) =>
+          (item.category && String(item.category).trim()) || "uncategorized"
+      )
+    );
+
+    // dedupe defaults + from feed
+    const dedup = new Map<string, Category>();
+    DEFAULT_CATEGORIES.forEach((c) => dedup.set(c.id, c));
+
+    idsFromFeed.forEach((id) => {
+      if (!dedup.has(id)) {
+        dedup.set(id, makeCustomCategory(id));
+      }
+    });
+
+    // ensure 'uncategorized'
+    if (!dedup.has("uncategorized")) {
+      dedup.set("uncategorized", {
+        id: "uncategorized",
+        name: "Uncategorized",
+        icon: FolderOpen,
+        color: "text-gray-700",
+        bgColor: "bg-gray-100",
+        description: "Items without a category",
+        count: 0,
+      } as Category);
+    }
+
+    const base = Array.from(dedup.values()).map((cat) => ({
+      ...cat,
+      count:
+        cat.id === "all"
+          ? homeFeed.length
+          : homeFeed.filter(
+              (i) =>
+                ((i.category && String(i.category).trim()) ||
+                  "uncategorized") === cat.id
+            ).length,
+    }));
+
+    setCategories(base);
+
+    // keep category selection valid
+    if (!base.some((c) => c.id === selectedCategory)) {
+      setSelectedCategory("all");
+    }
+  }, [homeFeed, selectedCategory]);
+
+  // Filter cards (replicates Explore logic; writes into displayCards)
+  useEffect(() => {
+    const filtered = homeFeed.filter((item) => {
+      // privacy check: if item is private, only owner can see
+      const isAllowedToView =
+        item.privacy === true ? item.username === user?.username : true;
+      if (!isAllowedToView) return false;
+
+      // search
+      const matchesSearch =
+        !searchTerm ||
+        item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.text?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.username?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // category
+      const matchesCategory =
+        selectedCategory === "all" ||
+        (item.category &&
+          normalizeCategoryId(item.category) === selectedCategory) ||
+        (!item.category && selectedCategory === "uncategorized");
+
+      // phase
+      const matchesPhase =
+        selectedPhase === "all" || item.phase === selectedPhase;
+
+      // role types (any match)
+      const matchesRoleTypes =
+        selectedRoleTypes.size === 0 ||
+        (item.roleTypes &&
+          Array.from(selectedRoleTypes).some((rt: string) =>
+            item.roleTypes?.includes(rt)
+          ));
+
+      // date
+      const matchesDate = (() => {
+        if (dateFilter === "custom") {
+          if (!item.createdAt) return true;
+          const created = new Date(item.createdAt);
+          if (customStart) {
+            const start = new Date(`${customStart}T00:00:00`);
+            if (created < start) return false;
+          }
+          if (customEnd) {
+            const end = new Date(`${customEnd}T23:59:59.999`);
+            if (created > end) return false;
+          }
+          return true;
+        }
+        return (
+          dateFilter === "all" || checkDateFilter(item.createdAt, dateFilter)
+        );
+      })();
+
+      // content type
+      const matchesContentType =
+        contentTypeFilter === "all" ||
+        checkContentType(item as any, contentTypeFilter);
+
+      // engagement (placeholder: pass-through like Explore page)
+      const matchesEngagement = engagementFilter === "all";
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesPhase &&
+        matchesRoleTypes &&
+        matchesDate &&
+        matchesContentType &&
+        matchesEngagement
+      );
+    });
+
+    // simple sort (by id desc as in Explore)
+    filtered.sort((a, b) => b.id - a.id);
+    setDisplayCards(filtered);
+  }, [
+    homeFeed,
+    user,
+    searchTerm,
+    selectedCategory,
+    selectedPhase,
+    selectedRoleTypes,
+    dateFilter,
+    customStart,
+    customEnd,
+    contentTypeFilter,
+    engagementFilter,
+  ]);
+
   // Fetch interaction states
   useEffect(() => {
     const fetchInteractionStates = async () => {
@@ -380,7 +715,9 @@ export default function EventPage() {
           try {
             const response = await axios.get(
               `/nest-api/likes/homefeed/${user.username}/${item.id}`,
-              { headers: { Authorization: `Bearer ${token}` } }
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
             );
             return { id: item.id, hasLiked: response.data.hasLiked };
           } catch (error) {
@@ -393,7 +730,9 @@ export default function EventPage() {
           try {
             const response = await axios.get(
               `/nest-api/reposts/homefeed/${user.username}/${item.id}`,
-              { headers: { Authorization: `Bearer ${token}` } }
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
             );
             return { id: item.id, hasReposted: response.data.hasReposted };
           } catch (error) {
@@ -406,7 +745,9 @@ export default function EventPage() {
           try {
             const response = await axios.get(
               `/nest-api/saves/homefeed/${user.username}/${item.id}`,
-              { headers: { Authorization: `Bearer ${token}` } }
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
             );
             return { id: item.id, hasSaved: response.data.hasSaved };
           } catch (error) {
@@ -427,11 +768,11 @@ export default function EventPage() {
         setSavedCards(savedResults);
 
         const m: Record<string, boolean> = {};
-        likedCards.forEach((c) => (m[keyOf("like", c.id)] = !!c.hasLiked));
-        repostedCards.forEach(
+        likedResults.forEach((c) => (m[keyOf("like", c.id)] = !!c.hasLiked));
+        repostedResults.forEach(
           (c) => (m[keyOf("repost", c.id)] = !!c.hasReposted)
         );
-        savedCards.forEach((c) => (m[keyOf("save", c.id)] = !!c.hasSaved));
+        savedResults.forEach((c) => (m[keyOf("save", c.id)] = !!c.hasSaved));
         lastCommittedRef.current = { ...lastCommittedRef.current, ...m };
       } catch (error) {
         console.error("Error fetching interaction states:", error);
@@ -591,6 +932,53 @@ export default function EventPage() {
     return { totalCards, contributors, hasWeblinks, isLocked };
   };
 
+  // Filter logic
+  const filteredCards = useMemo(() => {
+    return displayCards.filter((card) => {
+      const categoryMatch =
+        selectedCategories.size === 0 ||
+        selectedCategories.has(card.category || "");
+      const phaseMatch =
+        selectedPhases.size === 0 || selectedPhases.has(card.phase || "");
+      const roleTypeMatch =
+        selectedRoleTypes.size === 0 ||
+        (card.roleTypes &&
+          card.roleTypes.some((role) => selectedRoleTypes.has(role)));
+      const dateMatch = (() => {
+        if (!card.createdAt) return true;
+        const created = new Date(card.createdAt);
+        const [start, end] = dateRange;
+        if (start && created < start) return false;
+        if (end) {
+          // end is inclusive, so set to end of day
+          const endOfDay = new Date(end);
+          endOfDay.setHours(23, 59, 59, 999);
+          if (created > endOfDay) return false;
+        }
+        return true;
+      })();
+      const contentTypeMatch = !showExternalLinksOnly || !!card.weblink;
+      const lockMatch = !showLockedOnly || !!card.lock;
+
+      return (
+        categoryMatch &&
+        phaseMatch &&
+        roleTypeMatch &&
+        dateMatch &&
+        contentTypeMatch &&
+        lockMatch
+      );
+    });
+  }, [
+    displayCards,
+    selectedCategories,
+    selectedPhases,
+    selectedRoleTypes,
+    dateRange,
+    showExternalLinksOnly,
+    showLockedOnly,
+  ]);
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -609,6 +997,68 @@ export default function EventPage() {
     localStorage.setItem("expandedCard", JSON.stringify(item));
     router.push(`/card/${item.id}`);
   };
+
+  // Toggle handlers for filters
+  const toggleCategory = (category: string) => {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+  };
+
+  const togglePhase = (phase: string) => {
+    setSelectedPhases((prev) => {
+      const next = new Set(prev);
+      if (next.has(phase)) {
+        next.delete(phase);
+      } else {
+        next.add(phase);
+      }
+      return next;
+    });
+  };
+
+  const toggleRoleType = (roleTypeId: string) => {
+    setSelectedRoleTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(roleTypeId)) {
+        next.delete(roleTypeId);
+      } else {
+        next.add(roleTypeId);
+      }
+      return next;
+    });
+  };
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("all");
+    setDateFilter("all");
+    setCustomStart("");
+    setCustomEnd("");
+    setContentTypeFilter("all");
+    setEngagementFilter("all");
+    setSelectedPhase("all");
+    setSelectedRoleTypes(new Set());
+  };
+
+  const activeFilterCount = [
+    selectedPhase !== "all" ? 1 : 0,
+    selectedRoleTypes.size,
+    dateFilter === "custom"
+      ? customStart || customEnd
+        ? 1
+        : 0
+      : dateFilter !== "all"
+      ? 1
+      : 0,
+    contentTypeFilter !== "all" ? 1 : 0,
+  ].reduce((a, b) => a + b, 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
@@ -658,6 +1108,8 @@ export default function EventPage() {
                 <input
                   type="text"
                   placeholder="Search posts..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-gray-100 border-0 rounded-full text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
                 />
               </div>
@@ -737,6 +1189,8 @@ export default function EventPage() {
             <input
               type="text"
               placeholder="Search posts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-0 rounded-full text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
             />
           </div>
@@ -865,7 +1319,7 @@ export default function EventPage() {
                     ))}
                     {displayCards.length > 3 && (
                       <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 sm:border-4 border-white text-white shadow-lg bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
-                        +{displayCards.length - 3}
+                        +{displayCards.length - 1}
                       </div>
                     )}
                   </div>
@@ -977,8 +1431,9 @@ export default function EventPage() {
 
               {/* Contributors Preview */}
               {contributors.length > 0 && (
-                <div className="flex flex-row items-center justify-between ">
-                  <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+                  {/* Contributors */}
+                  <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200 w-full">
                     <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
                       <div className="flex items-center space-x-3">
                         <span className="text-sm font-medium text-gray-600">
@@ -1006,16 +1461,309 @@ export default function EventPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 pt-4">
-                    <button
-                      onClick={() => setShowInvite(true)}
-                      className="ml-0  lg:ml-4 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-full hover:bg-purple-700"
-                    >
-                      Invite
-                    </button>
+                  <div className="flex flex-col sm:flex-row items-center  ">
+                    {/* Category pill */}
+                    <div className="mt-1 lg:mt-6 pt-1 lg:pt-6 inline-flex items-center ml-4">
+                      <span className="text-sm font-medium text-gray-600 mr-2">
+                        Category:
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${collectionCategory.bgColor} ${collectionCategory.color}`}
+                      >
+                        <CategoryIcon className="w-4 h-4" />
+                        <span>{collectionCategory.name}</span>
+                      </span>
+                    </div>
+
+                    {/* Invite button */}
+                    <div className="mt-2 lg:mt-6 pt-2 lg:pt-6">
+                      <button
+                        onClick={() => setShowInvite(true)}
+                        className="ml-0 lg:ml-4 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-full hover:bg-purple-700"
+                      >
+                        Invite
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
+              <div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4">
+                  {/* <div className="flex items-center gap-3">
+                  <SlidersHorizontal className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Filters
+                  </span>
+                  {activeFilterCount > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-xs bg-purple-600 text-white">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </div> */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowFilters((v) => !v)}
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition ${
+                        showFilters
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      <FilterIcon className="w-4 h-4" />
+                      <span>{showFilters ? "Hide" : "Show"} Filters</span>
+                    </button>
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-sm text-gray-600 hover:text-gray-900"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+                {showFilters && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Phase */}
+                      <div>
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                          <Workflow className="w-4 h-4 text-purple-600" />
+                          <span>Phase</span>
+                          <span className="text-xs text-gray-500 font-normal">
+                            (Work cycle stage)
+                          </span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={selectedPhase}
+                            onChange={(e) => setSelectedPhase(e.target.value)}
+                            className="w-full bg-gray-50 text-gray-600 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none pr-10"
+                          >
+                            <option value="all">All Phases</option>
+                            {PHASE_OPTIONS.map((phase) => (
+                              <option key={phase.id} value={phase.id}>
+                                {phase.order}. {phase.name}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        </div>
+                        {selectedPhase !== "all" && (
+                          <div className="mt-2 flex items-center justify-between text-xs">
+                            <span className="text-purple-600 font-medium">
+                              {
+                                PHASE_OPTIONS.find(
+                                  (p) => p.id === selectedPhase
+                                )?.name
+                              }
+                            </span>
+                            <button
+                              onClick={() => setSelectedPhase("all")}
+                              className="text-gray-500 hover:text-gray-700"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Date */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Date Range
+                        </label>
+                        <select
+                          value={dateFilter}
+                          onChange={(e) => {
+                            const v = e.target.value as typeof dateFilter;
+                            setDateFilter(v);
+                            if (v !== "custom") {
+                              setCustomStart("");
+                              setCustomEnd("");
+                            }
+                          }}
+                          className="w-full bg-gray-50 text-gray-600 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        >
+                          <option value="all">All Time</option>
+                          <option value="today">Today</option>
+                          <option value="week">This Week</option>
+                          <option value="month">This Month</option>
+                          <option value="custom">Custom range…</option>
+                        </select>
+
+                        {dateFilter === "custom" && (
+                          <div className="mt-2 grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">
+                                From
+                              </label>
+                              <input
+                                type="date"
+                                value={customStart}
+                                max={customEnd || undefined}
+                                onChange={(e) => setCustomStart(e.target.value)}
+                                className="w-full bg-gray-50 text-gray-600 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">
+                                To
+                              </label>
+                              <input
+                                type="date"
+                                value={customEnd}
+                                min={customStart || undefined}
+                                max={new Date().toISOString().slice(0, 10)}
+                                onChange={(e) => setCustomEnd(e.target.value)}
+                                className="w-full bg-gray-50 text-gray-600 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              />
+                            </div>
+                            {(customStart || customEnd) && (
+                              <div className="col-span-2 flex justify-end">
+                                <button
+                                  onClick={() => {
+                                    setDateFilter("all");
+                                    setCustomStart("");
+                                    setCustomEnd("");
+                                  }}
+                                  className="text-xs text-gray-500 hover:text-gray-700"
+                                >
+                                  Clear custom range
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Role / Type */}
+                      <div className="sm:col-span-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                          <Tag className="w-4 h-4 text-blue-600" />
+                          <span>Role / Type</span>
+                          <span className="text-xs text-gray-500 font-normal">
+                            (What the card contributes)
+                          </span>
+                          {selectedRoleTypes.size > 0 && (
+                            <span className="ml-auto text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                              {selectedRoleTypes.size} selected
+                            </span>
+                          )}
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                          {ROLE_TYPE_OPTIONS.map((roleType) => {
+                            const isSelected = selectedRoleTypes.has(
+                              roleType.id
+                            );
+                            return (
+                              <button
+                                key={roleType.id}
+                                onClick={() => toggleRoleType(roleType.id)}
+                                className={`relative flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                                  isSelected
+                                    ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
+                                    : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
+                                }`}
+                              >
+                                <span className="truncate">
+                                  {roleType.name}
+                                </span>
+                                {isSelected && (
+                                  <Check className="w-3 h-3 flex-shrink-0 ml-1" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {selectedRoleTypes.size > 0 && (
+                          <div className="mt-2 flex items-center justify-end">
+                            <button
+                              onClick={() => setSelectedRoleTypes(new Set())}
+                              className="text-xs text-gray-500 hover:text-gray-700"
+                            >
+                              Clear all role types
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Active badges */}
+                      <div className="sm:col-span-2 flex justify-between items-center">
+                        <div className="flex flex-wrap gap-2">
+                          {selectedPhase !== "all" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs">
+                              <Workflow className="w-3 h-3" />
+                              <span>
+                                {
+                                  PHASE_OPTIONS.find(
+                                    (p) => p.id === selectedPhase
+                                  )?.name
+                                }
+                              </span>
+                              <button
+                                onClick={() => setSelectedPhase("all")}
+                                className="ml-1 hover:bg-purple-200 rounded-full p-0.5"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          )}
+                          {[...selectedRoleTypes].map((rtId) => {
+                            const roleType = ROLE_TYPE_OPTIONS.find(
+                              (rt) => rt.id === rtId
+                            );
+                            return (
+                              <span
+                                key={rtId}
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs"
+                              >
+                                <Tag className="w-3 h-3" />
+                                <span>{roleType?.name}</span>
+                                <button
+                                  onClick={() => toggleRoleType(rtId)}
+                                  className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </span>
+                            );
+                          })}
+                          {dateFilter === "custom" &&
+                            (customStart || customEnd) && (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs">
+                                <Calendar className="w-3 h-3" />
+                                <span>
+                                  {customStart
+                                    ? new Date(customStart).toLocaleDateString()
+                                    : "…"}{" "}
+                                  –{" "}
+                                  {customEnd
+                                    ? new Date(customEnd).toLocaleDateString()
+                                    : "…"}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setDateFilter("all");
+                                    setCustomStart("");
+                                    setCustomEnd("");
+                                  }}
+                                  className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </span>
+                            )}
+                        </div>
+                        <button
+                          onClick={clearAllFilters}
+                          className="text-sm text-gray-600 hover:text-gray-900"
+                        >
+                          Clear All Filters
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1049,7 +1797,7 @@ export default function EventPage() {
             </div>
           ) : (
             <MasonryGrid>
-              {displayCards.map((item, index) => (
+              {filteredCards.map((item, index) => (
                 <div
                   id={`card-${item.id}`}
                   className="group relative scroll-mt-28 md:scroll-mt-28"
@@ -1081,6 +1829,8 @@ export default function EventPage() {
                       cardData={item}
                       weblink={item.weblink}
                       onUserClick={handleUserClick}
+                      phaseId={item.phase ?? undefined}
+                      roleTypeId={item.roleTypes ?? undefined}
                     />
                   </div>
                 </div>
@@ -1088,16 +1838,16 @@ export default function EventPage() {
             </MasonryGrid>
           )}
 
-          {displayCards.length === 0 && !isLoading && (
+          {filteredCards.length === 0 && !isLoading && (
             <div className="text-center py-16">
               <div className="w-24 h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Layers className="w-12 h-12 text-gray-400" />
               </div>
               <div className="text-gray-400 text-lg mb-2">
-                No connected cards found
+                No cards match your filters
               </div>
               <div className="text-gray-500 text-sm">
-                This collection is waiting for its first connection
+                Try adjusting your search criteria
               </div>
             </div>
           )}
