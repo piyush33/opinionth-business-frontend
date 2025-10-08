@@ -31,6 +31,7 @@ import InboxPopup from "@/components/popups/inbox-popup";
 import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
 import axios from "axios";
+import ZoomPanImage from "@/components/ZoomPanImage";
 
 // Types
 interface CardData {
@@ -843,7 +844,7 @@ export default function CardExpansionPage() {
               </button>
               <Link href="/explore" className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">O</span>
+                  <span className="text-white font-bold text-sm">C</span>
                 </div>
                 <span className="font-bold text-xl text-gray-900">
                   Collabrr
@@ -988,17 +989,16 @@ export default function CardExpansionPage() {
               {card.image ? (
                 <>
                   {/* Image Layout */}
-                  <div className="w-1/2 relative bg-gray-100">
-                    <Image
-                      src={card.image || "/placeholder.svg"}
-                      alt={card.title}
-                      fill
-                      className="object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src =
-                          "/placeholder.svg?height=600&width=600";
-                      }}
-                    />
+                  <div className="w-1/2 relative bg-gray-50">
+                    <div className="absolute inset-0">
+                      <ZoomPanImage
+                        src={card.image!}
+                        alt={card.title}
+                        // optional tweaks:
+                        minScale={0.5}
+                        maxScale={10}
+                      />
+                    </div>
                   </div>
                   <div className="w-1/2 flex flex-col">
                     <div className="p-6 border-b border-gray-100 flex-shrink-0">
