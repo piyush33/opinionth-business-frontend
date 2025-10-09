@@ -1240,6 +1240,8 @@ export default function ExplorePage() {
                       onClick={() => handleCardClick(item)}
                       onUserTagClick={handleUserTagClick}
                       onCardTagClick={handleCardTagClick}
+                      phaseId={item.phase ?? undefined}
+                      roleTypeId={item.roleTypes ?? undefined}
                     />
                   ))}
                 </MasonryGrid>
