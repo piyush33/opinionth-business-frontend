@@ -40,6 +40,7 @@ interface CardProps {
   cardData?: any;
   phaseId?: string;
   roleTypeId?: string[];
+  feed?: string;
 }
 
 export default function Card({
@@ -67,6 +68,7 @@ export default function Card({
   cardData,
   phaseId,
   roleTypeId,
+  feed,
 }: CardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showReferences, setShowReferences] = useState(false);
@@ -305,23 +307,24 @@ export default function Card({
               )}
 
               {/* Multiple role types */}
-              {/* {roleMetas.map((meta) => (
-                <span
-                  key={meta.id}
-                  className={roleClasses}
-                  title={
-                    meta.description
-                      ? `${meta.name} — ${meta.description}`
-                      : meta.name
-                  }
-                  aria-label={`Role type: ${meta.name}`}
-                >
-                  <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="truncate max-w-[9rem] sm:max-w-[12rem]">
-                    {meta.name}
+              {feed === "explore" &&
+                roleMetas.map((meta) => (
+                  <span
+                    key={meta.id}
+                    className={roleClasses}
+                    title={
+                      meta.description
+                        ? `${meta.name} — ${meta.description}`
+                        : meta.name
+                    }
+                    aria-label={`Role type: ${meta.name}`}
+                  >
+                    <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="truncate max-w-[9rem] sm:max-w-[12rem]">
+                      {meta.name}
+                    </span>
                   </span>
-                </span>
-              ))} */}
+                ))}
             </div>
           )}
 

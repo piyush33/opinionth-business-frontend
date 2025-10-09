@@ -1242,6 +1242,7 @@ export default function ExplorePage() {
                       onCardTagClick={handleCardTagClick}
                       phaseId={item.phase ?? undefined}
                       roleTypeId={item.roleTypes ?? undefined}
+                      feed="explore"
                     />
                   ))}
                 </MasonryGrid>
