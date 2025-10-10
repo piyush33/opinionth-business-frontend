@@ -243,6 +243,86 @@ export default function EventPage() {
     { id: "retro-learning", name: "Retro / Learning", order: 8 },
   ];
 
+  // Keep your PHASE_OPTIONS as-is (for non-roadmap)
+
+  type RoadmapBucket = "Backlog" | "Planned" | "In Progress" | "Completed";
+  type PhaseMap = {
+    id: string; // backend id (unchanged)
+    name: string; // your normal label
+    order: number;
+    roadmapPhase: RoadmapBucket;
+  };
+
+  const PHASE_OPTIONS_MAPPING: PhaseMap[] = [
+    {
+      id: "backlog",
+      name: "Backlog/ Pending",
+      order: 0,
+      roadmapPhase: "Backlog",
+    },
+    {
+      id: "seed-initial-discuss",
+      name: "Seed / Initial Discuss",
+      order: 1,
+      roadmapPhase: "Planned",
+    },
+    {
+      id: "discovery-brainstorm",
+      name: "Discovery / Brainstorm",
+      order: 2,
+      roadmapPhase: "Planned",
+    },
+    {
+      id: "hypothesis-options",
+      name: "Hypothesis / Options",
+      order: 3,
+      roadmapPhase: "Planned",
+    },
+    {
+      id: "specs-solutioning",
+      name: "Specs / Solutioning",
+      order: 4,
+      roadmapPhase: "In Progress",
+    },
+    { id: "decision", name: "Decision", order: 5, roadmapPhase: "In Progress" },
+    {
+      id: "task-execution",
+      name: "Task / Execution",
+      order: 6,
+      roadmapPhase: "In Progress",
+    },
+    {
+      id: "documentation-narrative",
+      name: "Documentation / Narrative",
+      order: 7,
+      roadmapPhase: "In Progress",
+    },
+    {
+      id: "retro-learning",
+      name: "Retro / Learning",
+      order: 8,
+      roadmapPhase: "Completed",
+    },
+  ];
+
+  // helpers
+  const PHASE_ID_TO_ROADMAP: Record<string, RoadmapBucket | undefined> =
+    Object.fromEntries(
+      PHASE_OPTIONS_MAPPING.map((p) => [p.id, p.roadmapPhase])
+    );
+
+  const ROADMAP_PHASE_ORDER: Record<RoadmapBucket, number> = {
+    Backlog: 0,
+    Planned: 1,
+    "In Progress": 2,
+    Completed: 3,
+  };
+  const ROADMAP_PHASE_OPTIONS = (
+    Object.keys(ROADMAP_PHASE_ORDER) as RoadmapBucket[]
+  )
+    .map((name) => ({ id: name, name, order: ROADMAP_PHASE_ORDER[name] }))
+    .sort((a, b) => a.order - b.order);
+
   const ROLE_TYPE_OPTIONS = [
     { id: "feature", name: "Feature" },
     { id: "bug", name: "Bug" },
@@ -636,7 +716,12 @@ export default function EventPage() {
 
       // phase
       const matchesPhase =
-        selectedPhase === "all" || item.phase === selectedPhase;
+        selectedPhase === "all" ||
+        (isRoadmap
+          ? // selectedPhase is a roadmap bucket name here
+            PHASE_ID_TO_ROADMAP[item.phase ?? ""] === selectedPhase
+          : // normal behavior (selectedPhase is backend id)
+            item.phase === selectedPhase);
 
       // role types (any match)
       const matchesRoleTypes =
@@ -932,14 +1017,25 @@ export default function EventPage() {
     return { totalCards, contributors, hasWeblinks, isLocked };
   };
 
+  const isRoadmap = collectionCategory.id === "roadmap";
+
+  const PHASE_OPTIONS_FOR_UI = isRoadmap
+    ? ROADMAP_PHASE_OPTIONS
+    : PHASE_OPTIONS;
+
   // Filter logic
   const filteredCards = useMemo(() => {
     return displayCards.filter((card) => {
       const categoryMatch =
         selectedCategories.size === 0 ||
         selectedCategories.has(card.category || "");
+      const phaseKey = isRoadmap
+        ? PHASE_ID_TO_ROADMAP[card.phase ?? ""] // -> bucket name or undefined
+        : card.phase ?? ""; // -> backend id or ""
+
       const phaseMatch =
-        selectedPhases.size === 0 || selectedPhases.has(card.phase || "");
+        selectedPhases.size === 0 ||
+        (!!phaseKey && selectedPhases.has(phaseKey));
       const roleTypeMatch =
         selectedRoleTypes.size === 0 ||
         (card.roleTypes &&
@@ -1538,10 +1634,25 @@ export default function EventPage() {
                             onChange={(e) => setSelectedPhase(e.target.value)}
                             className="w-full bg-gray-50 text-gray-600 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none pr-10"
                           >
-                            <option value="all">All Phases</option>
-                            {PHASE_OPTIONS.map((phase) => (
-                              <option key={phase.id} value={phase.id}>
-                                {phase.order}. {phase.name}
+                            <option value="all">
+                              {isRoadmap ? "All Roadmap Phases" : "All Phases"}
+                            </option>
+
+                            {PHASE_OPTIONS_FOR_UI.map((phase) => (
+                              <option
+                                key={phase.id}
+                                // IMPORTANT: for roadmap we store bucket name (Backlog/Planned/...)
+                                value={
+                                  isRoadmap
+                                    ? (phase as any).name
+                                    : (phase as any).id
+                                }
+                              >
+                                {isRoadmap
+                                  ? (phase as any).name
+                                  : `${(phase as any).order}. ${
+                                      (phase as any).name
+                                    }`}
                               </option>
                             ))}
                           </select>
@@ -1550,11 +1661,11 @@ export default function EventPage() {
                         {selectedPhase !== "all" && (
                           <div className="mt-2 flex items-center justify-between text-xs">
                             <span className="text-purple-600 font-medium">
-                              {
-                                PHASE_OPTIONS.find(
-                                  (p) => p.id === selectedPhase
-                                )?.name
-                              }
+                              {isRoadmap
+                                ? selectedPhase // "Backlog" / "Planned" / ...
+                                : PHASE_OPTIONS.find(
+                                    (p) => p.id === selectedPhase
+                                  )?.name}
                             </span>
                             <button
                               onClick={() => setSelectedPhase("all")}
@@ -1693,11 +1804,11 @@ export default function EventPage() {
                             <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs">
                               <Workflow className="w-3 h-3" />
                               <span>
-                                {
-                                  PHASE_OPTIONS.find(
-                                    (p) => p.id === selectedPhase
-                                  )?.name
-                                }
+                                {isRoadmap
+                                  ? selectedPhase
+                                  : PHASE_OPTIONS.find(
+                                      (p) => p.id === selectedPhase
+                                    )?.name}
                               </span>
                               <button
                                 onClick={() => setSelectedPhase("all")}
@@ -1707,6 +1818,7 @@ export default function EventPage() {
                               </button>
                             </span>
                           )}
+
                           {[...selectedRoleTypes].map((rtId) => {
                             const roleType = ROLE_TYPE_OPTIONS.find(
                               (rt) => rt.id === rtId
@@ -1831,6 +1943,13 @@ export default function EventPage() {
                       onUserClick={handleUserClick}
                       phaseId={item.phase ?? undefined}
                       roleTypeId={item.roleTypes ?? undefined}
+                      phaseLabelOverride={
+                        (item.category
+                          ? normalizeCategoryId(item.category)
+                          : collectionCategory.id) === "roadmap"
+                          ? PHASE_ID_TO_ROADMAP[item.phase ?? ""]
+                          : undefined
+                      }
                     />
                   </div>
                 </div>

@@ -40,6 +40,7 @@ interface CardProps {
   cardData?: any;
   phaseId?: string;
   roleTypeId?: string[];
+  phaseLabelOverride?: string;
   feed?: string;
 }
 
@@ -68,6 +69,7 @@ export default function Card({
   cardData,
   phaseId,
   roleTypeId,
+  phaseLabelOverride,
   feed,
 }: CardProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -301,7 +303,9 @@ export default function Card({
                 >
                   <GitBranch className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span className="truncate max-w-[9rem] sm:max-w-[12rem]">
-                    {phaseMeta.name}
+                    <span className="truncate max-w-[9rem] sm:max-w-[12rem]">
+                      {phaseLabelOverride ?? phaseMeta.name}
+                    </span>
                   </span>
                 </span>
               )}

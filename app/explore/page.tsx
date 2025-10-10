@@ -78,6 +78,84 @@ const PHASE_OPTIONS = [
   { id: "retro-learning", name: "Retro / Learning", order: 8 },
 ];
 
+type PhaseMap = {
+  id: string; // backend id (unchanged)
+  name: string; // normal name (what you already show today)
+  order: number;
+  roadmapPhase: "Backlog" | "Planned" | "In Progress" | "Completed";
+};
+
+export const PHASE_OPTIONS_MAPPING: PhaseMap[] = [
+  {
+    id: "backlog",
+    name: "Backlog/ Pending",
+    order: 0,
+    roadmapPhase: "Backlog",
+  },
+  {
+    id: "seed-initial-discuss",
+    name: "Seed / Initial Discuss",
+    order: 1,
+    roadmapPhase: "Planned",
+  },
+  {
+    id: "discovery-brainstorm",
+    name: "Discovery / Brainstorm",
+    order: 2,
+    roadmapPhase: "Planned",
+  },
+  {
+    id: "hypothesis-options",
+    name: "Hypothesis / Options",
+    order: 3,
+    roadmapPhase: "Planned",
+  },
+  {
+    id: "specs-solutioning",
+    name: "Specs / Solutioning",
+    order: 4,
+    roadmapPhase: "In Progress",
+  },
+  { id: "decision", name: "Decision", order: 5, roadmapPhase: "In Progress" },
+  {
+    id: "task-execution",
+    name: "Task / Execution",
+    order: 6,
+    roadmapPhase: "In Progress",
+  },
+  {
+    id: "documentation-narrative",
+    name: "Documentation / Narrative",
+    order: 7,
+    roadmapPhase: "In Progress",
+  },
+  {
+    id: "retro-learning",
+    name: "Retro / Learning",
+    order: 8,
+    roadmapPhase: "Completed",
+  },
+];
+
+// helpers
+const PHASE_ID_TO_ROADMAP: Record<string, string> = Object.fromEntries(
+  PHASE_OPTIONS_MAPPING.map((p) => [p.id, p.roadmapPhase])
+);
+
+const ROADMAP_PHASE_ORDER = {
+  Backlog: 0,
+  Planned: 1,
+  "In Progress": 2,
+  Completed: 3,
+} as const;
+const ROADMAP_PHASE_OPTIONS = Object.keys(ROADMAP_PHASE_ORDER)
+  .map((name) => ({
+    id: name,
+    name,
+    order: ROADMAP_PHASE_ORDER[name as keyof typeof ROADMAP_PHASE_ORDER],
+  }))
+  .sort((a, b) => a.order - b.order);
+
 const ROLE_TYPE_OPTIONS = [
   { id: "feature", name: "Feature" },
   { id: "bug", name: "Bug" },
@@ -416,7 +494,12 @@ export default function ExplorePage() {
 
       // Phase filter
       const matchesPhase =
-        selectedPhase === "all" || item.phase === selectedPhase;
+        selectedPhase === "all" ||
+        (isRoadmap
+          ? // selectedPhase is a roadmap bucket name here
+            PHASE_ID_TO_ROADMAP[item.phase ?? ""] === selectedPhase
+          : // normal behavior (selectedPhase is backend id)
+            item.phase === selectedPhase);
 
       // Role Types filter (multi-select - item must have at least one selected role type)
       const matchesRoleTypes =
@@ -557,6 +640,11 @@ export default function ExplorePage() {
       : 0,
     contentTypeFilter !== "all" ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
+
+  const isRoadmap = selectedCategory === "roadmap";
+  const PHASE_OPTIONS_FOR_UI = isRoadmap
+    ? ROADMAP_PHASE_OPTIONS
+    : PHASE_OPTIONS;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -988,22 +1076,31 @@ export default function ExplorePage() {
                           onChange={(e) => setSelectedPhase(e.target.value)}
                           className="w-full bg-gray-50 text-gray-500 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none pr-10"
                         >
-                          <option value="all">All Phases</option>
-                          {PHASE_OPTIONS.map((phase) => (
-                            <option key={phase.id} value={phase.id}>
-                              {phase.order}. {phase.name}
+                          <option value="all">
+                            {isRoadmap ? "All Roadmap Phases" : "All Phases"}
+                          </option>
+                          {PHASE_OPTIONS_FOR_UI.map((phase) => (
+                            <option
+                              key={phase.id}
+                              value={isRoadmap ? phase.name : phase.id} // IMPORTANT
+                            >
+                              {isRoadmap
+                                ? phase.name
+                                : `${phase.order}. ${phase.name}`}
                             </option>
                           ))}
                         </select>
+
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                       </div>
                       {selectedPhase !== "all" && (
                         <div className="mt-2 flex items-center justify-between text-xs">
                           <span className="text-purple-600 font-medium">
-                            {
-                              PHASE_OPTIONS.find((p) => p.id === selectedPhase)
-                                ?.name
-                            }
+                            {isRoadmap
+                              ? selectedPhase // "Backlog" / "Planned" / ...
+                              : PHASE_OPTIONS.find(
+                                  (p) => p.id === selectedPhase
+                                )?.name}
                           </span>
                           <button
                             onClick={() => setSelectedPhase("all")}
@@ -1140,10 +1237,11 @@ export default function ExplorePage() {
                         <span className="inline-flex items-center space-x-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs">
                           <Workflow className="w-3 h-3" />
                           <span>
-                            {
-                              PHASE_OPTIONS.find((p) => p.id === selectedPhase)
-                                ?.name
-                            }
+                            {isRoadmap
+                              ? selectedPhase
+                              : PHASE_OPTIONS.find(
+                                  (p) => p.id === selectedPhase
+                                )?.name}
                           </span>
                           <button
                             onClick={() => setSelectedPhase("all")}
@@ -1153,6 +1251,7 @@ export default function ExplorePage() {
                           </button>
                         </span>
                       )}
+
                       {selectedRoleTypes.map((rtId) => {
                         const roleType = ROLE_TYPE_OPTIONS.find(
                           (rt) => rt.id === rtId
@@ -1242,6 +1341,11 @@ export default function ExplorePage() {
                       onCardTagClick={handleCardTagClick}
                       phaseId={item.phase ?? undefined}
                       roleTypeId={item.roleTypes ?? undefined}
+                      phaseLabelOverride={
+                        item.category === "roadmap"
+                          ? PHASE_ID_TO_ROADMAP[item.phase ?? ""]
+                          : undefined
+                      }
                       feed="explore"
                     />
                   ))}

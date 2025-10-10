@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -45,6 +45,12 @@ import {
   slugify,
 } from "@/utils/customCategories";
 import LayerLockModal from "@/components/modals/LayerLockModal";
+import {
+  ROADMAP_BUCKET_OPTIONS,
+  backendToBucket,
+  mapBucketToBackendPrimary,
+  type RoadmapBucketId,
+} from "@/utils/roadmapPhaseMap";
 
 type Category = {
   id: string;
@@ -56,10 +62,13 @@ type Category = {
   isCustom?: boolean;
 };
 
+type RoadmapBucket = "Backlog" | "Planned" | "In Progress" | "Completed";
+
 type Phase = {
-  id: string;
-  name: string;
+  id: string; // backend id (unchanged)
+  name: string; // backend display name
   description: string;
+  roadmapBucket?: RoadmapBucket; // UI-only bucket for roadmap views
 };
 
 type RoleType = {
@@ -156,46 +165,58 @@ const PHASES: Phase[] = [
     id: "backlog",
     name: "Backlog/ Pending",
     description: "Items pending from earlier workflow",
+    roadmapBucket: "Backlog",
   },
+
   {
     id: "seed-initial-discuss",
     name: "Seed / Initial Discuss",
     description: "Initial exploration and discussion",
+    roadmapBucket: "Planned",
   },
   {
     id: "discovery-brainstorm",
     name: "Discovery / Brainstorm",
     description: "Exploring possibilities and ideas",
+    roadmapBucket: "Planned",
   },
   {
     id: "hypothesis-options",
     name: "Hypothesis / Options",
     description: "Forming hypotheses and considering options",
+    roadmapBucket: "Planned",
   },
+
   {
     id: "specs-solutioning",
     name: "Specs / Solutioning",
     description: "Defining specifications and solutions",
+    roadmapBucket: "In Progress",
   },
   {
     id: "decision",
     name: "Decision",
     description: "Making key decisions",
+    roadmapBucket: "In Progress",
   },
   {
     id: "task-execution",
     name: "Task / Execution",
     description: "Executing tasks and implementation",
+    roadmapBucket: "In Progress",
   },
   {
     id: "documentation-narrative",
     name: "Documentation / Narrative",
     description: "Documenting outcomes and narratives",
+    roadmapBucket: "In Progress",
   },
+
   {
     id: "retro-learning",
     name: "Retro / Learning",
     description: "Reflecting and learning from outcomes",
+    roadmapBucket: "Completed",
   },
 ];
 
@@ -328,6 +349,16 @@ export default function CreatePage() {
 
   type ActiveOrg = { id: number; name: string; slug: string } | null;
 
+  // is the currently chosen category "roadmap"?
+  const isRoadmap = (selectedCategory?.id ?? "").toLowerCase() === "roadmap";
+
+  // UI list in the Phase modal: buckets for roadmap, full phases otherwise
+  const UI_PHASES_FOR_MODAL: Array<{
+    id: string;
+    name: string;
+    description?: string;
+  }> = isRoadmap ? ROADMAP_BUCKET_OPTIONS : PHASES;
+
   // add this helper inside your component file
   const getActiveOrgId = (): number | null => {
     if (typeof window === "undefined") return null; // guard SSR
@@ -405,11 +436,23 @@ export default function CreatePage() {
       }
       // Pre-fill phase and roleTypes if coming from an existing card
       if (card.phase) {
-        const phaseMatch = PHASES.find((p) => p.id === card.phase);
-        if (phaseMatch) {
-          setSelectedPhase(phaseMatch);
+        if ((card.category ?? "").toLowerCase() === "roadmap") {
+          const bucketId = backendToBucket(card.phase);
+          if (bucketId) {
+            setSelectedPhase({
+              id: bucketId, // store the BUCKET id in UI
+              name:
+                ROADMAP_BUCKET_OPTIONS.find((b) => b.id === bucketId)?.name ||
+                "Backlog",
+              description: "",
+            });
+          }
+        } else {
+          const match = PHASES.find((p) => p.id === card.phase);
+          if (match) setSelectedPhase(match);
         }
       }
+
       if (card.roleTypes && Array.isArray(card.roleTypes)) {
         setSelectedRoleTypes(
           ROLE_TYPES.filter((rt) => card.roleTypes.includes(rt.id))
@@ -465,7 +508,10 @@ export default function CreatePage() {
     }
   };
 
-  const createHomefeedData = async (parentId: number) => {
+  const createHomefeedData = async (
+    parentId: number,
+    phaseIdForBackend: string | null
+  ) => {
     const token = localStorage.getItem("token");
     const orgId = getActiveOrgId();
 
@@ -481,11 +527,11 @@ export default function CreatePage() {
         picture: user.image,
         weblink: webLink,
         visibility: isLockSelected ? "layer" : "org",
-        lock: !!isLockSelected, // ask backend to lock the layer
+        lock: !!isLockSelected,
         allowedMemberIds,
         privacy: selectedCard?.privacy || isPrivacySelected,
         category: selectedCategory?.id || selectedCategory?.name || null,
-        phase: selectedPhase?.id || null,
+        phase: phaseIdForBackend || null, // <-- use mapped id
         roleTypes: selectedRoleTypes.map((rt) => rt.id),
       },
       {
@@ -499,7 +545,8 @@ export default function CreatePage() {
 
   const createProfilefeedData = async (
     parentId: number,
-    homefeedId?: number
+    homefeedId?: number,
+    phaseIdForBackend?: string | null
   ) => {
     const token = localStorage.getItem("token");
     const orgId = getActiveOrgId();
@@ -520,8 +567,8 @@ export default function CreatePage() {
         allowedMemberIds,
         privacy: selectedCard?.privacy || isPrivacySelected,
         category: selectedCategory?.id || selectedCategory?.name || null,
-        homefeedItemId: homefeedId ?? undefined, // <-- NEW
-        phase: selectedPhase?.id || null,
+        homefeedItemId: homefeedId ?? undefined,
+        phase: phaseIdForBackend || null, // <-- use mapped id
         roleTypes: selectedRoleTypes.map((rt) => rt.id),
       },
       { headers: { Authorization: `Bearer ${token}` } }
@@ -535,17 +582,22 @@ export default function CreatePage() {
       return;
     }
 
+    // Map UI selection → backend id
+    const phaseIdForBackend = isRoadmap
+      ? mapBucketToBackendPrimary(selectedPhase.id as RoadmapBucketId)
+      : selectedPhase.id;
+
     setIsCreating(true);
     try {
       const parentId =
         selectedCard?.layer.key || (await generateUniqueParent());
 
-      // 1) create homefeed first — capture its id
-      const homeRes = await createHomefeedData(parentId);
-      const homefeedId = homeRes.data?.id; // ensure backend returns the id
+      // 1) create homefeed — note the mapped phase id
+      const homeRes = await createHomefeedData(parentId, phaseIdForBackend);
+      const homefeedId = homeRes.data?.id;
 
-      // 2) create linked profilefeed with homefeedItemId
-      await createProfilefeedData(parentId, homefeedId);
+      // 2) create linked profilefeed
+      await createProfilefeedData(parentId, homefeedId, phaseIdForBackend);
 
       localStorage.removeItem("selectedCard");
       router.back();
@@ -1131,7 +1183,7 @@ export default function CreatePage() {
               >
                 <div className="flex items-center justify-center space-x-3">
                   <Calendar className="w-4 h-4 text-white" />
-                  <span className="text-white text-sm">
+                  <span className="text-white font-medium">
                     {selectedPhase ? selectedPhase.name : "Select Phase"}
                   </span>
                 </div>
@@ -1490,35 +1542,53 @@ export default function CreatePage() {
                 Use this to cut the Explore feed into "where things are" in the
                 work cycle. Single selection required.
               </p>
+
               <div className="space-y-2">
-                {PHASES.map((phase, index) => (
+                {UI_PHASES_FOR_MODAL.map((opt, index) => (
                   <button
-                    key={phase.id}
+                    key={opt.id}
                     onClick={() => {
+                      if (isRoadmap) {
+                        // opt is a bucket option
+                        setSelectedPhase({
+                          id: opt.id, // "backlog" | "planned" | "in-progress" | "completed"
+                          name: opt.name, // "Backlog" | "Planned" | ...
+                          description: "",
+                        });
+                      } else {
+                        // opt is a full backend phase
+                        setSelectedPhase(opt as Phase);
+                      }
                       setShowPhaseError(false);
-                      setSelectedPhase(phase);
                       setIsPhaseModalOpen(false);
                     }}
                     className={`w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-200 ${
-                      selectedPhase?.id === phase.id
+                      selectedPhase?.id === opt.id
                         ? "border-blue-500 bg-blue-50"
                         : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
                     }`}
                   >
                     <div className="flex items-center space-x-3">
                       <span className="text-sm font-semibold text-gray-500">
-                        {index}.
+                        {index + 1}.
                       </span>
                       <div className="text-left">
-                        <div className="font-medium text-gray-900">
-                          {phase.name}
+                        <div className="font-medium text-gray-900 flex items-center gap-2">
+                          <span>{opt.name}</span>
+                          {!isRoadmap && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                              {PHASES.find((p) => p.id === opt.id)?.name || ""}
+                            </span>
+                          )}
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {phase.description}
-                        </div>
+                        {!isRoadmap && opt.description && (
+                          <div className="text-xs text-gray-500">
+                            {opt.description}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    {selectedPhase?.id === phase.id && (
+                    {selectedPhase?.id === opt.id && (
                       <Check className="w-5 h-5 text-blue-600" />
                     )}
                   </button>
