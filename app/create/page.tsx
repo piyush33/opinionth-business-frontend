@@ -400,6 +400,14 @@ export default function CreatePage() {
   }, []);
 
   useEffect(() => {
+    const selectedData = localStorage.getItem("selectedCategory");
+    const category =
+      DEFAULT_CATEGORIES.filter((c) => c.id === selectedData)[0] || null;
+
+    setSelectedCategory(category);
+  }, []);
+
+  useEffect(() => {
     window.scrollTo(0, 0);
 
     // Get user from localStorage

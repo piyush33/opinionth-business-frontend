@@ -252,6 +252,10 @@ export default function ExplorePage() {
     }
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem("selectedCategory", selectedCategory);
+  }, [selectedCategory]);
+
   // NEW helpers
   const PALETTE = [
     { color: "text-gray-700", bgColor: "bg-gray-100" },
