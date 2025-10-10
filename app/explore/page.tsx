@@ -85,7 +85,7 @@ type PhaseMap = {
   roadmapPhase: "Backlog" | "Planned" | "In Progress" | "Completed";
 };
 
-export const PHASE_OPTIONS_MAPPING: PhaseMap[] = [
+const PHASE_OPTIONS_MAPPING: PhaseMap[] = [
   {
     id: "backlog",
     name: "Backlog/ Pending",
