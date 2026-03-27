@@ -94,14 +94,14 @@ export default function Card({
     const matches = text?.match(regex) || [];
     const users = [
       ...new Set(
-        matches.filter((m) => !/^@\d+$/.test(m)).map((m) => m.slice(1))
+        matches.filter((m) => !/^@\d+$/.test(m)).map((m) => m.slice(1)),
       ),
     ];
     const cards = [
       ...new Set(
         matches
           .filter((m) => /^@\d+$/.test(m))
-          .map((m) => Number.parseInt(m.slice(1)))
+          .map((m) => Number.parseInt(m.slice(1))),
       ),
     ];
     return { users, cards };
@@ -112,7 +112,7 @@ export default function Card({
   function parseAndRenderText(
     text: string,
     onUserClick: (username: string) => void,
-    onCardClick: (id: number) => void
+    onCardClick: (id: number) => void,
   ) {
     const regex = /(@\w+)/g;
     const parts = text?.split(regex);
@@ -161,14 +161,14 @@ export default function Card({
   const roleIds = Array.isArray(roleTypeId)
     ? roleTypeId
     : roleTypeId
-    ? [roleTypeId]
-    : [];
+      ? [roleTypeId]
+      : [];
 
   const roleMetas = roleIds
     .filter((id): id is string => !!id && typeof id === "string")
     .map(
       (id) =>
-        getRoleTypeById(id) ?? { id, name: toTitleCase(id), description: "" }
+        getRoleTypeById(id) ?? { id, name: toTitleCase(id), description: "" },
     );
 
   const phaseClasses =
@@ -311,24 +311,23 @@ export default function Card({
               )}
 
               {/* Multiple role types */}
-              {feed === "explore" &&
-                roleMetas.map((meta) => (
-                  <span
-                    key={meta.id}
-                    className={roleClasses}
-                    title={
-                      meta.description
-                        ? `${meta.name} — ${meta.description}`
-                        : meta.name
-                    }
-                    aria-label={`Role type: ${meta.name}`}
-                  >
-                    <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="truncate max-w-[9rem] sm:max-w-[12rem]">
-                      {meta.name}
-                    </span>
+              {roleMetas.map((meta) => (
+                <span
+                  key={meta.id}
+                  className={roleClasses}
+                  title={
+                    meta.description
+                      ? `${meta.name} — ${meta.description}`
+                      : meta.name
+                  }
+                  aria-label={`Role type: ${meta.name}`}
+                >
+                  <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="truncate max-w-[9rem] sm:max-w-[12rem]">
+                    {meta.name}
                   </span>
-                ))}
+                </span>
+              ))}
             </div>
           )}
 

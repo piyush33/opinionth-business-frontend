@@ -201,11 +201,11 @@ export default function EventPage() {
 
   // Filters state
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [selectedPhases, setSelectedPhases] = useState<Set<string>>(new Set());
   const [selectedRoleTypes, setSelectedRoleTypes] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
     null,
@@ -252,6 +252,10 @@ export default function EventPage() {
     order: number;
     roadmapPhase: RoadmapBucket;
   };
+
+  const PHASE_ORDER_MAP: Record<string, number> = Object.fromEntries(
+    PHASE_OPTIONS.map((p) => [p.id, p.order]),
+  );
 
   const PHASE_OPTIONS_MAPPING: PhaseMap[] = [
     {
@@ -308,7 +312,7 @@ export default function EventPage() {
   // helpers
   const PHASE_ID_TO_ROADMAP: Record<string, RoadmapBucket | undefined> =
     Object.fromEntries(
-      PHASE_OPTIONS_MAPPING.map((p) => [p.id, p.roadmapPhase])
+      PHASE_OPTIONS_MAPPING.map((p) => [p.id, p.roadmapPhase]),
     );
 
   const ROADMAP_PHASE_ORDER: Record<RoadmapBucket, number> = {
@@ -366,7 +370,7 @@ export default function EventPage() {
   function scheduleCommit(
     action: "like" | "repost" | "save",
     card: CardItem,
-    desired: boolean
+    desired: boolean,
   ) {
     const k = keyOf(action, card.id);
 
@@ -397,17 +401,17 @@ export default function EventPage() {
         // Roll back optimistic UI to lastCommitted
         if (action === "like") {
           setLikedCards((prev) =>
-            prev.map((c) => (c.id === card.id ? { ...c, hasLiked: last } : c))
+            prev.map((c) => (c.id === card.id ? { ...c, hasLiked: last } : c)),
           );
         } else if (action === "repost") {
           setRepostedCards((prev) =>
             prev.map((c) =>
-              c.id === card.id ? { ...c, hasReposted: last } : c
-            )
+              c.id === card.id ? { ...c, hasReposted: last } : c,
+            ),
           );
         } else {
           setSavedCards((prev) =>
-            prev.map((c) => (c.id === card.id ? { ...c, hasSaved: last } : c))
+            prev.map((c) => (c.id === card.id ? { ...c, hasSaved: last } : c)),
           );
         }
       }
@@ -423,26 +427,26 @@ export default function EventPage() {
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked`,
         { feedItemId: item.profileFeedItemId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       await axios.post(
         `/nest-api/likes/homefeed/${user.username}/${item.id}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
     } else {
       await axios.delete(
         `/nest-api/likes/homefeed/${user.username}/${item.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       await axios.delete(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/liked/${item.profileFeedItemId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
     }
   }
@@ -456,26 +460,26 @@ export default function EventPage() {
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted`,
         { feedItemId: item.profileFeedItemId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       await axios.post(
         `/nest-api/reposts/homefeed/${user.username}/${item.id}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
     } else {
       await axios.delete(
         `/nest-api/reposts/homefeed/${user.username}/${item.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       await axios.delete(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/reposted/${item.profileFeedItemId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
     }
   }
@@ -489,26 +493,26 @@ export default function EventPage() {
       await axios.post(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved`,
         { feedItemId: item.profileFeedItemId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       await axios.post(
         `/nest-api/saves/homefeed/${user.username}/${item.id}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
     } else {
       await axios.delete(
         `/nest-api/saves/homefeed/${user.username}/${item.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       await axios.delete(
         `/nest-api/orgs/${orgId}/profilefeed/${user.username}/saved/${item.profileFeedItemId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
     }
   }
@@ -535,7 +539,7 @@ export default function EventPage() {
     if (!orgId || !user) return;
     try {
       const res = await fetch(
-        `/nest-api/orgs/${orgId}/notifications/user/${user.username}/unread-count`
+        `/nest-api/orgs/${orgId}/notifications/user/${user.username}/unread-count`,
       );
       const { count } = await res.json();
       setUnreadCount(count || 0);
@@ -589,7 +593,7 @@ export default function EventPage() {
           {
             headers: { Authorization: `Bearer ${token}` },
             signal: abort.signal,
-          }
+          },
         );
 
         if (response.status === 401) {
@@ -644,8 +648,8 @@ export default function EventPage() {
     const idsFromFeed = new Set<string>(
       homeFeed.map(
         (item) =>
-          (item.category && String(item.category).trim()) || "uncategorized"
-      )
+          (item.category && String(item.category).trim()) || "uncategorized",
+      ),
     );
 
     // dedupe defaults + from feed
@@ -679,7 +683,7 @@ export default function EventPage() {
           : homeFeed.filter(
               (i) =>
                 ((i.category && String(i.category).trim()) ||
-                  "uncategorized") === cat.id
+                  "uncategorized") === cat.id,
             ).length,
     }));
 
@@ -728,7 +732,7 @@ export default function EventPage() {
         selectedRoleTypes.size === 0 ||
         (item.roleTypes &&
           Array.from(selectedRoleTypes).some((rt: string) =>
-            item.roleTypes?.includes(rt)
+            item.roleTypes?.includes(rt),
           ));
 
       // date
@@ -802,7 +806,7 @@ export default function EventPage() {
               `/nest-api/likes/homefeed/${user.username}/${item.id}`,
               {
                 headers: { Authorization: `Bearer ${token}` },
-              }
+              },
             );
             return { id: item.id, hasLiked: response.data.hasLiked };
           } catch (error) {
@@ -817,7 +821,7 @@ export default function EventPage() {
               `/nest-api/reposts/homefeed/${user.username}/${item.id}`,
               {
                 headers: { Authorization: `Bearer ${token}` },
-              }
+              },
             );
             return { id: item.id, hasReposted: response.data.hasReposted };
           } catch (error) {
@@ -832,7 +836,7 @@ export default function EventPage() {
               `/nest-api/saves/homefeed/${user.username}/${item.id}`,
               {
                 headers: { Authorization: `Bearer ${token}` },
-              }
+              },
             );
             return { id: item.id, hasSaved: response.data.hasSaved };
           } catch (error) {
@@ -845,7 +849,7 @@ export default function EventPage() {
             Promise.all(likedPromises),
             Promise.all(repostedPromises),
             Promise.all(savedPromises),
-          ]
+          ],
         );
 
         setLikedCards(likedResults);
@@ -855,7 +859,7 @@ export default function EventPage() {
         const m: Record<string, boolean> = {};
         likedResults.forEach((c) => (m[keyOf("like", c.id)] = !!c.hasLiked));
         repostedResults.forEach(
-          (c) => (m[keyOf("repost", c.id)] = !!c.hasReposted)
+          (c) => (m[keyOf("repost", c.id)] = !!c.hasReposted),
         );
         savedResults.forEach((c) => (m[keyOf("save", c.id)] = !!c.hasSaved));
         lastCommittedRef.current = { ...lastCommittedRef.current, ...m };
@@ -879,7 +883,7 @@ export default function EventPage() {
     setLikedCards((prev) =>
       prev.some((c) => c.id === item.id)
         ? prev.map((c) => (c.id === item.id ? { ...c, hasLiked: desired } : c))
-        : [...prev, { id: item.id, hasLiked: desired }]
+        : [...prev, { id: item.id, hasLiked: desired }],
     );
 
     // debounce the server commit
@@ -896,9 +900,9 @@ export default function EventPage() {
     setRepostedCards((prev) =>
       prev.some((c) => c.id === item.id)
         ? prev.map((c) =>
-            c.id === item.id ? { ...c, hasReposted: desired } : c
+            c.id === item.id ? { ...c, hasReposted: desired } : c,
           )
-        : [...prev, { id: item.id, hasReposted: desired }]
+        : [...prev, { id: item.id, hasReposted: desired }],
     );
 
     scheduleCommit("repost", item, desired);
@@ -914,7 +918,7 @@ export default function EventPage() {
     setSavedCards((prev) =>
       prev.some((c) => c.id === item.id)
         ? prev.map((c) => (c.id === item.id ? { ...c, hasSaved: desired } : c))
-        : [...prev, { id: item.id, hasSaved: desired }]
+        : [...prev, { id: item.id, hasSaved: desired }],
     );
 
     scheduleCommit("save", item, desired);
@@ -1031,7 +1035,7 @@ export default function EventPage() {
         selectedCategories.has(card.category || "");
       const phaseKey = isRoadmap
         ? PHASE_ID_TO_ROADMAP[card.phase ?? ""] // -> bucket name or undefined
-        : card.phase ?? ""; // -> backend id or ""
+        : (card.phase ?? ""); // -> backend id or ""
 
       const phaseMatch =
         selectedPhases.size === 0 ||
@@ -1074,6 +1078,44 @@ export default function EventPage() {
     showExternalLinksOnly,
     showLockedOnly,
   ]);
+
+  const groupedCards = useMemo(() => {
+    const map = new Map<string, CardItem[]>();
+
+    filteredCards.forEach((card) => {
+      let key = "Uncategorized";
+
+      if (isRoadmap) {
+        key = PHASE_ID_TO_ROADMAP[card.phase ?? ""] || "Uncategorized";
+      } else {
+        const phase = PHASE_OPTIONS.find((p) => p.id === card.phase);
+        key = phase?.name || "Uncategorized";
+      }
+
+      if (!map.has(key)) {
+        map.set(key, []);
+      }
+
+      map.get(key)!.push(card);
+    });
+
+    // Convert to ordered array
+    if (isRoadmap) {
+      return [...ROADMAP_PHASE_OPTIONS]
+        .sort((a, b) => b.order - a.order) // 🔥 descending
+        .map((p) => ({
+          title: p.name,
+          items: map.get(p.name) || [],
+        }));
+    }
+
+    return [...PHASE_OPTIONS]
+      .sort((a, b) => b.order - a.order) // 🔥 descending
+      .map((p) => ({
+        title: p.name,
+        items: map.get(p.name) || [],
+      }));
+  }, [filteredCards, isRoadmap]);
 
   if (!user) {
     return (
@@ -1151,8 +1193,8 @@ export default function EventPage() {
         ? 1
         : 0
       : dateFilter !== "all"
-      ? 1
-      : 0,
+        ? 1
+        : 0,
     contentTypeFilter !== "all" ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
 
@@ -1404,8 +1446,8 @@ export default function EventPage() {
                           index === 0
                             ? "from-purple-400 to-pink-400"
                             : index === 1
-                            ? "from-blue-400 to-cyan-400"
-                            : "from-green-400 to-emerald-400"
+                              ? "from-blue-400 to-cyan-400"
+                              : "from-green-400 to-emerald-400"
                         } flex items-center justify-center text-white font-bold text-xs sm:text-sm z-${
                           10 + index
                         }`}
@@ -1543,10 +1585,10 @@ export default function EventPage() {
                                 index % 4 === 0
                                   ? "from-purple-400 to-pink-400"
                                   : index % 4 === 1
-                                  ? "from-blue-400 to-cyan-400"
-                                  : index % 4 === 2
-                                  ? "from-green-400 to-emerald-400"
-                                  : "from-orange-400 to-red-400"
+                                    ? "from-blue-400 to-cyan-400"
+                                    : index % 4 === 2
+                                      ? "from-green-400 to-emerald-400"
+                                      : "from-orange-400 to-red-400"
                               } flex items-center justify-center text-white font-bold text-xs`}
                               title={username}
                             >
@@ -1664,7 +1706,7 @@ export default function EventPage() {
                               {isRoadmap
                                 ? selectedPhase // "Backlog" / "Planned" / ...
                                 : PHASE_OPTIONS.find(
-                                    (p) => p.id === selectedPhase
+                                    (p) => p.id === selectedPhase,
                                   )?.name}
                             </span>
                             <button
@@ -1763,7 +1805,7 @@ export default function EventPage() {
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                           {ROLE_TYPE_OPTIONS.map((roleType) => {
                             const isSelected = selectedRoleTypes.has(
-                              roleType.id
+                              roleType.id,
                             );
                             return (
                               <button
@@ -1807,7 +1849,7 @@ export default function EventPage() {
                                 {isRoadmap
                                   ? selectedPhase
                                   : PHASE_OPTIONS.find(
-                                      (p) => p.id === selectedPhase
+                                      (p) => p.id === selectedPhase,
                                     )?.name}
                               </span>
                               <button
@@ -1821,7 +1863,7 @@ export default function EventPage() {
 
                           {[...selectedRoleTypes].map((rtId) => {
                             const roleType = ROLE_TYPE_OPTIONS.find(
-                              (rt) => rt.id === rtId
+                              (rt) => rt.id === rtId,
                             );
                             return (
                               <span
@@ -1908,53 +1950,72 @@ export default function EventPage() {
               </button>
             </div>
           ) : (
-            <MasonryGrid>
-              {filteredCards.map((item, index) => (
-                <div
-                  id={`card-${item.id}`}
-                  className="group relative scroll-mt-28 md:scroll-mt-28"
-                  key={item.id}
-                >
-                  {/* Card Wrapper with hover detection */}
-                  <div className="relative transition-all duration-300">
-                    <Card
-                      user={item.username}
-                      title={item.title}
-                      description={item.description}
-                      text={item.text}
-                      image={item.image}
-                      picture={item.picture}
-                      selected={
-                        (selectedCard?.id || Number(cardId)) === item.id
-                      }
-                      onClick={() => handleCardClick(item)}
-                      onUserTagClick={handleUserTagClick}
-                      onCardTagClick={handleCardTagClick}
-                      showActions={true}
-                      onLike={handleLike}
-                      onRepost={handleRepost}
-                      onSave={handleSave}
-                      onShare={handleShare}
-                      isLiked={isLiked(item.id)}
-                      isReposted={isReposted(item.id)}
-                      isSaved={isSaved(item.id)}
-                      cardData={item}
-                      weblink={item.weblink}
-                      onUserClick={handleUserClick}
-                      phaseId={item.phase ?? undefined}
-                      roleTypeId={item.roleTypes ?? undefined}
-                      phaseLabelOverride={
-                        (item.category
-                          ? normalizeCategoryId(item.category)
-                          : collectionCategory.id) === "roadmap"
-                          ? PHASE_ID_TO_ROADMAP[item.phase ?? ""]
-                          : undefined
-                      }
-                    />
+            <div className="space-y-10">
+              {groupedCards.map((group) => {
+                if (group.items.length === 0) return null;
+
+                return (
+                  <div key={group.title}>
+                    {/* 🔥 Phase Header */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="h-1 w-6 bg-purple-500 rounded-full" />
+                      <h2 className="text-lg font-semibold text-gray-800">
+                        {group.title}
+                      </h2>
+                      <span className="text-xs text-gray-500">
+                        {group.items.length} cards
+                      </span>
+                    </div>
+
+                    {/* Cards */}
+                    <MasonryGrid>
+                      {group.items.map((item) => (
+                        <div
+                          id={`card-${item.id}`}
+                          key={item.id}
+                          className="group relative scroll-mt-28"
+                        >
+                          <Card
+                            user={item.username}
+                            title={item.title}
+                            description={item.description}
+                            text={item.text}
+                            image={item.image}
+                            picture={item.picture}
+                            selected={
+                              (selectedCard?.id || Number(cardId)) === item.id
+                            }
+                            onClick={() => handleCardClick(item)}
+                            onUserTagClick={handleUserTagClick}
+                            onCardTagClick={handleCardTagClick}
+                            showActions={true}
+                            onLike={handleLike}
+                            onRepost={handleRepost}
+                            onSave={handleSave}
+                            onShare={handleShare}
+                            isLiked={isLiked(item.id)}
+                            isReposted={isReposted(item.id)}
+                            isSaved={isSaved(item.id)}
+                            cardData={item}
+                            weblink={item.weblink}
+                            onUserClick={handleUserClick}
+                            phaseId={item.phase ?? undefined}
+                            roleTypeId={item.roleTypes ?? undefined}
+                            phaseLabelOverride={
+                              (item.category
+                                ? normalizeCategoryId(item.category)
+                                : collectionCategory.id) === "roadmap"
+                                ? PHASE_ID_TO_ROADMAP[item.phase ?? ""]
+                                : undefined
+                            }
+                          />
+                        </div>
+                      ))}
+                    </MasonryGrid>
                   </div>
-                </div>
-              ))}
-            </MasonryGrid>
+                );
+              })}
+            </div>
           )}
 
           {filteredCards.length === 0 && !isLoading && (
