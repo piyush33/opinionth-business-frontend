@@ -295,7 +295,7 @@ export default function Card({
 
           {(phaseMeta || roleMetas.length > 0) && (
             <div className="pl-3 sm:pl-4 sm:pr-4 pb-4 flex flex-wrap gap-1 sm:gap-2">
-              {phaseMeta && (
+              {feed === "explore" && phaseMeta && (
                 <span
                   className={phaseClasses}
                   title={`${phaseMeta.name} — ${phaseMeta.description}`}
