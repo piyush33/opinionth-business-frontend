@@ -11,7 +11,7 @@ import {
   Compass,
   CornerDownRight,
 } from "lucide-react";
-import { readAuth, signatureOf } from "@/lib/ai/client";
+import { postAi, readAuth, signatureOf } from "@/lib/ai/client";
 
 export type SummaryCardInput = {
   id: number;
@@ -119,18 +119,12 @@ export function useSpaceSummary({
       setLoading(true);
       setError(null);
       try {
-        const { token, orgId } = readAuth();
-        const res = await fetch("/api/ai/space-summary", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ layerId, orgId, category, phases, cards, force }),
-          signal: ac.signal,
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json?.error || "Failed to summarize.");
+        const { orgId } = readAuth();
+        const json = await postAi<any>(
+          "/api/ai/space-summary",
+          { layerId, orgId, category, phases, cards, force },
+          { signal: ac.signal, fallbackError: "Failed to summarize." },
+        );
         setData(json);
         try {
           sessionStorage.setItem(storageKey, JSON.stringify(json));
