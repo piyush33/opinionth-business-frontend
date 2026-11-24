@@ -43,11 +43,12 @@ type SpaceSummary = {
   cardCount: number;
 };
 
+export type SpaceSummaryState = ReturnType<typeof useSpaceSummary>;
+
 type Props = {
   open: boolean;
   onClose: () => void;
-  layerId: number;
-  category: string;
+  summary: SpaceSummaryState;
   phases: string[]; // ordered phase labels with cards
   cards: SummaryCardInput[];
   onJumpToPhase: (phase: string) => void;
@@ -78,32 +79,31 @@ const timeAgo = (iso: string) => {
   return `${Math.floor(d / 86400)}d ago`;
 };
 
-export default function SpaceSummaryModal({
-  open,
-  onClose,
+/**
+ * Summary fetching, shared by the page header and the modal.
+ * With `auto`, it loads in the background once the cards settle.
+ */
+export function useSpaceSummary({
   layerId,
   category,
   phases,
   cards,
-  onJumpToPhase,
-  onJumpToCard,
-}: Props) {
+  auto = false,
+}: {
+  layerId: number;
+  category: string;
+  phases: string[];
+  cards: SummaryCardInput[];
+  auto?: boolean;
+}) {
   const [data, setData] = useState<SpaceSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [minimized, setMinimized] = useState(false);
-  const [closing, setClosing] = useState(false);
-  // Height of the page's fixed top bar, so the navbar stays sharp and usable.
-  const [topOffset, setTopOffset] = useState(64);
   const abortRef = useRef<AbortController | null>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const inflightKey = useRef<string | null>(null);
 
   const signature = useMemo(() => signatureOf(cards), [cards]);
   const storageKey = `${STORAGE_PREFIX}${layerId}:${signature}`;
-  const titleById = useMemo(
-    () => new Map(cards.map((c) => [c.id, c.title || `Card #${c.id}`])),
-    [cards],
-  );
 
   const load = useCallback(
     async (force = false) => {
@@ -112,6 +112,8 @@ export default function SpaceSummaryModal({
         return;
       }
       if (!force) {
+        // same request already running (e.g. header auto-load): let it finish
+        if (inflightKey.current === storageKey) return;
         try {
           const cached = sessionStorage.getItem(storageKey);
           if (cached) {
@@ -126,6 +128,7 @@ export default function SpaceSummaryModal({
       abortRef.current?.abort();
       const ac = new AbortController();
       abortRef.current = ac;
+      inflightKey.current = storageKey;
       setLoading(true);
       setError(null);
       try {
@@ -146,18 +149,53 @@ export default function SpaceSummaryModal({
       } catch (e: any) {
         if (e?.name !== "AbortError") setError(e?.message || "Failed to summarize.");
       } finally {
-        if (abortRef.current === ac) setLoading(false);
+        if (abortRef.current === ac) {
+          setLoading(false);
+          inflightKey.current = null;
+        }
       }
     },
     [cards, category, layerId, phases, storageKey],
+  );
+
+  // Background load; debounced so a feed that is still filling in
+  // doesn't trigger several requests.
+  useEffect(() => {
+    if (!auto) return;
+    const t = setTimeout(() => load(false), 800);
+    return () => clearTimeout(t);
+  }, [auto, storageKey]);
+
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  return { data, loading, error, load, storageKey };
+}
+
+export default function SpaceSummaryModal({
+  open,
+  onClose,
+  summary,
+  phases,
+  cards,
+  onJumpToPhase,
+  onJumpToCard,
+}: Props) {
+  const { data, loading, error, load, storageKey } = summary;
+  const [minimized, setMinimized] = useState(false);
+  const [closing, setClosing] = useState(false);
+  // Height of the page's fixed top bar, so the navbar stays sharp and usable.
+  const [topOffset, setTopOffset] = useState(64);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const titleById = useMemo(
+    () => new Map(cards.map((c) => [c.id, c.title || `Card #${c.id}`])),
+    [cards],
   );
 
   // Fetch when opened (or when space content changes while open)
   useEffect(() => {
     if (open && !minimized) load(false);
   }, [open, storageKey]);
-
-  useEffect(() => () => abortRef.current?.abort(), []);
 
   useEffect(() => {
     if (!open) {
