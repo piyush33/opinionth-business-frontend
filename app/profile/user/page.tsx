@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { lookupFeedCard } from "@/lib/feed";
 import { toast } from "sonner";
 import Link from "next/link";
 import {
@@ -319,37 +320,18 @@ export default function ProfileUserPage() {
     });
   };
 
+  // Open the feed card behind this profile post, in its own space. The
+  // server finds it by the profile item, else by title/description/author
+  // (reposts), across all cards rather than just the newest few.
   const handleCardClick = async (item: CardItem) => {
     try {
-      const token = localStorage.getItem("token");
-      // Fetch homefeed to find the corresponding item
-      const response = await fetch(
-        `/nest-api/orgs/${orgId}/homefeed/user/${user.username}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const homefeedData = await response.json();
-
-      // Find matching homefeed item by title, description, and parent
-      const matchingHomefeedItem = homefeedData.find(
-        (homefeedItem: any) =>
-          homefeedItem.title === item.title &&
-          homefeedItem.description === item.description &&
-          homefeedItem.username === item.username
-      );
-
-      console.log("matching:", matchingHomefeedItem);
-      console.log("item:", item);
-      console.log("homefeed:", homefeedData);
-
-      if (matchingHomefeedItem) {
-        router.push(`/event/${matchingHomefeedItem.id}`);
-      } else {
-        console.error("Could not find matching homefeed item");
-      }
+      const hit = await lookupFeedCard(item);
+      if (hit.layerId)
+        localStorage.setItem("lastVisitedCardLayerid", String(hit.layerId));
+      router.push(`/event/${hit.id}`);
     } catch (error) {
-      console.error("Error finding homefeed item:", error);
+      console.error("Could not find matching homefeed item", error);
+      toast.error("Couldn't open this card. It may have been removed.");
     }
   };
 

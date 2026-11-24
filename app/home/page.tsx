@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useDebounced, useLoadMoreSentinel, usePagedFeed } from "@/lib/feed";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -24,7 +25,6 @@ import NotificationsPopup from "@/components/popups/notifications-popup";
 
 export default function HomePage() {
   const router = useRouter();
-  const [homeFeed, setHomeFeed] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [user, setUser] = useState<any>(null);
   const [isInboxPopupOpen, setIsInboxPopupOpen] = useState(false);
@@ -32,8 +32,6 @@ export default function HomePage() {
   const [isNotificationsPopupOpen, setIsNotificationsPopupOpen] =
     useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Check authentication and get user data
@@ -92,64 +90,30 @@ export default function HomePage() {
     return () => clearInterval(id);
   }, [user]);
 
-  // Fetch data from your API
-  useEffect(() => {
-    const fetchHomeFeedData = async () => {
-      if (!user) return;
+  // Session expired: toast, clear auth, back to sign-in.
+  const onSessionExpired = useCallback(() => {
+    try {
+      toast.error("Session expired. Please sign in again.");
+    } catch {
+      console.warn("Toast system not available");
+    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("profileUser");
+    setTimeout(() => router.replace("/"), 1000);
+  }, [router]);
 
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const token = localStorage.getItem("token");
-        const orgId = getActiveOrgId();
-        const response = await fetch(
-          `/nest-api/orgs/${orgId}/homefeed/user/${user.username}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.status === 401) {
-          // show toast & bounce to login
-          try {
-            toast.error("Session expired. Please sign in again.");
-          } catch {
-            // fallback if no toast system mounted
-            console.warn("Toast system not available");
-            alert("Session expired. Please sign in again.");
-          }
-
-          // clear auth bits
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          localStorage.removeItem("profileUser");
-
-          setIsLoading(false);
-          // small timeout ensures toast renders at least once before route change
-          setTimeout(() => router.replace("/"), 1000); // adjust path if needed
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setHomeFeed(data);
-      } catch (error: any) {
-        console.error("Error fetching home feed:", error);
-        setError(error.message);
-        setHomeFeed([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchHomeFeedData();
-  }, [user]);
+  // Newest first, a page at a time; search runs on the server.
+  const debouncedSearch = useDebounced(searchTerm, 300);
+  const feedFilters = useMemo(() => ({ q: debouncedSearch }), [debouncedSearch]);
+  const feed = usePagedFeed<any>(feedFilters, !!user, onSessionExpired);
+  const isLoading = feed.loading || (!!user && feed.total === null && !feed.error);
+  const error = feed.items.length === 0 ? feed.error : null;
+  const sentinelRef = useLoadMoreSentinel(
+    feed.loadMore,
+    feed.hasMore && !feed.loading,
+    feed.items.length
+  );
 
   const handleCardClick = (item: any) => {
     localStorage.setItem("lastVisitedCardLayerid", item.layer.id);
@@ -160,21 +124,7 @@ export default function HomePage() {
     setSearchTerm(value.toLowerCase());
   };
 
-  const filteredHomeFeed = homeFeed
-    .filter((item: any) => {
-      const isAllowedToView =
-        item.privacy === true ? item.username === user?.username : true;
-
-      if (isAllowedToView) {
-        return (
-          item.title?.toLowerCase().includes(searchTerm) ||
-          item.description?.toLowerCase().includes(searchTerm) ||
-          item.text?.toLowerCase().includes(searchTerm)
-        );
-      }
-      return false;
-    })
-    .sort((a: any, b: any) => b.id - a.id); // Sort by id descending
+  const filteredHomeFeed = feed.items;
 
   if (!user) {
     return (
@@ -467,6 +417,21 @@ export default function HomePage() {
                   />
                 ))}
               </MasonryGrid>
+              {/* Loads the next page as this nears the viewport */}
+              <div ref={sentinelRef} aria-hidden className="h-px" />
+              {feed.loadingMore && (
+                <div className="flex justify-center py-6">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
+                </div>
+              )}
+              {feed.error && feed.items.length > 0 && !feed.loadingMore && (
+                <div className="flex justify-center py-6 text-sm text-rose-600">
+                  {feed.error}.
+                  <button type="button" onClick={feed.loadMore} className="ml-2 underline">
+                    Retry
+                  </button>
+                </div>
+              )}
 
               {filteredHomeFeed.length === 0 && (
                 <div className="text-center py-16">
