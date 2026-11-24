@@ -1,21 +1,14 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles,
   X,
   RefreshCw,
   ArrowUpRight,
   Minimize2,
+  Waves,
   Compass,
-  ChevronRight,
   CornerDownRight,
 } from "lucide-react";
 
@@ -85,15 +78,13 @@ const timeAgo = (iso: string) => {
   return `${Math.floor(d / 86400)}d ago`;
 };
 
-// Apple system colours (light appearance) for phase markers
-const PHASE_DOTS = [
-  "#AF52DE", // purple
-  "#007AFF", // blue
-  "#5856D6", // indigo
-  "#34C759", // green
-  "#FF9500", // orange
-  "#FF2D55", // pink
-  "#30B0C7", // teal
+const PHASE_TINTS = [
+  "from-violet-400/70 to-fuchsia-400/70",
+  "from-sky-400/70 to-cyan-300/70",
+  "from-indigo-400/70 to-blue-300/70",
+  "from-emerald-400/70 to-teal-300/70",
+  "from-amber-300/80 to-orange-300/70",
+  "from-pink-400/70 to-rose-300/70",
 ];
 
 export default function SpaceSummaryModal({
@@ -202,14 +193,6 @@ export default function SpaceSummaryModal({
 
   if (!open) return null;
 
-  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const el = panelRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    el.style.setProperty("--mx", `${((e.clientX - r.left) / r.width) * 100}%`);
-    el.style.setProperty("--my", `${((e.clientY - r.top) / r.height) * 100}%`);
-  };
-
   const jumpPhase = (phase: string) => {
     setMinimized(true);
     onJumpToPhase(phase);
@@ -219,91 +202,94 @@ export default function SpaceSummaryModal({
     onJumpToCard(id);
   };
 
-  // Minimized: a floating glass capsule keeps the summary one tap away.
+  // Minimized: a floating glass pill keeps the summary one tap away.
   if (minimized) {
     return (
       <button
         onClick={() => setMinimized(false)}
-        className="lg-type lg-capsule fixed bottom-6 left-6 z-50 flex items-center gap-2 rounded-full py-2 pl-2 pr-3.5 text-[14px] font-medium"
+        className="ai-glass-pill fixed bottom-6 left-6 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-slate-800"
         aria-label="Reopen space summary"
       >
-        <span className="lg-rim" />
-        <span className="lg-icon flex h-7 w-7 items-center justify-center rounded-full">
+        <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-blue-500 to-cyan-400 text-white shadow-inner">
           <Sparkles className="h-3.5 w-3.5" />
         </span>
-        <span className="max-w-[200px] truncate text-[color:var(--lg-label)]">
-          {data?.topic || "Space Summary"}
-        </span>
-        <ArrowUpRight className="h-4 w-4 text-[color:var(--lg-tertiary)]" />
+        <span className="max-w-[180px] truncate">{data?.topic || "Space summary"}</span>
+        <ArrowUpRight className="h-4 w-4 text-slate-500" />
       </button>
     );
   }
 
   return (
     <div
-      className="lg-type fixed inset-0 z-50"
+      className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="space-summary-title"
+      aria-labelledby="ai-summary-title"
     >
-      {/* Light veil: the collection stays sharp and visible behind */}
+      {/* Soft frosted veil: the collection stays visible, gently out of focus */}
       <div
-        className={`lg-veil absolute inset-0 ${closing ? "lg-fade-out" : "lg-fade-in"}`}
+        className={`ai-veil absolute inset-0 ${closing ? "ai-fade-out" : "ai-fade-in"}`}
         onClick={handleClose}
       />
 
-      {/* Liquid glass panel */}
+      {/* Glass panel */}
       <div
         ref={panelRef}
         tabIndex={-1}
-        onPointerMove={onPointerMove}
-        className={`lg-panel absolute inset-x-2 bottom-2 top-16 flex flex-col overflow-hidden rounded-[32px] outline-none md:inset-x-auto md:right-6 md:top-24 md:bottom-6 md:w-[min(600px,calc(100vw-3rem))] ${
-          closing ? "lg-panel-out" : "lg-panel-in"
+        className={`ai-glass-panel absolute inset-x-2 bottom-2 top-16 flex flex-col overflow-hidden rounded-[28px] outline-none md:inset-x-auto md:right-6 md:top-24 md:bottom-6 md:w-[min(620px,calc(100vw-3rem))] ${
+          closing ? "ai-panel-out" : "ai-panel-in"
         }`}
       >
-        <span className="lg-specular" aria-hidden />
-        <span className="lg-rim" aria-hidden />
+        {/* Liquid layer */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="ai-blob ai-blob-a" />
+          <div className="ai-blob ai-blob-b" />
+          <div className="ai-blob ai-blob-c" />
+          <div className="ai-caustics" />
+          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/50 to-transparent" />
+          <div className="ai-sheen" />
+        </div>
 
         {/* Header */}
-        <div className="relative z-10 flex items-center justify-between gap-3 px-5 pt-5 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="lg-icon flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full">
+        <div className="relative z-10 flex items-start justify-between gap-3 px-5 pt-5 sm:px-7 sm:pt-6">
+          <div className="flex items-center gap-2.5">
+            <span className="ai-orb relative flex h-9 w-9 items-center justify-center rounded-2xl text-white">
               <Sparkles className="h-4 w-4" />
             </span>
-            <div className="min-w-0 leading-tight">
-              <div className="text-[15px] font-semibold text-[color:var(--lg-label)]">
+            <div className="leading-tight">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
                 Space Summary
               </div>
-              <div className="truncate text-[12.5px] text-[color:var(--lg-secondary)]">
+              <div className="text-xs text-slate-600">
                 {data
-                  ? `${data.cardCount} cards · ${data.phases.length} phases · Updated ${timeAgo(
+                  ? `${data.cardCount} cards · ${data.phases.length} phases · ${timeAgo(
                       data.generatedAt,
                     )}`
                   : `${cards.length} cards · ${phases.length} phases`}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => load(true)}
               disabled={loading}
-              className="lg-btn"
+              className="ai-icon-btn"
               title="Regenerate"
               aria-label="Regenerate summary"
             >
-              <RefreshCw className={`h-[15px] w-[15px] ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </button>
             <button
               onClick={() => setMinimized(true)}
-              className="lg-btn hidden sm:flex"
+              className="ai-icon-btn hidden sm:flex"
               title="Minimize"
               aria-label="Minimize summary"
             >
-              <Minimize2 className="h-[15px] w-[15px]" />
+              <Minimize2 className="h-4 w-4" />
             </button>
             <button
               onClick={handleClose}
-              className="lg-btn"
+              className="ai-icon-btn"
               title="Close"
               aria-label="Close summary"
             >
@@ -313,37 +299,40 @@ export default function SpaceSummaryModal({
         </div>
 
         {/* Body */}
-        <div className="lg-scroll relative z-10 mt-5 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-6">
+        <div className="ai-scroll relative z-10 mt-4 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-7">
           {loading && !data && <SummarySkeleton cards={cards.length} phases={phases.length} />}
 
           {error && !loading && (
-            <div className="lg-platter p-5">
-              <div className="mb-3 text-[14px] font-medium text-[#D70015]">{error}</div>
-              <button onClick={() => load(true)} className="lg-btn-text">
-                Try Again
+            <div className="ai-glass-card mt-2 p-5 text-sm text-slate-700">
+              <div className="mb-3 font-medium text-rose-600">{error}</div>
+              <button
+                onClick={() => load(true)}
+                className="rounded-full bg-slate-900/80 px-4 py-1.5 text-xs font-medium text-white hover:bg-slate-900"
+              >
+                Try again
               </button>
             </div>
           )}
 
           {data && (
-            <div className={`space-y-6 ${loading ? "opacity-60 transition-opacity" : ""}`}>
+            <div className={`space-y-5 ${loading ? "opacity-60 transition-opacity" : ""}`}>
               {/* Topic */}
-              <section className="lg-rise px-1" style={{ animationDelay: "60ms" }}>
+              <section className="ai-rise" style={{ animationDelay: "40ms" }}>
                 <h2
-                  id="space-summary-title"
-                  className="text-[26px] font-bold leading-[1.15] tracking-[-0.022em] text-[color:var(--lg-label)] sm:text-[30px]"
+                  id="ai-summary-title"
+                  className="bg-gradient-to-r from-violet-700 via-blue-700 to-cyan-600 bg-clip-text text-2xl font-bold leading-tight text-transparent sm:text-[28px]"
                 >
                   {data.topic}
                 </h2>
                 {data.tagline && (
-                  <p className="mt-2 text-[15px] leading-[1.45] text-[color:var(--lg-secondary)]">
+                  <p className="mt-1.5 text-[15px] leading-relaxed text-slate-700">
                     {data.tagline}
                   </p>
                 )}
                 {data.themes.length > 0 && (
-                  <div className="mt-3.5 flex flex-wrap gap-1.5">
+                  <div className="mt-3 flex flex-wrap gap-1.5">
                     {data.themes.map((t) => (
-                      <span key={t} className="lg-chip">
+                      <span key={t} className="ai-chip">
                         {t}
                       </span>
                     ))}
@@ -352,85 +341,93 @@ export default function SpaceSummaryModal({
               </section>
 
               {/* Collective summary */}
-              <section className="lg-rise" style={{ animationDelay: "130ms" }}>
-                <h3 className="lg-section-title">Overview</h3>
-                <div className="lg-platter">
-                  <p className="px-4 py-3.5 text-[15px] leading-[1.5] text-[color:var(--lg-label)]">
-                    {data.overview}
-                  </p>
-                  {data.momentum && (
-                    <div className="lg-hairline-top flex items-start gap-2.5 px-4 py-3 text-[14px] leading-[1.45] text-[color:var(--lg-secondary)]">
-                      <Compass className="mt-[2px] h-4 w-4 flex-shrink-0 text-[#AF52DE]" />
-                      <span>{data.momentum}</span>
-                    </div>
-                  )}
+              <section className="ai-glass-card ai-rise p-4 sm:p-5" style={{ animationDelay: "120ms" }}>
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+                  <Waves className="h-3.5 w-3.5 text-blue-500" />
+                  The whole space
                 </div>
+                <p className="text-[14.5px] leading-relaxed text-slate-800">{data.overview}</p>
+                {data.momentum && (
+                  <div className="mt-3 flex items-start gap-2 rounded-2xl bg-white/55 px-3 py-2 text-[13px] text-slate-700 ring-1 ring-white/70">
+                    <Compass className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-violet-500" />
+                    <span>{data.momentum}</span>
+                  </div>
+                )}
               </section>
 
-              {/* Phase by phase */}
+              {/* Phase journey */}
               {data.phases.length > 0 && (
-                <section className="lg-rise" style={{ animationDelay: "190ms" }}>
-                  <h3 className="lg-section-title">Phases</h3>
-                  <ol className="lg-platter">
+                <section>
+                  <div
+                    className="ai-rise mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600"
+                    style={{ animationDelay: "180ms" }}
+                  >
+                    Phase by phase
+                  </div>
+                  <ol className="relative space-y-3 pl-6">
+                    <span className="absolute bottom-3 left-[9px] top-3 w-px bg-gradient-to-b from-violet-300/80 via-blue-300/60 to-cyan-300/30" />
                     {data.phases.map((p, i) => {
                       const count = cards.filter((c) => c.phase === p.phase).length;
                       return (
                         <li
                           key={p.phase}
-                          className={`lg-rise px-4 py-3.5 ${i > 0 ? "lg-hairline-top" : ""}`}
-                          style={{ animationDelay: `${230 + i * 60}ms` }}
+                          className="ai-rise relative"
+                          style={{ animationDelay: `${220 + i * 70}ms` }}
                         >
-                          <button
-                            onClick={() => jumpPhase(p.phase)}
-                            className="group flex w-full items-center gap-2.5 text-left"
-                            title="Show this phase in the collection"
-                          >
-                            <span
-                              className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
-                              style={{
-                                background: PHASE_DOTS[i % PHASE_DOTS.length],
-                                boxShadow: `0 0 0 3px ${PHASE_DOTS[i % PHASE_DOTS.length]}22`,
-                              }}
-                            />
-                            <span className="min-w-0 flex-1 truncate text-[16px] font-semibold tracking-[-0.01em] text-[color:var(--lg-label)]">
-                              {p.phase}
-                            </span>
-                            <span className="flex-shrink-0 text-[13px] text-[color:var(--lg-tertiary)]">
-                              {count} {count === 1 ? "card" : "cards"}
-                            </span>
-                            <ChevronRight className="h-4 w-4 flex-shrink-0 text-[color:var(--lg-tertiary)] transition-transform group-hover:translate-x-0.5" />
-                          </button>
-                          <p className="mt-1.5 pl-5 text-[14px] leading-[1.5] text-[color:var(--lg-label)]">
-                            {p.summary}
-                          </p>
-                          {p.keyPoints.length > 0 && (
-                            <ul className="mt-2 space-y-1 pl-5">
-                              {p.keyPoints.map((k, j) => (
-                                <li
-                                  key={j}
-                                  className="flex items-start gap-2 text-[13.5px] leading-[1.45] text-[color:var(--lg-secondary)]"
-                                >
-                                  <span className="mt-[8px] h-[4px] w-[4px] flex-shrink-0 rounded-full bg-[color:var(--lg-tertiary)]" />
-                                  <span>{k}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                          {p.keyCardIds.length > 0 && (
-                            <div className="mt-2.5 flex flex-wrap gap-1.5 pl-5">
-                              {p.keyCardIds.map((id) => (
-                                <button
-                                  key={id}
-                                  onClick={() => jumpCard(id)}
-                                  className="lg-link"
-                                  title="Select this card in the collection"
-                                >
-                                  <CornerDownRight className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate">{titleById.get(id)}</span>
-                                </button>
-                              ))}
+                          <span
+                            className={`absolute -left-6 top-4 h-[18px] w-[18px] rounded-full bg-gradient-to-br ${
+                              PHASE_TINTS[i % PHASE_TINTS.length]
+                            } ring-4 ring-white/50 shadow-[0_0_14px_rgba(139,92,246,.35)]`}
+                          />
+                          <div className="ai-glass-card group p-4">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex min-w-0 items-baseline gap-2">
+                                <h3 className="truncate text-[15px] font-semibold text-slate-900">
+                                  {p.phase}
+                                </h3>
+                                <span className="flex-shrink-0 text-xs text-slate-600">
+                                  {count} {count === 1 ? "card" : "cards"}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => jumpPhase(p.phase)}
+                                className="flex flex-shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-blue-700 opacity-80 transition hover:bg-white/60 hover:opacity-100"
+                              >
+                                View <ArrowUpRight className="h-3.5 w-3.5" />
+                              </button>
                             </div>
-                          )}
+                            <p className="mt-1.5 text-[13.5px] leading-relaxed text-slate-800">
+                              {p.summary}
+                            </p>
+                            {p.keyPoints.length > 0 && (
+                              <ul className="mt-2 space-y-1">
+                                {p.keyPoints.map((k, j) => (
+                                  <li
+                                    key={j}
+                                    className="flex items-start gap-2 text-[13px] text-slate-700"
+                                  >
+                                    <span className="mt-[7px] h-1 w-1 flex-shrink-0 rounded-full bg-slate-400" />
+                                    <span>{k}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                            {p.keyCardIds.length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-1.5">
+                                {p.keyCardIds.map((id) => (
+                                  <button
+                                    key={id}
+                                    onClick={() => jumpCard(id)}
+                                    className="ai-card-link"
+                                    title="Show this card in the collection"
+                                  >
+                                    <CornerDownRight className="h-3 w-3 flex-shrink-0 opacity-60" />
+                                    <span className="truncate">{titleById.get(id)}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </li>
                       );
                     })}
@@ -438,7 +435,7 @@ export default function SpaceSummaryModal({
                 </section>
               )}
 
-              <p className="px-1 text-center text-[12px] text-[color:var(--lg-tertiary)]">
+              <p className="pt-1 text-center text-[11px] text-slate-600">
                 Auto-generated from the cards you can see. It can be wrong; check the cards.
               </p>
             </div>
@@ -451,33 +448,31 @@ export default function SpaceSummaryModal({
 
 function SummarySkeleton({ cards, phases }: { cards: number; phases: number }) {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2 px-1 text-[14px] text-[color:var(--lg-secondary)]">
-        <span className="lg-dots">
+    <div className="space-y-5">
+      <div className="flex items-center gap-2 text-sm text-slate-700">
+        <span className="ai-dots">
           <i />
           <i />
           <i />
         </span>
         Reading {cards} cards across {phases} phases…
       </div>
-      <div className="space-y-2.5 px-1">
-        <div className="lg-shimmer h-7 w-2/3 rounded-lg" />
-        <div className="lg-shimmer h-4 w-5/6 rounded-md" />
+      <div className="space-y-2">
+        <div className="ai-shimmer h-7 w-2/3 rounded-xl" />
+        <div className="ai-shimmer h-4 w-5/6 rounded-lg" />
       </div>
-      <div className="lg-platter space-y-2.5 p-4">
-        <div className="lg-shimmer h-3.5 w-full rounded" />
-        <div className="lg-shimmer h-3.5 w-11/12 rounded" />
-        <div className="lg-shimmer h-3.5 w-4/5 rounded" />
+      <div className="ai-glass-card space-y-2 p-5">
+        <div className="ai-shimmer h-3 w-full rounded" />
+        <div className="ai-shimmer h-3 w-11/12 rounded" />
+        <div className="ai-shimmer h-3 w-4/5 rounded" />
       </div>
-      <div className="lg-platter">
-        {Array.from({ length: Math.min(Math.max(phases, 2), 4) }).map((_, i) => (
-          <div key={i} className={`space-y-2.5 p-4 ${i > 0 ? "lg-hairline-top" : ""}`}>
-            <div className="lg-shimmer h-4 w-1/3 rounded" />
-            <div className="lg-shimmer h-3.5 w-full rounded" />
-            <div className="lg-shimmer h-3.5 w-3/4 rounded" />
-          </div>
-        ))}
-      </div>
+      {Array.from({ length: Math.min(Math.max(phases, 2), 4) }).map((_, i) => (
+        <div key={i} className="ai-glass-card ml-6 space-y-2 p-4">
+          <div className="ai-shimmer h-4 w-1/3 rounded" />
+          <div className="ai-shimmer h-3 w-full rounded" />
+          <div className="ai-shimmer h-3 w-3/4 rounded" />
+        </div>
+      ))}
     </div>
   );
 }

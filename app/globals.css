@@ -25,235 +25,192 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* ───────────── Space summary: Apple-style liquid glass ───────────── */
+/* ───────────── AI summary: liquid glass ───────────── */
 @layer components {
-  .lg-type {
-    --lg-label: #1d1d1f;
-    --lg-secondary: rgba(60, 60, 67, 0.86);
-    --lg-tertiary: rgba(60, 60, 67, 0.6);
-    --lg-hairline: rgba(60, 60, 67, 0.13);
-    --lg-blue: #0066cc;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
-      "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "kern", "ss01";
-  }
-
-  .lg-veil {
-    /* tint only: no blur, so the cards stay crisp beside the panel */
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.18) 100%);
-  }
-
-  /* The material: clear, heavily blurred, vibrancy-boosted. Colour comes
-     from the content behind it, not from the glass itself. */
-  .lg-panel,
-  .lg-capsule {
-    position: absolute;
-    isolation: isolate;
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.66) 0%,
-      rgba(250, 250, 252, 0.56) 100%
-    );
-    -webkit-backdrop-filter: blur(40px) saturate(190%) contrast(1.02);
-    backdrop-filter: blur(40px) saturate(190%) contrast(1.02);
-    box-shadow:
-      /* glass thickness: light enters top-left, bounces bottom-right */
-      inset 0 1px 0.5px rgba(255, 255, 255, 0.95),
-      inset 0 -1px 0.5px rgba(255, 255, 255, 0.5),
-      inset 10px 12px 24px -16px rgba(255, 255, 255, 0.9),
-      inset -12px -14px 28px -18px rgba(255, 255, 255, 0.7),
-      inset 0 0 0 0.5px rgba(0, 0, 0, 0.04),
-      /* lift */
-      0 30px 70px -20px rgba(15, 23, 42, 0.28),
-      0 10px 24px -12px rgba(15, 23, 42, 0.12),
-      0 0 0 0.5px rgba(0, 0, 0, 0.06);
-  }
-  .lg-capsule { position: fixed; }
-
-  /* Specular rim: bright at the lit corners, fading along the sides */
-  .lg-rim {
-    position: absolute;
-    inset: 0;
-    z-index: 20;
-    pointer-events: none;
-    border-radius: inherit;
-    padding: 1.25px;
+  .ai-veil {
     background: linear-gradient(
       135deg,
-      rgba(255, 255, 255, 1) 0%,
-      rgba(255, 255, 255, 0.35) 22%,
-      rgba(255, 255, 255, 0.06) 48%,
-      rgba(255, 255, 255, 0.3) 78%,
-      rgba(255, 255, 255, 0.95) 100%
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(237, 233, 254, 0.18) 50%,
+      rgba(207, 250, 254, 0.2) 100%
     );
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    backdrop-filter: blur(8px) saturate(140%);
   }
-
-  /* Moving light: follows the pointer like a reflection on curved glass */
-  .lg-specular {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    border-radius: inherit;
-    background:
-      radial-gradient(
-        520px circle at var(--mx, 20%) var(--my, -10%),
-        rgba(255, 255, 255, 0.55),
-        rgba(255, 255, 255, 0) 45%
-      ),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 18%);
-    transition: background-position 0.2s ease;
+  .ai-glass-panel {
+    /* Frosted enough that page content behind never competes with text,
+       still translucent at the edges so the collection reads through. */
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.74) 0%,
+      rgba(248, 250, 255, 0.62) 45%,
+      rgba(238, 236, 255, 0.66) 100%
+    );
+    -webkit-backdrop-filter: blur(44px) saturate(180%) brightness(1.04);
+    backdrop-filter: blur(44px) saturate(180%) brightness(1.04);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.25),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 40px 90px -30px rgba(76, 29, 149, 0.35),
+      0 18px 40px -20px rgba(14, 116, 144, 0.25);
   }
-
-  /* Grouped platter, like an iOS inset-grouped list */
-  .lg-platter {
+  .ai-glass-card {
     position: relative;
-    overflow: hidden;
-    border-radius: 22px;
-    background: rgba(255, 255, 255, 0.62);
+    border-radius: 20px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      0 8px 24px -14px rgba(30, 41, 59, 0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  }
+  .ai-glass-card:hover {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.95),
-      inset 0 0 0 0.5px rgba(255, 255, 255, 0.7),
-      0 1px 2px rgba(15, 23, 42, 0.04),
-      0 8px 24px -16px rgba(15, 23, 42, 0.14);
+      0 14px 30px -16px rgba(76, 29, 149, 0.3);
   }
-  .lg-hairline-top { box-shadow: inset 0 0.5px 0 var(--lg-hairline); }
-
-  .lg-section-title {
-    margin: 0 0 8px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: -0.005em;
-    color: var(--lg-secondary);
-  }
-
-  .lg-chip {
-    font-size: 12.5px;
-    font-weight: 500;
-    padding: 4px 11px;
-    border-radius: 9999px;
-    color: var(--lg-label);
-    background: rgba(255, 255, 255, 0.6);
+  .ai-glass-pill {
+    background: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(18px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.95),
-      0 0 0 0.5px rgba(60, 60, 67, 0.12);
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 12px 30px -12px rgba(76, 29, 149, 0.4);
+    animation: ai-pill-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) backwards;
+    transition: transform 0.2s ease;
   }
-
-  .lg-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    max-width: 100%;
-    font-size: 13px;
-    font-weight: 500;
-    padding: 5px 11px;
-    border-radius: 9999px;
-    color: var(--lg-blue);
-    background: rgba(0, 122, 255, 0.1);
-    transition: background 0.18s ease, transform 0.18s cubic-bezier(0.3, 1.4, 0.5, 1);
-  }
-  .lg-link:hover { background: rgba(0, 122, 255, 0.16); }
-  .lg-link:active { transform: scale(0.96); }
-
-  .lg-icon {
-    color: #fff;
-    background: linear-gradient(180deg, #5ac8fa 0%, #007aff 100%);
-    box-shadow:
-      inset 0 1px 0.5px rgba(255, 255, 255, 0.6),
-      inset 0 -1px 1px rgba(0, 0, 0, 0.12),
-      0 4px 10px -3px rgba(0, 122, 255, 0.5);
-  }
-
-  /* Circular glass buttons */
-  .lg-btn {
+  .ai-glass-pill:hover { transform: translateY(-2px); }
+  .ai-icon-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 9999px;
-    color: var(--lg-secondary);
-    background: rgba(255, 255, 255, 0.55);
+    color: rgb(71 85 105);
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .ai-icon-btn:hover { background: rgba(255, 255, 255, 0.7); color: rgb(15 23 42); }
+  .ai-icon-btn:disabled { opacity: 0.5; }
+  .ai-chip {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    color: rgb(55 48 163);
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+  .ai-card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 10px;
+    color: rgb(30 58 138);
+    background: rgba(219, 234, 254, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .ai-card-link:hover { background: rgba(219, 234, 254, 0.8); transform: translateY(-1px); }
+  .ai-orb {
+    background: radial-gradient(circle at 30% 25%, #c4b5fd, #6366f1 45%, #06b6d4 100%);
     box-shadow:
-      inset 0 1px 0.5px rgba(255, 255, 255, 1),
-      inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.05),
-      0 0 0 0.5px rgba(60, 60, 67, 0.12),
-      0 2px 6px -2px rgba(15, 23, 42, 0.12);
-    transition: background 0.18s ease, color 0.18s ease,
-      transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1);
+      inset 0 1px 1px rgba(255, 255, 255, 0.7),
+      0 6px 18px -4px rgba(99, 102, 241, 0.6);
   }
-  .lg-btn:hover { background: rgba(255, 255, 255, 0.85); color: var(--lg-label); }
-  .lg-btn:active { transform: scale(0.9); }
-  .lg-btn:disabled { opacity: 0.45; }
+  .ai-orb::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 18px;
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    animation: ai-ripple 2.6s ease-out infinite;
+  }
 
-  .lg-btn-text {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--lg-blue);
-    padding: 6px 14px;
+  /* Liquid blobs drifting beneath the glass */
+  .ai-blob {
+    position: absolute;
     border-radius: 9999px;
-    background: rgba(0, 122, 255, 0.1);
+    filter: blur(60px);
+    opacity: 0.38;
+    mix-blend-mode: multiply;
   }
-  .lg-btn-text:hover { background: rgba(0, 122, 255, 0.16); }
-
-  .lg-capsule {
-    transition: transform 0.25s cubic-bezier(0.3, 1.4, 0.5, 1);
-    animation: lg-capsule-in 0.5s cubic-bezier(0.32, 1.3, 0.5, 1) backwards;
+  .ai-blob-a { width: 340px; height: 340px; top: -120px; right: -80px; background: #c4b5fd; animation: ai-drift-a 16s ease-in-out infinite; }
+  .ai-blob-b { width: 300px; height: 300px; bottom: -100px; left: -90px; background: #a5f3fc; animation: ai-drift-b 19s ease-in-out infinite; }
+  .ai-blob-c { width: 220px; height: 220px; top: 40%; left: 45%; background: #fbcfe8; opacity: 0.25; animation: ai-drift-c 22s ease-in-out infinite; }
+  .ai-caustics {
+    position: absolute;
+    inset: -50%;
+    opacity: 0.18;
+    background:
+      radial-gradient(closest-side at 20% 30%, rgba(255,255,255,.9), transparent 60%),
+      radial-gradient(closest-side at 70% 60%, rgba(255,255,255,.7), transparent 60%),
+      radial-gradient(closest-side at 40% 80%, rgba(255,255,255,.6), transparent 60%);
+    animation: ai-caustics 24s linear infinite;
   }
-  .lg-capsule:hover { transform: translateY(-2px) scale(1.02); }
-  .lg-capsule:active { transform: scale(0.96); }
+  .ai-sheen {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40%;
+    left: -60%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    transform: skewX(-18deg);
+    animation: ai-sheen 1.4s 0.15s ease-out both;
+  }
 
-  .lg-scroll { scrollbar-width: thin; scrollbar-color: rgba(60, 60, 67, 0.25) transparent; }
-  .lg-scroll::-webkit-scrollbar { width: 6px; }
-  .lg-scroll::-webkit-scrollbar-thumb { background: rgba(60, 60, 67, 0.25); border-radius: 9999px; }
+  .ai-scroll { scrollbar-width: thin; scrollbar-color: rgba(100, 116, 139, 0.35) transparent; }
+  .ai-scroll::-webkit-scrollbar { width: 6px; }
+  .ai-scroll::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 9999px; }
 
-  .lg-shimmer {
-    background: linear-gradient(90deg, rgba(60,60,67,.07) 0%, rgba(60,60,67,.13) 50%, rgba(60,60,67,.07) 100%);
+  .ai-shimmer {
+    background: linear-gradient(90deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,.8) 50%, rgba(255,255,255,.35) 100%);
     background-size: 200% 100%;
-    animation: lg-shimmer 1.4s ease-in-out infinite;
+    animation: ai-shimmer 1.4s ease-in-out infinite;
   }
-  .lg-dots { display: inline-flex; gap: 3px; }
-  .lg-dots i { width: 5px; height: 5px; border-radius: 9999px; background: #007aff; animation: lg-dot 1s ease-in-out infinite; }
-  .lg-dots i:nth-child(2) { animation-delay: 0.15s; }
-  .lg-dots i:nth-child(3) { animation-delay: 0.3s; }
+  .ai-dots { display: inline-flex; gap: 3px; }
+  .ai-dots i { width: 5px; height: 5px; border-radius: 9999px; background: #6366f1; animation: ai-dot 1s ease-in-out infinite; }
+  .ai-dots i:nth-child(2) { animation-delay: 0.15s; background: #3b82f6; }
+  .ai-dots i:nth-child(3) { animation-delay: 0.3s; background: #06b6d4; }
 
-  .lg-fade-in { animation: lg-fade 0.3s ease-out backwards; }
-  .lg-fade-out { animation: lg-fade 0.22s ease-in reverse both; }
-  /* Spring open, like a sheet lifting off the glass.
-     No `filter` here and fill-mode `backwards`: a lingering filter on the
-     panel (or opacity on an ancestor) silently disables backdrop-filter. */
-  .lg-panel-in {
-    transform-origin: 70% 0%;
-    animation: lg-panel 0.6s cubic-bezier(0.32, 1.25, 0.5, 1) backwards;
-  }
-  .lg-panel-out { transform-origin: 70% 0%; animation: lg-panel-exit 0.22s ease-in both; }
-  .lg-rise { animation: lg-rise 0.55s cubic-bezier(0.25, 1, 0.5, 1) both; }
+  .ai-fade-in { animation: ai-fade 0.3s ease-out backwards; }
+  .ai-fade-out { animation: ai-fade 0.22s ease-in reverse both; }
+  /* fill-mode backwards and no `filter`: a lingering filter on the panel
+     (or opacity on an ancestor) silently disables backdrop-filter */
+  .ai-panel-in { animation: ai-panel 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.1) backwards; }
+  .ai-panel-out { animation: ai-panel-exit 0.22s ease-in both; }
+  .ai-rise { animation: ai-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
-  @keyframes lg-fade { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes lg-panel {
-    from { opacity: 0; transform: translateY(-6px) scale(0.92); }
+  @keyframes ai-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes ai-panel {
+    from { opacity: 0; transform: translateY(18px) scale(0.97); }
     to { opacity: 1; transform: none; }
   }
-  @keyframes lg-panel-exit { to { opacity: 0; transform: scale(0.95); } }
-  @keyframes lg-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  @keyframes lg-capsule-in { from { opacity: 0; transform: translateY(14px) scale(0.85); } to { opacity: 1; transform: none; } }
-  @keyframes lg-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-  @keyframes lg-dot { 0%,100% { transform: translateY(0); opacity: .45; } 50% { transform: translateY(-3px); opacity: 1; } }
+  @keyframes ai-panel-exit { to { opacity: 0; transform: translateY(12px) scale(0.98); } }
+  @keyframes ai-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes ai-pill-in { from { opacity: 0; transform: translateY(12px) scale(0.9); } to { opacity: 1; transform: none; } }
+  @keyframes ai-drift-a { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-60px,50px) scale(1.15); } }
+  @keyframes ai-drift-b { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(70px,-40px) scale(1.1); } }
+  @keyframes ai-drift-c { 0%,100% { transform: translate(0,0); } 33% { transform: translate(-80px,-60px); } 66% { transform: translate(40px,50px); } }
+  @keyframes ai-caustics { to { transform: rotate(360deg); } }
+  @keyframes ai-sheen { to { left: 130%; } }
+  @keyframes ai-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  @keyframes ai-dot { 0%,100% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(-4px); opacity: 1; } }
+  @keyframes ai-ripple { 0% { transform: scale(0.9); opacity: .9; } 100% { transform: scale(1.35); opacity: 0; } }
 
   @media (prefers-reduced-motion: reduce) {
-    .lg-shimmer, .lg-dots i { animation: none !important; }
-    .lg-rise, .lg-panel-in, .lg-panel-out, .lg-fade-in, .lg-fade-out, .lg-capsule {
-      animation-duration: 0.01s !important;
-    }
-  }
-
-  /* Older browsers without backdrop-filter: fall back to a solid sheet */
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .lg-panel, .lg-capsule { background: rgba(250, 250, 252, 0.97); }
+    .ai-blob, .ai-caustics, .ai-sheen, .ai-orb::after, .ai-shimmer, .ai-dots i { animation: none !important; }
+    .ai-rise, .ai-panel-in, .ai-fade-in, .ai-glass-pill { animation-duration: 0.01s !important; }
   }
 }
