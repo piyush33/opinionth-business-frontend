@@ -85,14 +85,12 @@ const timeAgo = (iso: string) => {
  */
 export function useSpaceSummary({
   layerId,
-  username,
   category,
   phases,
   cards,
   auto = false,
 }: {
   layerId: number;
-  username?: string;
   category: string;
   phases: string[];
   cards: SummaryCardInput[];
@@ -149,7 +147,7 @@ export function useSpaceSummary({
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify({ layerId, orgId, username, category, phases, cards, force }),
+          body: JSON.stringify({ layerId, orgId, category, phases, cards, force }),
           signal: ac.signal,
         });
         const json = await res.json();
@@ -169,7 +167,7 @@ export function useSpaceSummary({
         }
       }
     },
-    [cards, category, layerId, username, phases, storageKey],
+    [cards, category, layerId, phases, storageKey],
   );
 
   // Background load; debounced so a feed that is still filling in
