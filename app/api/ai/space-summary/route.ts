@@ -19,7 +19,6 @@ type InCard = {
 type InBody = {
   layerId?: number;
   orgId?: number | string;
-  username?: string;
   category?: string;
   phases: string[]; // ordered phase labels that have cards
   cards: InCard[];
@@ -44,67 +43,91 @@ export type SpaceSummary = {
 
 const MAX_CARDS = 200;
 const MAX_FIELD = 700;
+const PROMPT_VERSION = 1;
 
-// Small in-memory cache so repeated opens of the same space don't re-bill.
-const cache = new Map<string, { at: number; data: SpaceSummary }>();
-const CACHE_TTL_MS = 30 * 60 * 1000;
 
 // Backend that owns auth and layer membership (same target as the
 // /nest-api rewrite in next.config.ts).
 const NEST_API_ORIGIN =
   process.env.NEST_API_ORIGIN || "https://dn2h1x2q2afc3.cloudfront.net";
 
-// Remember successful access checks briefly so opening the summary
-// doesn't hit the backend on every request.
-const accessCache = new Map<string, number>();
-const ACCESS_TTL_MS = 5 * 60 * 1000;
+type Space = { token: string; orgId: string; layerId: string };
 
-/**
- * Only signed-in members of the space may spend AI quota: the backend
- * must accept the caller's token for this layer's cards.
- */
-async function checkAccess(
+/** Pull the caller's token and the space ids out of the request. */
+function readSpace(
   req: Request,
   body: InBody,
-): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+): { ok: true; space: Space } | { ok: false; status: number; error: string } {
   const auth = req.headers.get("authorization") ?? "";
   const token = auth.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
   if (!token) return { ok: false, status: 401, error: "Sign in to see the summary." };
-
   const orgId = String(body.orgId ?? "");
   const layerId = String(body.layerId ?? "");
-  const username = typeof body.username === "string" ? body.username : "";
-  if (!/^\d+$/.test(orgId) || !/^\d+$/.test(layerId) || !username) {
+  if (!/^\d+$/.test(orgId) || !/^\d+$/.test(layerId)) {
     return { ok: false, status: 400, error: "Missing space details." };
   }
+  return { ok: true, space: { token, orgId, layerId } };
+}
 
-  const key = createHash("sha256")
-    .update(`${token}|${orgId}|${layerId}|${username}`)
-    .digest("hex");
-  const seen = accessCache.get(key);
-  if (seen && Date.now() - seen < ACCESS_TTL_MS) return { ok: true };
+const summaryUrl = (s: Space, signature?: string) =>
+  `${NEST_API_ORIGIN}/orgs/${s.orgId}/homefeed/layers/${s.layerId}/summary` +
+  (signature ? `?signature=${signature}` : "");
 
+/**
+ * Ask the backend for a saved summary of exactly these cards. This is
+ * also the access check: the backend takes the user from the token and
+ * applies the same rules as reading the layer's cards.
+ */
+async function loadSaved(
+  s: Space,
+  signature: string,
+): Promise<
+  | { ok: true; summary: SpaceSummary | null }
+  | { ok: false; status: number; error: string }
+> {
   let res: Response;
   try {
-    res = await fetch(
-      `${NEST_API_ORIGIN}/orgs/${orgId}/homefeed/layers/${layerId}/cards?username=${encodeURIComponent(
-        username,
-      )}`,
-      { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
-    );
+    res = await fetch(summaryUrl(s, signature), {
+      headers: { Authorization: `Bearer ${s.token}` },
+      cache: "no-store",
+    });
   } catch (e) {
-    console.error("[space-summary] access check failed", e);
+    console.error("[space-summary] backend unreachable", e);
     return { ok: false, status: 502, error: "Could not verify access." };
   }
-  if (res.status === 401) return { ok: false, status: 401, error: "Session expired. Please sign in again." };
-  if (!res.ok) return { ok: false, status: 403, error: "You don't have access to this space." };
-
-  accessCache.set(key, Date.now());
-  if (accessCache.size > 1000) {
-    const oldest = accessCache.keys().next().value;
-    if (oldest) accessCache.delete(oldest);
+  if (res.status === 401)
+    return { ok: false, status: 401, error: "Session expired. Please sign in again." };
+  if (res.status === 403)
+    return { ok: false, status: 403, error: "You don't have access to this space." };
+  if (!res.ok) {
+    console.error("[space-summary] backend lookup failed", res.status);
+    return { ok: false, status: 502, error: "Could not verify access." };
   }
-  return { ok: true };
+  const json = await res.json().catch(() => null);
+  return { ok: true, summary: (json?.summary as SpaceSummary) ?? null };
+}
+
+/** Save a fresh summary so the next viewer of these cards gets it free. */
+async function saveSummary(
+  s: Space,
+  signature: string,
+  model: string,
+  summary: SpaceSummary,
+) {
+  try {
+    const res = await fetch(summaryUrl(s), {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${s.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ signature, model, summary }),
+      cache: "no-store",
+    });
+    if (!res.ok) console.error("[space-summary] save failed", res.status);
+  } catch (e) {
+    console.error("[space-summary] save failed", e);
+  }
 }
 
 const clip = (s: unknown, n = MAX_FIELD) => {
@@ -184,9 +207,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const access = await checkAccess(req, body);
-  if (!access.ok) {
-    return NextResponse.json({ error: access.error }, { status: access.status });
+  const sp = readSpace(req, body);
+  if (!sp.ok) {
+    return NextResponse.json({ error: sp.error }, { status: sp.status });
   }
 
   const cards = Array.isArray(body.cards) ? body.cards.slice(0, MAX_CARDS) : [];
@@ -212,12 +235,22 @@ export async function POST(req: Request) {
     link: c.weblink ? true : undefined,
   }));
 
-  const cacheKey = createHash("sha256")
-    .update(JSON.stringify({ m: model, cat: body.category, phases, compact }))
+  // Fingerprint of everything the summary depends on. Bump PROMPT_VERSION
+  // when the prompt or schema changes so saved summaries regenerate.
+  const signature = createHash("sha256")
+    .update(
+      JSON.stringify({ v: PROMPT_VERSION, m: model, cat: body.category, phases, compact }),
+    )
     .digest("hex");
-  const hit = cache.get(cacheKey);
-  if (!body.force && hit && Date.now() - hit.at < CACHE_TTL_MS) {
-    return NextResponse.json({ ...hit.data, cached: true });
+
+  // Saved summary lookup doubles as the access check, so it runs even
+  // when `force` skips the saved copy.
+  const saved = await loadSaved(sp.space, signature);
+  if (!saved.ok) {
+    return NextResponse.json({ error: saved.error }, { status: saved.status });
+  }
+  if (!body.force && saved.summary) {
+    return NextResponse.json({ ...saved.summary, cached: true });
   }
 
   const prompt = [
@@ -313,11 +346,7 @@ export async function POST(req: Request) {
     cardCount: compact.length,
   };
 
-  cache.set(cacheKey, { at: Date.now(), data });
-  if (cache.size > 200) {
-    const oldest = cache.keys().next().value;
-    if (oldest) cache.delete(oldest);
-  }
+  await saveSummary(sp.space, signature, model, data);
 
   return NextResponse.json(data);
 }
