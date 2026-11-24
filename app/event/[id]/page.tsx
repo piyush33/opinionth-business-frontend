@@ -41,6 +41,9 @@ import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
 import MasonryGrid from "@/components/masonry-grid";
 import LayerInviteModal from "@/components/modals/LayerInviteModal";
+import CardSuggestionHover, {
+  type CardSuggestion,
+} from "@/components/ai/CardSuggestionHover";
 import SpaceSummaryModal, {
   useSpaceSummary,
   type SummaryCardInput,
@@ -939,6 +942,34 @@ export default function EventPage() {
 
     // Store selected card data and navigate to create page
     localStorage.setItem("selectedCard", JSON.stringify(selectedCard));
+    router.push("/create");
+  };
+
+  // "Draft this card" from an AI suggestion: open Create prefilled, linked
+  // into this space through the hovered card (same as handleCreate).
+  const draftFromSuggestion = (cardId: number, s: CardSuggestion) => {
+    const item = homeFeed.find((c) => c.id === cardId);
+    if (!item) return;
+    if (item.lock && item.username !== user?.username) {
+      toast.error("This space is locked. Only certain users can add cards.");
+      return;
+    }
+    localStorage.setItem(
+      "selectedCard",
+      JSON.stringify({
+        ...item,
+        roleTypes: s.roleTypes.length ? s.roleTypes : item.roleTypes,
+      }),
+    );
+    localStorage.setItem(
+      "aiDraftCard",
+      JSON.stringify({
+        title: s.title,
+        description: s.description,
+        text: s.text,
+        at: Date.now(),
+      }),
+    );
     router.push("/create");
   };
 
@@ -2097,6 +2128,7 @@ export default function EventPage() {
                         <div
                           id={`card-${item.id}`}
                           key={item.id}
+                          data-suggest-id={item.id}
                           className="group relative scroll-mt-28"
                         >
                           <Card
@@ -2180,6 +2212,15 @@ export default function EventPage() {
         isOpen={isNotificationsPopupOpen}
         onClose={() => setIsNotificationsPopupOpen(false)}
         onAllRead={() => setUnreadCount(0)}
+      />
+
+      <CardSuggestionHover
+        layerId={layerId}
+        category={collectionCategory.name}
+        phases={summaryInput.phases}
+        cards={summaryInput.cards}
+        disabled={showSummary}
+        onDraft={draftFromSuggestion}
       />
 
       <SpaceSummaryModal

@@ -416,6 +416,20 @@ export default function CreatePage() {
       setUser(JSON.parse(userData));
     }
 
+    // Prefill from an AI card suggestion (event page "Draft this card").
+    try {
+      const draftRaw = localStorage.getItem("aiDraftCard");
+      localStorage.removeItem("aiDraftCard");
+      const draft = draftRaw ? JSON.parse(draftRaw) : null;
+      if (draft && Date.now() - Number(draft.at) < 10 * 60 * 1000) {
+        if (draft.title) setTitle(String(draft.title));
+        if (draft.description) setDescription(String(draft.description));
+        if (draft.text) setModalText(String(draft.text));
+      }
+    } catch {
+      /* ignore malformed draft */
+    }
+
     // Get selected card if coming from event page
     const selectedCardData = localStorage.getItem("selectedCard");
     if (selectedCardData) {
