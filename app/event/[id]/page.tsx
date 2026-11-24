@@ -41,6 +41,9 @@ import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
 import MasonryGrid from "@/components/masonry-grid";
 import LayerInviteModal from "@/components/modals/LayerInviteModal";
+import SpaceSummaryModal, {
+  type SummaryCardInput,
+} from "@/components/modals/SpaceSummaryModal";
 import {
   type Category,
   DEFAULT_CATEGORIES,
@@ -190,6 +193,7 @@ export default function EventPage() {
     useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
   const [orgId, setOrgId] = useState<number | null>(null);
   const [layerId, setLayerId] = useState<number>(0);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -1117,6 +1121,60 @@ export default function EventPage() {
       }));
   }, [filteredCards, isRoadmap]);
 
+  // AI summary input: every card the viewer may see (ignores UI filters),
+  // grouped by the same phase labels the page uses, in workflow order.
+  const summaryInput = useMemo(() => {
+    const visible = homeFeed.filter((item) =>
+      item.privacy === true ? item.username === user?.username : true,
+    );
+    const phaseLabelOf = (card: CardItem) =>
+      isRoadmap
+        ? PHASE_ID_TO_ROADMAP[card.phase ?? ""] || "Uncategorized"
+        : PHASE_OPTIONS.find((p) => p.id === card.phase)?.name ||
+          "Uncategorized";
+    const ordered = isRoadmap
+      ? ROADMAP_PHASE_OPTIONS.map((p) => p.name)
+      : [...PHASE_OPTIONS].sort((a, b) => a.order - b.order).map((p) => p.name);
+
+    const cards: SummaryCardInput[] = visible.map((c) => ({
+      id: c.id,
+      title: c.title,
+      description: c.description,
+      text: c.text,
+      username: c.username,
+      category: c.category,
+      phase: phaseLabelOf(c),
+      roleTypes: c.roleTypes,
+      createdAt: c.createdAt,
+      weblink: c.weblink,
+    }));
+    const present = new Set(cards.map((c) => c.phase));
+    const phases = [...ordered, "Uncategorized"].filter((p) => present.has(p));
+    return { cards, phases };
+  }, [homeFeed, user?.username, isRoadmap]);
+
+  const phaseAnchorId = (title: string) => `phase-${slugify(title)}`;
+
+  const jumpToPhaseSection = (phase: string) => {
+    document
+      .getElementById(phaseAnchorId(phase))
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const jumpToCardFromSummary = (id: number) => {
+    // make sure UI filters don't hide the card we're pointing at
+    if (!filteredCards.some((c) => c.id === id)) clearAllFilters();
+    setTimeout(() => {
+      scrollToCard(id, "smooth");
+      const el = document.getElementById(`card-${id}`);
+      if (!el) return;
+      el.classList.remove("ai-spotlight");
+      void el.offsetWidth; // restart animation
+      el.classList.add("ai-spotlight");
+      setTimeout(() => el.classList.remove("ai-spotlight"), 2600);
+    }, 60);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -1600,6 +1658,23 @@ export default function EventPage() {
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row items-center  ">
+                    {/* AI summary trigger */}
+                    <div className="mt-1 lg:mt-6 pt-1 lg:pt-6">
+                      <button
+                        onClick={() => setShowSummary(true)}
+                        className="group relative inline-flex items-center gap-1.5 rounded-full p-[1px] bg-gradient-to-r from-violet-500 via-blue-500 to-cyan-400 shadow-[0_6px_20px_-8px_rgba(99,102,241,.6)] transition hover:shadow-[0_8px_26px_-8px_rgba(99,102,241,.8)]"
+                        title="AI summary of this space"
+                        aria-label="Open AI summary"
+                      >
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-sm font-medium text-slate-700 backdrop-blur group-hover:bg-white/70">
+                          <Sparkles className="w-4 h-4 text-violet-600 transition-transform group-hover:rotate-12" />
+                          <span className="bg-gradient-to-r from-violet-700 to-blue-700 bg-clip-text text-transparent">
+                            Summary
+                          </span>
+                        </span>
+                      </button>
+                    </div>
+
                     {/* Category pill */}
                     <div className="mt-1 lg:mt-6 pt-1 lg:pt-6 inline-flex items-center ml-4">
                       <span className="text-sm font-medium text-gray-600 mr-2">
@@ -1957,7 +2032,10 @@ export default function EventPage() {
                 return (
                   <div key={group.title}>
                     {/* 🔥 Phase Header */}
-                    <div className="flex items-center gap-3 mb-4">
+                    <div
+                      id={phaseAnchorId(group.title)}
+                      className="flex items-center gap-3 mb-4 scroll-mt-28"
+                    >
                       <div className="h-1 w-6 bg-purple-500 rounded-full" />
                       <h2 className="text-lg font-semibold text-gray-800">
                         {group.title}
@@ -2056,6 +2134,17 @@ export default function EventPage() {
         isOpen={isNotificationsPopupOpen}
         onClose={() => setIsNotificationsPopupOpen(false)}
         onAllRead={() => setUnreadCount(0)}
+      />
+
+      <SpaceSummaryModal
+        open={showSummary}
+        onClose={() => setShowSummary(false)}
+        layerId={layerId}
+        category={collectionCategory.name}
+        phases={summaryInput.phases}
+        cards={summaryInput.cards}
+        onJumpToPhase={jumpToPhaseSection}
+        onJumpToCard={jumpToCardFromSummary}
       />
 
       {showInvite && (
