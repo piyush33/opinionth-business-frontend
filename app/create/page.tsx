@@ -622,7 +622,13 @@ export default function CreatePage() {
       await createProfilefeedData(parentId, homefeedId, phaseIdForBackend);
 
       localStorage.removeItem("selectedCard");
-      router.back();
+      // Added to an existing collection: open the collection on the new
+      // card (selected and scrolled to), not on the card we came from.
+      if (selectedCard && homefeedId) {
+        router.replace(`/event/${homefeedId}`);
+      } else {
+        router.back();
+      }
     } catch (error) {
       console.error("Error creating card:", error);
     } finally {
