@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -33,8 +33,6 @@ import MasonryGrid from "@/components/masonry-grid";
 import {
   type Category,
   DEFAULT_CATEGORIES,
-  checkDateFilter,
-  checkContentType,
   sortOptions,
 } from "@/utils/filters";
 import {
@@ -44,6 +42,15 @@ import {
 } from "@/utils/customCategories";
 import { FolderOpen } from "lucide-react";
 import SpaceIdeas, { type SpaceIdea } from "@/components/ai/SpaceIdeas";
+import {
+  type CategoryCount,
+  type FeedFilters,
+  SessionExpiredError,
+  fetchCategoryCounts,
+  useDebounced,
+  useLoadMoreSentinel,
+  usePagedFeed,
+} from "@/lib/feed";
 
 interface CardItem {
   id: number;
@@ -214,14 +221,11 @@ const normalizeCategoryId = (raw?: string | null) => {
 export default function ExplorePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [homeFeed, setHomeFeed] = useState<CardItem[]>([]);
-  const [filteredFeed, setFilteredFeed] = useState<CardItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isCategorySidebarOpen, setIsCategorySidebarOpen] = useState(true);
 
   // Popup states
@@ -337,106 +341,124 @@ export default function ExplorePage() {
     return () => clearInterval(id);
   }, [user]);
 
+  // Session expired: toast, clear auth, back to sign-in.
+  const onSessionExpired = useCallback(() => {
+    try {
+      toast.error("Session expired. Please sign in again.");
+    } catch {
+      console.warn("Toast system not available");
+    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("profileUser");
+    setTimeout(() => router.replace("/"), 1000);
+  }, [router]);
+
+  // Card counts per category, over everything the user can see.
+  const [categoryCounts, setCategoryCounts] = useState<{
+    total: number;
+    categories: CategoryCount[];
+  } | null>(null);
   useEffect(() => {
-    const abort = new AbortController();
+    if (!user) return;
+    const ac = new AbortController();
+    fetchCategoryCounts(ac.signal)
+      .then(setCategoryCounts)
+      .catch((e) => {
+        if (e instanceof SessionExpiredError) onSessionExpired();
+        else if (e?.name !== "AbortError")
+          console.error("Error fetching categories:", e);
+      });
+    return () => ac.abort();
+  }, [user, onSessionExpired]);
 
-    const fetchHomeFeedData = async () => {
-      if (!user) return;
-
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem("token");
-        const orgId = getActiveOrgId();
-
-        const response = await fetch(
-          `/nest-api/orgs/${orgId}/homefeed/user/${user.username}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            signal: abort.signal,
-          }
-        );
-
-        if (response.status === 401) {
-          // show toast & bounce to login
-          try {
-            toast.error("Session expired. Please sign in again.");
-          } catch {
-            // fallback if no toast system mounted
-            console.warn("Toast system not available");
-            alert("Session expired. Please sign in again.");
-          }
-
-          // clear auth bits
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          localStorage.removeItem("profileUser");
-
-          setIsLoading(false);
-          // small timeout ensures toast renders at least once before route change
-          setTimeout(() => router.replace("/"), 1000); // adjust path if needed
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const enrichedData = data.map((item: any) => {
-          const normalized = normalizeCategoryId(item.category);
-          return {
-            ...item,
-            _rawCategory: item.category ?? null,
-            category: normalized,
-            createdAt: item.createdAt,
-          };
-        });
-
-        setHomeFeed(enrichedData);
-      } catch (error: any) {
-        if (error?.name !== "AbortError") {
-          console.error("Error fetching home feed:", error);
-        }
-      } finally {
-        setIsLoading(false);
-      }
+  // Filters run on the server; the feed loads a page at a time.
+  const debouncedSearch = useDebounced(searchTerm, 300);
+  const feedFilters = useMemo<FeedFilters>(() => {
+    const day = 24 * 60 * 60 * 1000;
+    let from: string | undefined;
+    let to: string | undefined;
+    if (dateFilter === "custom") {
+      if (customStart) from = new Date(`${customStart}T00:00:00`).toISOString();
+      if (customEnd) to = new Date(`${customEnd}T23:59:59.999`).toISOString();
+    } else if (dateFilter === "today" || dateFilter === "week" || dateFilter === "month") {
+      // same windows as checkDateFilter: under 1, 8 and 31 whole days old
+      const days = { today: 1, week: 8, month: 31 }[dateFilter];
+      from = new Date(Date.now() - days * day).toISOString();
+    }
+    const phases =
+      selectedPhase === "all"
+        ? undefined
+        : selectedCategory === "roadmap"
+          ? // a roadmap bucket covers several phases
+            Object.keys(PHASE_ID_TO_ROADMAP).filter(
+              (id) => PHASE_ID_TO_ROADMAP[id] === selectedPhase
+            )
+          : [selectedPhase];
+    return {
+      category: selectedCategory,
+      q: debouncedSearch,
+      phases,
+      roles: selectedRoleTypes,
+      from,
+      to,
+      content: contentTypeFilter,
     };
+  }, [
+    selectedCategory,
+    debouncedSearch,
+    selectedPhase,
+    selectedRoleTypes,
+    dateFilter,
+    customStart,
+    customEnd,
+    contentTypeFilter,
+  ]);
 
-    fetchHomeFeedData();
-    return () => abort.abort();
-  }, [user, router]);
+  const feed = usePagedFeed<CardItem>(feedFilters, !!user, onSessionExpired);
+  const isLoading = feed.loading || (!!user && feed.total === null && !feed.error);
+  const filteredFeed = useMemo(
+    () =>
+      feed.items.map((item: any) => ({
+        ...item,
+        _rawCategory: item.category ?? null,
+        category: normalizeCategoryId(item.category),
+      })) as CardItem[],
+    [feed.items]
+  );
+  const sentinelRef = useLoadMoreSentinel(
+    feed.loadMore,
+    feed.hasMore && !feed.loading,
+    feed.items.length
+  );
 
   const DEFAULT_IDS = new Set<string>(
     DEFAULT_CATEGORIES.map((c) => c.id).concat(["uncategorized"])
   );
 
-  // NEW: derive categories from defaults + cookie + feed, and persist new ones
+  // Categories: defaults + saved custom ones + any the server reports,
+  // with counts over every card the user can see (not just loaded pages).
   useEffect(() => {
-    // Collect category ids from feed (fallback to 'uncategorized')
-    const idsFromFeed = new Set<string>(
-      homeFeed.map(
-        (item) =>
-          (item.category && String(item.category).trim()) || "uncategorized"
-      )
+    if (!categoryCounts) return;
+    const countOf = new Map(
+      categoryCounts.categories.map((c) => [c.id, c.count])
     );
+    const idsFromServer = categoryCounts.categories.map((c) => c.id);
 
-    // Persist any *new* non-default ids from feed into the cookie (dedup handled inside helper)
-    const toSave = [...idsFromFeed].filter((id) => id && !DEFAULT_IDS.has(id));
+    // Persist any *new* non-default ids (dedup handled inside helper)
+    const toSave = idsFromServer.filter((id) => id && !DEFAULT_IDS.has(id));
     if (toSave.length) {
       ensureSaved(toSave); // writes only what's missing
     }
 
-    // Pull the full saved list (now includes any just-saved ids) and hydrate with FolderOpen icon for Explore
     const savedCustomHydrated = hydrateForUI(getSavedCustomCats(), FolderOpen);
 
-    // Start with defaults + saved customs; dedupe by id
     const dedup = new Map<string, Category>();
     [...DEFAULT_CATEGORIES, ...savedCustomHydrated].forEach((c) =>
       dedup.set(c.id, c)
     );
     const base = Array.from(dedup.values());
 
-    // Ensure 'uncategorized' exists
     if (!base.some((c) => c.id === "uncategorized")) {
       base.push({
         id: "uncategorized",
@@ -449,127 +471,24 @@ export default function ExplorePage() {
       });
     }
 
-    // Add any remaining feed categories that aren't in base yet (these will also have been saved above)
-    idsFromFeed.forEach((id) => {
+    idsFromServer.forEach((id) => {
       if (!base.some((c) => c.id === id)) {
         base.push(makeCustomCategory(id));
       }
     });
 
-    // Recalculate counts immutably
     const withCounts = base.map((cat) => ({
       ...cat,
-      count:
-        cat.id === "all"
-          ? homeFeed.length
-          : homeFeed.filter(
-              (i) =>
-                ((i.category && String(i.category).trim()) ||
-                  "uncategorized") === cat.id
-            ).length,
+      count: cat.id === "all" ? categoryCounts.total : countOf.get(cat.id) ?? 0,
     }));
 
     setCategories(withCounts);
 
-    // Keep selection valid
     if (!withCounts.some((c) => c.id === selectedCategory)) {
       setSelectedCategory("all");
     }
-  }, [homeFeed, selectedCategory]);
+  }, [categoryCounts, selectedCategory]);
 
-  useEffect(() => {
-    const filtered = homeFeed.filter((item) => {
-      // Privacy check
-      const isAllowedToView =
-        item.privacy === true ? item.username === user?.username : true;
-
-      if (!isAllowedToView) return false;
-
-      // Search filter
-      const matchesSearch =
-        !searchTerm ||
-        item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.text?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.username?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      // Category filter
-      const matchesCategory =
-        selectedCategory === "all" || item.category === selectedCategory;
-
-      // Phase filter
-      const matchesPhase =
-        selectedPhase === "all" ||
-        (isRoadmap
-          ? // selectedPhase is a roadmap bucket name here
-            PHASE_ID_TO_ROADMAP[item.phase ?? ""] === selectedPhase
-          : // normal behavior (selectedPhase is backend id)
-            item.phase === selectedPhase);
-
-      // Role Types filter (multi-select - item must have at least one selected role type)
-      const matchesRoleTypes =
-        selectedRoleTypes.length === 0 ||
-        (item.roleTypes &&
-          selectedRoleTypes.some((rt) => item.roleTypes?.includes(rt)));
-
-      // Date filter (supports custom range)
-      const matchesDate = (() => {
-        if (dateFilter === "custom") {
-          if (!item.createdAt) return true; // no date -> don't exclude
-          const created = new Date(item.createdAt);
-
-          if (customStart) {
-            const start = new Date(`${customStart}T00:00:00`);
-            if (created < start) return false;
-          }
-          if (customEnd) {
-            const end = new Date(`${customEnd}T23:59:59.999`);
-            if (created > end) return false;
-          }
-          return true;
-        }
-        return (
-          dateFilter === "all" || checkDateFilter(item.createdAt, dateFilter)
-        );
-      })();
-
-      // Content type filter
-      const matchesContentType =
-        contentTypeFilter === "all" ||
-        checkContentType(item, contentTypeFilter);
-
-      // Engagement filter
-      const matchesEngagement = engagementFilter === "all";
-
-      return (
-        matchesSearch &&
-        matchesCategory &&
-        matchesPhase &&
-        matchesRoleTypes &&
-        matchesDate &&
-        matchesContentType &&
-        matchesEngagement
-      );
-    });
-
-    // Sort filtered results
-    filtered.sort((a, b) => b.id - a.id); // Sort by id descending
-
-    setFilteredFeed(filtered);
-  }, [
-    homeFeed,
-    searchTerm,
-    selectedCategory,
-    selectedPhase,
-    selectedRoleTypes,
-    sortBy,
-    dateFilter,
-    contentTypeFilter,
-    engagementFilter,
-    user,
-    customStart,
-    customEnd,
-  ]);
 
   const toggleRoleType = (roleTypeId: string) => {
     setSelectedRoleTypes((prev) =>
@@ -1056,7 +975,7 @@ export default function ExplorePage() {
               </div>
 
               <div className="flex items-center space-x-3 md:space-x-4 text-xs md:text-sm text-gray-500">
-                <span>{filteredFeed.length} whiteboards</span>
+                <span>{feed.total ?? filteredFeed.length} whiteboards</span>
                 <span>•</span>
                 <span className="hidden sm:inline">
                   Updated {new Date().toLocaleDateString()}
@@ -1100,7 +1019,7 @@ export default function ExplorePage() {
                   <div className="flex items-center justify-between sm:justify-end space-x-4">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <span className="whitespace-nowrap">
-                        {filteredFeed.length} results
+                        {feed.total ?? filteredFeed.length} results
                       </span>
                     </div>
                   </div>
@@ -1400,6 +1319,25 @@ export default function ExplorePage() {
                     />
                   ))}
                 </MasonryGrid>
+                {/* Loads the next page as this nears the viewport */}
+                <div ref={sentinelRef} aria-hidden className="h-px" />
+                {feed.loadingMore && (
+                  <div className="flex justify-center py-6">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
+                  </div>
+                )}
+                {feed.error && !feed.loadingMore && (
+                  <div className="flex justify-center py-6 text-sm text-rose-600">
+                    {feed.error}.{" "}
+                    <button
+                      type="button"
+                      onClick={feed.loadMore}
+                      className="ml-2 underline"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-12 md:py-16 px-4">
