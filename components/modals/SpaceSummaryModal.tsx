@@ -85,12 +85,14 @@ const timeAgo = (iso: string) => {
  */
 export function useSpaceSummary({
   layerId,
+  username,
   category,
   phases,
   cards,
   auto = false,
 }: {
   layerId: number;
+  username?: string;
   category: string;
   phases: string[];
   cards: SummaryCardInput[];
@@ -132,10 +134,22 @@ export function useSpaceSummary({
       setLoading(true);
       setError(null);
       try {
+        let token: string | null = null;
+        let orgId: number | null = null;
+        try {
+          token = localStorage.getItem("token");
+          const org = JSON.parse(localStorage.getItem("activeOrg") || "null");
+          orgId = typeof org === "number" ? org : (org?.id ?? null);
+        } catch {
+          /* ignore */
+        }
         const res = await fetch("/api/ai/space-summary", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ layerId, category, phases, cards, force }),
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ layerId, orgId, username, category, phases, cards, force }),
           signal: ac.signal,
         });
         const json = await res.json();
@@ -155,7 +169,7 @@ export function useSpaceSummary({
         }
       }
     },
-    [cards, category, layerId, phases, storageKey],
+    [cards, category, layerId, username, phases, storageKey],
   );
 
   // Background load; debounced so a feed that is still filling in

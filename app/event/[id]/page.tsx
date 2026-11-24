@@ -1159,6 +1159,7 @@ export default function EventPage() {
   const summaryHeaderOn = summaryInput.cards.length >= SUMMARY_HEADER_MIN_CARDS;
   const spaceSummary = useSpaceSummary({
     layerId,
+    username: user?.username,
     category: collectionCategory.name,
     phases: summaryInput.phases,
     cards: summaryInput.cards,
