@@ -78,15 +78,6 @@ const timeAgo = (iso: string) => {
   return `${Math.floor(d / 86400)}d ago`;
 };
 
-const PHASE_TINTS = [
-  "from-violet-400/70 to-fuchsia-400/70",
-  "from-sky-400/70 to-cyan-300/70",
-  "from-indigo-400/70 to-blue-300/70",
-  "from-emerald-400/70 to-teal-300/70",
-  "from-amber-300/80 to-orange-300/70",
-  "from-pink-400/70 to-rose-300/70",
-];
-
 export default function SpaceSummaryModal({
   open,
   onClose,
@@ -102,6 +93,8 @@ export default function SpaceSummaryModal({
   const [error, setError] = useState<string | null>(null);
   const [minimized, setMinimized] = useState(false);
   const [closing, setClosing] = useState(false);
+  // Height of the page's fixed top bar, so the navbar stays sharp and usable.
+  const [topOffset, setTopOffset] = useState(64);
   const abortRef = useRef<AbortController | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -173,6 +166,22 @@ export default function SpaceSummaryModal({
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const measure = () => {
+      const bars = document.querySelectorAll<HTMLElement>("[data-summary-clear]");
+      let bottom = 0;
+      bars.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.height > 0) bottom = Math.max(bottom, r.bottom);
+      });
+      setTopOffset(Math.round(bottom));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [open]);
+
   const handleClose = useCallback(() => {
     setClosing(true);
     setTimeout(() => {
@@ -210,7 +219,7 @@ export default function SpaceSummaryModal({
         className="ai-glass-pill fixed bottom-6 left-6 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-slate-800"
         aria-label="Reopen space summary"
       >
-        <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-blue-500 to-cyan-400 text-white shadow-inner">
+        <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-violet-700 text-white shadow-inner">
           <Sparkles className="h-3.5 w-3.5" />
         </span>
         <span className="max-w-[180px] truncate">{data?.topic || "Space summary"}</span>
@@ -221,7 +230,8 @@ export default function SpaceSummaryModal({
 
   return (
     <div
-      className="fixed inset-0 z-50"
+      className="fixed inset-x-0 bottom-0 z-50"
+      style={{ top: topOffset }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="ai-summary-title"
@@ -236,7 +246,7 @@ export default function SpaceSummaryModal({
       <div
         ref={panelRef}
         tabIndex={-1}
-        className={`ai-glass-panel absolute inset-x-2 bottom-2 top-16 flex flex-col overflow-hidden rounded-[28px] outline-none md:inset-x-auto md:right-6 md:top-24 md:bottom-6 md:w-[min(620px,calc(100vw-3rem))] ${
+        className={`ai-glass-panel absolute inset-x-2 bottom-2 top-3 flex flex-col overflow-hidden rounded-[28px] outline-none md:inset-x-auto md:right-6 md:top-6 md:bottom-6 md:w-[min(620px,calc(100vw-3rem))] ${
           closing ? "ai-panel-out" : "ai-panel-in"
         }`}
       >
@@ -320,7 +330,7 @@ export default function SpaceSummaryModal({
               <section className="ai-rise" style={{ animationDelay: "40ms" }}>
                 <h2
                   id="ai-summary-title"
-                  className="bg-gradient-to-r from-violet-700 via-blue-700 to-cyan-600 bg-clip-text text-2xl font-bold leading-tight text-transparent sm:text-[28px]"
+                  className="text-2xl font-bold leading-tight text-violet-900 sm:text-[28px]"
                 >
                   {data.topic}
                 </h2>
@@ -343,13 +353,13 @@ export default function SpaceSummaryModal({
               {/* Collective summary */}
               <section className="ai-glass-card ai-rise p-4 sm:p-5" style={{ animationDelay: "120ms" }}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-                  <Waves className="h-3.5 w-3.5 text-blue-500" />
+                  <Waves className="h-3.5 w-3.5 text-violet-600" />
                   The whole space
                 </div>
                 <p className="text-[14.5px] leading-relaxed text-slate-800">{data.overview}</p>
                 {data.momentum && (
                   <div className="mt-3 flex items-start gap-2 rounded-2xl bg-white/55 px-3 py-2 text-[13px] text-slate-700 ring-1 ring-white/70">
-                    <Compass className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-violet-500" />
+                    <Compass className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-violet-600" />
                     <span>{data.momentum}</span>
                   </div>
                 )}
@@ -365,7 +375,7 @@ export default function SpaceSummaryModal({
                     Phase by phase
                   </div>
                   <ol className="relative space-y-3 pl-6">
-                    <span className="absolute bottom-3 left-[9px] top-3 w-px bg-gradient-to-b from-violet-300/80 via-blue-300/60 to-cyan-300/30" />
+                    <span className="absolute bottom-3 left-[9px] top-3 w-px bg-gradient-to-b from-violet-300/80 to-violet-300/20" />
                     {data.phases.map((p, i) => {
                       const count = cards.filter((c) => c.phase === p.phase).length;
                       return (
@@ -374,11 +384,7 @@ export default function SpaceSummaryModal({
                           className="ai-rise relative"
                           style={{ animationDelay: `${220 + i * 70}ms` }}
                         >
-                          <span
-                            className={`absolute -left-6 top-4 h-[18px] w-[18px] rounded-full bg-gradient-to-br ${
-                              PHASE_TINTS[i % PHASE_TINTS.length]
-                            } ring-4 ring-white/50 shadow-[0_0_14px_rgba(139,92,246,.35)]`}
-                          />
+                          <span className="absolute -left-6 top-4 h-[18px] w-[18px] rounded-full bg-gradient-to-br from-violet-400 to-violet-600 ring-4 ring-white/60 shadow-[0_0_14px_rgba(139,92,246,.35)]" />
                           <div className="ai-glass-card group p-4">
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex min-w-0 items-baseline gap-2">
@@ -391,7 +397,7 @@ export default function SpaceSummaryModal({
                               </div>
                               <button
                                 onClick={() => jumpPhase(p.phase)}
-                                className="flex flex-shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-blue-700 opacity-80 transition hover:bg-white/60 hover:opacity-100"
+                                className="flex flex-shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-violet-700 opacity-80 transition hover:bg-white/60 hover:opacity-100"
                               >
                                 View <ArrowUpRight className="h-3.5 w-3.5" />
                               </button>
