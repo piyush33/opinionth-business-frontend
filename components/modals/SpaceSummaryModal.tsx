@@ -11,6 +11,7 @@ import {
   Compass,
   CornerDownRight,
 } from "lucide-react";
+import { readAuth, signatureOf } from "@/lib/ai/client";
 
 export type SummaryCardInput = {
   id: number;
@@ -56,20 +57,6 @@ type Props = {
 };
 
 const STORAGE_PREFIX = "spaceSummary:v1:";
-
-const signatureOf = (cards: SummaryCardInput[]) => {
-  // cheap content signature: ids + phase + title length
-  let h = 0;
-  const s = cards
-    .map((c) => `${c.id}|${c.phase}|${(c.title ?? "").length}|${(c.text ?? "").length}`)
-    .sort()
-    .join(",");
-  for (let i = 0; i < s.length; i++) {
-    h = (h << 5) - h + s.charCodeAt(i);
-    h |= 0;
-  }
-  return `${cards.length}-${Math.abs(h)}`;
-};
 
 const timeAgo = (iso: string) => {
   const d = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -132,15 +119,7 @@ export function useSpaceSummary({
       setLoading(true);
       setError(null);
       try {
-        let token: string | null = null;
-        let orgId: number | null = null;
-        try {
-          token = localStorage.getItem("token");
-          const org = JSON.parse(localStorage.getItem("activeOrg") || "null");
-          orgId = typeof org === "number" ? org : (org?.id ?? null);
-        } catch {
-          /* ignore */
-        }
+        const { token, orgId } = readAuth();
         const res = await fetch("/api/ai/space-summary", {
           method: "POST",
           headers: {

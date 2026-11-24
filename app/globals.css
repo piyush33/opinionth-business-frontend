@@ -135,6 +135,7 @@ body {
     inset: -4px;
     border-radius: 18px;
     border: 1px solid rgba(139, 92, 246, 0.35);
+    pointer-events: none;
     animation: ai-ripple 2.6s ease-out infinite;
   }
 
