@@ -431,8 +431,9 @@ export default function ProfileUserPage() {
     }
   };
 
+  // @id link: open that card in its own space, selected.
   const handleCardTagClick = (cardId: number) => {
-    const cardElement = document.getElementById(`card-${cardId}`);
+    router.push(`/event/${cardId}`);
   };
 
   return (
