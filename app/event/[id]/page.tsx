@@ -1161,18 +1161,12 @@ export default function EventPage() {
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  // Same behaviour as card linkages (@id): move the selection to the card
+  // and keep it there.
   const jumpToCardFromSummary = (id: number) => {
     // make sure UI filters don't hide the card we're pointing at
     if (!filteredCards.some((c) => c.id === id)) clearAllFilters();
-    setTimeout(() => {
-      scrollToCard(id, "smooth");
-      const el = document.getElementById(`card-${id}`);
-      if (!el) return;
-      el.classList.remove("ai-spotlight");
-      void el.offsetWidth; // restart animation
-      el.classList.add("ai-spotlight");
-      setTimeout(() => el.classList.remove("ai-spotlight"), 2600);
-    }, 60);
+    setTimeout(() => handleCardTagClick(id), 60);
   };
 
   if (!user) {
@@ -1658,13 +1652,13 @@ export default function EventPage() {
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row items-center  ">
-                    {/* AI summary trigger */}
+                    {/* Space summary trigger */}
                     <div className="mt-1 lg:mt-6 pt-1 lg:pt-6">
                       <button
                         onClick={() => setShowSummary(true)}
                         className="group relative inline-flex items-center gap-1.5 rounded-full p-[1px] bg-gradient-to-r from-violet-500 via-blue-500 to-cyan-400 shadow-[0_6px_20px_-8px_rgba(99,102,241,.6)] transition hover:shadow-[0_8px_26px_-8px_rgba(99,102,241,.8)]"
-                        title="AI summary of this space"
-                        aria-label="Open AI summary"
+                        title="Summary of this space"
+                        aria-label="Open space summary"
                       >
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-sm font-medium text-slate-700 backdrop-blur group-hover:bg-white/70">
                           <Sparkles className="w-4 h-4 text-violet-600 transition-transform group-hover:rotate-12" />

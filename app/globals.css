@@ -27,14 +27,16 @@ body {
 
 /* ───────────── AI summary: liquid glass ───────────── */
 .ai-glass-panel {
+  /* Frosted enough that page content behind never competes with text,
+     still translucent at the edges so the collection reads through. */
   background: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.42) 0%,
-    rgba(255, 255, 255, 0.22) 45%,
-    rgba(236, 233, 255, 0.28) 100%
+    rgba(255, 255, 255, 0.74) 0%,
+    rgba(248, 250, 255, 0.62) 45%,
+    rgba(238, 236, 255, 0.66) 100%
   );
-  -webkit-backdrop-filter: blur(28px) saturate(170%);
-  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(44px) saturate(180%) brightness(1.04);
+  backdrop-filter: blur(44px) saturate(180%) brightness(1.04);
   border: 1px solid rgba(255, 255, 255, 0.65);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
@@ -46,23 +48,23 @@ body {
 .ai-glass-card {
   position: relative;
   border-radius: 20px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.25));
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
-  backdrop-filter: blur(14px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.85),
     0 8px 24px -14px rgba(30, 41, 59, 0.25);
   transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 .ai-glass-card:hover {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.34));
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.95),
     0 14px 30px -16px rgba(76, 29, 149, 0.3);
 }
 .ai-glass-pill {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.72);
   -webkit-backdrop-filter: blur(18px) saturate(170%);
   backdrop-filter: blur(18px) saturate(170%);
   border: 1px solid rgba(255, 255, 255, 0.75);
@@ -81,8 +83,8 @@ body {
   height: 34px;
   border-radius: 9999px;
   color: rgb(71 85 105);
-  background: rgba(255, 255, 255, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   transition: background 0.2s ease, color 0.2s ease;
 }
 .ai-icon-btn:hover { background: rgba(255, 255, 255, 0.7); color: rgb(15 23 42); }
@@ -91,8 +93,8 @@ body {
   font-size: 12px;
   padding: 3px 10px;
   border-radius: 9999px;
-  color: rgb(67 56 202);
-  background: rgba(255, 255, 255, 0.45);
+  color: rgb(55 48 163);
+  background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.75);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
@@ -104,8 +106,8 @@ body {
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 10px;
-  color: rgb(30 64 175);
-  background: rgba(219, 234, 254, 0.45);
+  color: rgb(30 58 138);
+  background: rgba(219, 234, 254, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.7);
   transition: background 0.2s ease, transform 0.2s ease;
 }
@@ -129,13 +131,13 @@ body {
 .ai-blob {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(50px);
-  opacity: 0.55;
+  filter: blur(60px);
+  opacity: 0.38;
   mix-blend-mode: multiply;
 }
 .ai-blob-a { width: 340px; height: 340px; top: -120px; right: -80px; background: #c4b5fd; animation: ai-drift-a 16s ease-in-out infinite; }
 .ai-blob-b { width: 300px; height: 300px; bottom: -100px; left: -90px; background: #a5f3fc; animation: ai-drift-b 19s ease-in-out infinite; }
-.ai-blob-c { width: 220px; height: 220px; top: 40%; left: 45%; background: #fbcfe8; opacity: 0.35; animation: ai-drift-c 22s ease-in-out infinite; }
+.ai-blob-c { width: 220px; height: 220px; top: 40%; left: 45%; background: #fbcfe8; opacity: 0.25; animation: ai-drift-c 22s ease-in-out infinite; }
 .ai-caustics {
   position: absolute;
   inset: -50%;
@@ -177,12 +179,6 @@ body {
 .ai-panel-out { animation: ai-panel-exit 0.22s ease-in both; }
 .ai-rise { animation: ai-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
-/* Card spotlight when jumping from the summary */
-.ai-spotlight > * {
-  border-radius: 16px;
-  animation: ai-spotlight 2.4s ease-out both;
-}
-
 @keyframes ai-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ai-panel {
   from { opacity: 0; transform: translateY(18px) scale(0.97); filter: blur(6px); }
@@ -199,11 +195,6 @@ body {
 @keyframes ai-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 @keyframes ai-dot { 0%,100% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(-4px); opacity: 1; } }
 @keyframes ai-ripple { 0% { transform: scale(0.9); opacity: .9; } 100% { transform: scale(1.35); opacity: 0; } }
-@keyframes ai-spotlight {
-  0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
-  15% { box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.55), 0 0 40px 6px rgba(56, 189, 248, 0.35); }
-  100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .ai-blob, .ai-caustics, .ai-sheen, .ai-orb::after, .ai-shimmer, .ai-dots i { animation: none !important; }
