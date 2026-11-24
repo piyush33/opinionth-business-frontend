@@ -7,7 +7,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from "react-dom";
 import { Sparkles, X, Shuffle, Compass, PenLine, Tag } from "lucide-react";
 import { getRoleTypeById } from "@/lib/phases";
-import { postAi, readAuth, signatureOf } from "@/lib/ai/client";
+import { runAiJob, signatureOf } from "@/lib/ai/client";
 import type { SummaryCardInput } from "@/components/modals/SpaceSummaryModal";
 
 export type CardSuggestion = {
@@ -40,8 +40,10 @@ const STORAGE_PREFIX = "cardSuggest:v1:";
 const MIN_W = 300;
 const MAX_W = 400;
 const GAP = 12;
-const SHOW_DELAY = 500;
-const SWITCH_DELAY = 250;
+// Generation starts as soon as a card is hovered; the suggestion is only
+// revealed after this long on the same card, so passing over cards never
+// pops anything up.
+const REVEAL_DELAY = 10_000;
 const HIDE_DELAY = 300;
 
 function useCardSuggestions({
@@ -88,10 +90,9 @@ function useCardSuggestions({
       setLoading(true);
       setError(null);
       try {
-        const { orgId } = readAuth();
-        const json = await postAi<Suggestions>(
-          "/api/ai/card-suggestions",
-          { layerId, orgId, category, phases, cards, force },
+        const json = await runAiJob<Suggestions>(
+          "suggestions",
+          { layerId, category, phases, cards, force },
           { fallbackError: "Could not get suggestions." },
         );
         if (inflight.current !== storageKey) return; // cards changed meanwhile
@@ -141,6 +142,7 @@ export default function CardSuggestionHover({
   } | null>(null);
   const [canHover, setCanHover] = useState(false);
   const anchorRef = useRef<number | null>(null);
+  const dwellRef = useRef<number | null>(null); // card being hovered, not yet revealed
   const showT = useRef<number | undefined>(undefined);
   const hideT = useRef<number | undefined>(undefined);
   const popRef = useRef<HTMLDivElement>(null);
@@ -156,13 +158,20 @@ export default function CardSuggestionHover({
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  const hide = useCallback(() => {
-    window.clearTimeout(showT.current);
+  // Close the open suggestion only (a hover on another card may be counting).
+  const closePopover = useCallback(() => {
     window.clearTimeout(hideT.current);
     anchorRef.current = null;
     setAnchorId(null);
     setPos(null);
   }, []);
+
+  // Close and cancel everything.
+  const hide = useCallback(() => {
+    window.clearTimeout(showT.current);
+    dwellRef.current = null;
+    closePopover();
+  }, [closePopover]);
 
   // Hover tracking via delegation, so the page only tags its cards.
   useEffect(() => {
@@ -175,29 +184,46 @@ export default function CardSuggestionHover({
       const t = e.target as Element | null;
       if (!t?.closest) return;
       if (t.closest("[data-suggest-popover]")) {
+        // Back on the open suggestion: keep it, and stop counting any card
+        // the pointer crossed on the way.
         window.clearTimeout(hideT.current);
+        window.clearTimeout(showT.current);
+        dwellRef.current = null;
         return;
       }
       const el = t.closest<HTMLElement>("[data-suggest-id]");
       if (el) {
-        window.clearTimeout(hideT.current);
         const id = Number(el.dataset.suggestId);
-        if (!cardById.has(id) || id === anchorRef.current) return;
-        window.clearTimeout(showT.current);
-        showT.current = window.setTimeout(
-          () => {
-            anchorRef.current = id;
-            setAnchorId(id);
-            setPick(0);
-            ensure();
-          },
-          anchorRef.current == null ? SHOW_DELAY : SWITCH_DELAY,
-        );
-      } else {
-        window.clearTimeout(showT.current);
+        if (id === anchorRef.current) {
+          window.clearTimeout(hideT.current);
+          window.clearTimeout(showT.current);
+          dwellRef.current = null;
+          return;
+        }
+        if (!cardById.has(id) || id === dwellRef.current) return;
+        // A new card: drop any open suggestion, start generating now, and
+        // reveal only if the pointer stays on this card for REVEAL_DELAY.
         if (anchorRef.current != null) {
           window.clearTimeout(hideT.current);
-          hideT.current = window.setTimeout(hide, HIDE_DELAY);
+          hideT.current = window.setTimeout(closePopover, HIDE_DELAY);
+        }
+        window.clearTimeout(showT.current);
+        dwellRef.current = id;
+        ensure();
+        showT.current = window.setTimeout(() => {
+          if (dwellRef.current !== id) return;
+          dwellRef.current = null;
+          window.clearTimeout(hideT.current);
+          anchorRef.current = id;
+          setAnchorId(id);
+          setPick(0);
+        }, REVEAL_DELAY);
+      } else {
+        window.clearTimeout(showT.current);
+        dwellRef.current = null;
+        if (anchorRef.current != null) {
+          window.clearTimeout(hideT.current);
+          hideT.current = window.setTimeout(closePopover, HIDE_DELAY);
         }
       }
     };
@@ -205,32 +231,31 @@ export default function CardSuggestionHover({
     const onDown = (e: PointerEvent) => {
       const t = e.target as Element | null;
       if (t?.closest?.("[data-suggest-popover]")) return;
-      if (anchorRef.current != null) hide();
-      else window.clearTimeout(showT.current);
+      hide();
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") hide();
     };
+    // Pointer left the window (or the tab lost focus): stop counting.
+    const onLeave = () => {
+      window.clearTimeout(showT.current);
+      dwellRef.current = null;
+    };
     document.addEventListener("pointerover", onOver);
     document.addEventListener("pointerdown", onDown, true);
     window.addEventListener("keydown", onKey);
+    document.documentElement.addEventListener("pointerleave", onLeave);
+    window.addEventListener("blur", onLeave);
     return () => {
+      document.documentElement.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("blur", onLeave);
       document.removeEventListener("pointerover", onOver);
       document.removeEventListener("pointerdown", onDown, true);
       window.removeEventListener("keydown", onKey);
       window.clearTimeout(showT.current);
       window.clearTimeout(hideT.current);
     };
-  }, [active, cardById, ensure, hide]);
-
-  // Generation takes ~20s, so start it quietly once the page settles
-  // (desktop only); the first hover then usually has it ready. Results are
-  // saved per card set, so this runs once per space change, not per view.
-  useEffect(() => {
-    if (!active) return;
-    const t = window.setTimeout(() => ensure(), 2500);
-    return () => window.clearTimeout(t);
-  }, [active, ensure]);
+  }, [active, cardById, ensure, hide, closePopover]);
 
   // Keep the popover beside its card while scrolling or resizing.
   const place = useCallback(() => {

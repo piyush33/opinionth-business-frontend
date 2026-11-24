@@ -11,7 +11,7 @@ import {
   Compass,
   CornerDownRight,
 } from "lucide-react";
-import { postAi, readAuth, signatureOf } from "@/lib/ai/client";
+import { runAiJob, signatureOf } from "@/lib/ai/client";
 
 export type SummaryCardInput = {
   id: number;
@@ -119,10 +119,9 @@ export function useSpaceSummary({
       setLoading(true);
       setError(null);
       try {
-        const { orgId } = readAuth();
-        const json = await postAi<any>(
-          "/api/ai/space-summary",
-          { layerId, orgId, category, phases, cards, force },
+        const json = await runAiJob<SpaceSummary>(
+          "summary",
+          { layerId, category, phases, cards, force },
           { signal: ac.signal, fallbackError: "Failed to summarize." },
         );
         setData(json);
