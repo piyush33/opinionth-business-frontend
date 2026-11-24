@@ -272,7 +272,7 @@ export default function SpaceSummaryModal({
         <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-violet-700 text-white shadow-inner">
           <Sparkles className="h-3.5 w-3.5" />
         </span>
-        <span className="max-w-[180px] truncate">{data?.topic || "Space summary"}</span>
+        <span className="max-w-[180px] truncate">{data?.topic || "Summary"}</span>
         <ArrowUpRight className="h-4 w-4 text-slate-500" />
       </button>
     );
@@ -318,7 +318,7 @@ export default function SpaceSummaryModal({
             </span>
             <div className="leading-tight">
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
-                Space Summary
+                Summary
               </div>
               <div className="text-xs text-slate-600">
                 {data

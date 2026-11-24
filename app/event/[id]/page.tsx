@@ -1567,7 +1567,7 @@ export default function EventPage() {
             <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-4 sm:p-6 mb-6 mx-auto max-w-full overflow-hidden">
               <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
                 {/* Main Info */}
-                <div className="text-center lg:text-left w-full lg:w-auto">
+                <div className="text-center lg:text-left w-full lg:w-auto lg:flex-1 lg:min-w-0 lg:pr-8">
                   <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
                     {headerSummary ? (
                       <h1>
@@ -1620,7 +1620,7 @@ export default function EventPage() {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:shrink-0">
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-purple-200">
                     <div className="flex items-center justify-center mb-1 sm:mb-2">
                       <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
