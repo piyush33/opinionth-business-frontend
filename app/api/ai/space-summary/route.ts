@@ -18,6 +18,8 @@ type InCard = {
 
 type InBody = {
   layerId?: number;
+  orgId?: number | string;
+  username?: string;
   category?: string;
   phases: string[]; // ordered phase labels that have cards
   cards: InCard[];
@@ -46,6 +48,64 @@ const MAX_FIELD = 700;
 // Small in-memory cache so repeated opens of the same space don't re-bill.
 const cache = new Map<string, { at: number; data: SpaceSummary }>();
 const CACHE_TTL_MS = 30 * 60 * 1000;
+
+// Backend that owns auth and layer membership (same target as the
+// /nest-api rewrite in next.config.ts).
+const NEST_API_ORIGIN =
+  process.env.NEST_API_ORIGIN || "https://dn2h1x2q2afc3.cloudfront.net";
+
+// Remember successful access checks briefly so opening the summary
+// doesn't hit the backend on every request.
+const accessCache = new Map<string, number>();
+const ACCESS_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * Only signed-in members of the space may spend AI quota: the backend
+ * must accept the caller's token for this layer's cards.
+ */
+async function checkAccess(
+  req: Request,
+  body: InBody,
+): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const auth = req.headers.get("authorization") ?? "";
+  const token = auth.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+  if (!token) return { ok: false, status: 401, error: "Sign in to see the summary." };
+
+  const orgId = String(body.orgId ?? "");
+  const layerId = String(body.layerId ?? "");
+  const username = typeof body.username === "string" ? body.username : "";
+  if (!/^\d+$/.test(orgId) || !/^\d+$/.test(layerId) || !username) {
+    return { ok: false, status: 400, error: "Missing space details." };
+  }
+
+  const key = createHash("sha256")
+    .update(`${token}|${orgId}|${layerId}|${username}`)
+    .digest("hex");
+  const seen = accessCache.get(key);
+  if (seen && Date.now() - seen < ACCESS_TTL_MS) return { ok: true };
+
+  let res: Response;
+  try {
+    res = await fetch(
+      `${NEST_API_ORIGIN}/orgs/${orgId}/homefeed/layers/${layerId}/cards?username=${encodeURIComponent(
+        username,
+      )}`,
+      { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
+    );
+  } catch (e) {
+    console.error("[space-summary] access check failed", e);
+    return { ok: false, status: 502, error: "Could not verify access." };
+  }
+  if (res.status === 401) return { ok: false, status: 401, error: "Session expired. Please sign in again." };
+  if (!res.ok) return { ok: false, status: 403, error: "You don't have access to this space." };
+
+  accessCache.set(key, Date.now());
+  if (accessCache.size > 1000) {
+    const oldest = accessCache.keys().next().value;
+    if (oldest) accessCache.delete(oldest);
+  }
+  return { ok: true };
+}
 
 const clip = (s: unknown, n = MAX_FIELD) => {
   const str = typeof s === "string" ? s : "";
@@ -122,6 +182,11 @@ export async function POST(req: Request) {
     body = (await req.json()) as InBody;
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
+
+  const access = await checkAccess(req, body);
+  if (!access.ok) {
+    return NextResponse.json({ error: access.error }, { status: access.status });
   }
 
   const cards = Array.isArray(body.cards) ? body.cards.slice(0, MAX_CARDS) : [];
