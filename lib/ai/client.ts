@@ -28,48 +28,95 @@ export const readAuth = (): { token: string | null; orgId: number | null } => {
   }
 };
 
+type JobView =
+  | { status: "done"; signature: string; result: unknown }
+  | { status: "pending" | "missing"; signature: string }
+  | { status: "error"; signature: string; error: string };
+
+const POLL_MS = 2000;
+const MAX_WAIT_MS = 90_000;
+// Above the server's 700-character clip, so clipping here never changes
+// what the model sees (or the signature); it just keeps payloads small.
+const SEND_CLIP = 1000;
+
+const preclip = (s?: string) => {
+  if (typeof s !== "string") return s;
+  const flat = s.replace(/\s+/g, " ").trim();
+  return flat.length > SEND_CLIP ? `${flat.slice(0, SEND_CLIP)}…` : flat;
+};
+
+const sleep = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    const t = setTimeout(resolve, ms);
+    signal?.addEventListener("abort", () => {
+      clearTimeout(t);
+      reject(new DOMException("Aborted", "AbortError"));
+    });
+  });
+
 /**
- * POST to one of our AI routes. Never throws a raw JSON parse error: a
- * response that isn't JSON (a gateway timeout, a cold start, a dev
- * recompile) is retried once, then reported as a readable message.
+ * Run an AI generation on the backend: start (or join) a job, then poll
+ * until it's done. Generation happens in the background there, so no
+ * single request runs long enough to hit the hosting timeout.
  */
-export async function postAi<T>(
-  url: string,
-  body: unknown,
+export async function runAiJob<T>(
+  kind: "summary" | "suggestions",
+  input: {
+    layerId: number;
+    category: string;
+    phases: string[];
+    cards: { id: number; title?: string; description?: string; text?: string }[];
+    force?: boolean;
+  },
   opts: { signal?: AbortSignal; fallbackError: string },
 ): Promise<T> {
-  const { token } = readAuth();
-  const send = async () => {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(body),
-      signal: opts.signal,
-    });
-    const raw = await res.text();
-    let json: any = null;
+  const { token, orgId } = readAuth();
+  if (!token || orgId == null) throw new Error("Sign in to use this.");
+  const base = `/nest-api/orgs/${orgId}/homefeed/layers/${input.layerId}/ai/${kind}`;
+  const headers = { Authorization: `Bearer ${token}` };
+
+  const call = async (init?: RequestInit, url = base): Promise<JobView> => {
+    let res: Response;
     try {
-      json = raw ? JSON.parse(raw) : null;
-    } catch {
-      /* not JSON */
+      res = await fetch(url, { ...init, headers: { ...headers, ...init?.headers }, signal: opts.signal });
+    } catch (e: any) {
+      if (e?.name === "AbortError") throw e;
+      throw new Error(`${opts.fallbackError} Check your connection.`);
     }
-    return { res, json };
+    const json: any = await res.json().catch(() => null);
+    if (res.status === 401) throw new Error("Session expired. Please sign in again.");
+    if (res.status === 403) throw new Error("You don't have access to this space.");
+    if (!res.ok || !json?.status) {
+      const msg = Array.isArray(json?.message) ? json.message[0] : json?.message;
+      throw new Error(msg || opts.fallbackError);
+    }
+    return json as JobView;
   };
 
-  let { res, json } = await send();
-  // Retry once on an unreadable reply or a server/gateway failure; our own
-  // 4xx errors (auth, access, bad input) are final.
-  if (!json || res.status >= 500) {
-    // An unreadable reply is usually the hosting gateway timing out while
-    // the route keeps running and saves its result; wait so the retry can
-    // pick that up instead of generating again.
-    await new Promise((r) => setTimeout(r, json ? 1200 : 6000));
-    ({ res, json } = await send());
+  let view = await call({
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      category: input.category,
+      phases: input.phases,
+      force: !!input.force,
+      cards: input.cards.map((c) => ({
+        ...c,
+        title: preclip(c.title),
+        description: preclip(c.description),
+        text: preclip(c.text),
+      })),
+    }),
+  });
+
+  const started = Date.now();
+  while (view.status === "pending") {
+    if (Date.now() - started > MAX_WAIT_MS)
+      throw new Error(`${opts.fallbackError} It is taking too long; try again.`);
+    await sleep(POLL_MS, opts.signal);
+    view = await call(undefined, `${base}?signature=${view.signature}`);
   }
-  if (!json) throw new Error(`${opts.fallbackError} Please try again.`);
-  if (!res.ok) throw new Error(json.error || opts.fallbackError);
-  return json as T;
+  if (view.status === "done") return view.result as T;
+  if (view.status === "error") throw new Error(view.error || opts.fallbackError);
+  throw new Error(opts.fallbackError); // "missing": the job vanished
 }
