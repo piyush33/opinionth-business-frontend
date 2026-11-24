@@ -55,10 +55,62 @@ const sleep = (ms: number, signal?: AbortSignal) =>
   });
 
 /**
- * Run an AI generation on the backend: start (or join) a job, then poll
- * until it's done. Generation happens in the background there, so no
- * single request runs long enough to hit the hosting timeout.
+ * Start (or join) a backend AI job, then poll until it's done. Generation
+ * happens in the background there, so no single request runs long enough
+ * to hit the hosting timeout.
  */
+async function runJob<T>(
+  base: string,
+  body: unknown,
+  opts: {
+    signal?: AbortSignal;
+    fallbackError: string;
+    token: string;
+    /** Extra query params for the status poll. */
+    pollQuery?: Record<string, string>;
+    forbidden?: string;
+  },
+): Promise<T> {
+  const headers = { Authorization: `Bearer ${opts.token}` };
+
+  const call = async (init?: RequestInit, url = base): Promise<JobView> => {
+    let res: Response;
+    try {
+      res = await fetch(url, { ...init, headers: { ...headers, ...init?.headers }, signal: opts.signal });
+    } catch (e: any) {
+      if (e?.name === "AbortError") throw e;
+      throw new Error(`${opts.fallbackError} Check your connection.`);
+    }
+    const json: any = await res.json().catch(() => null);
+    if (res.status === 401) throw new Error("Session expired. Please sign in again.");
+    if (res.status === 403) throw new Error(opts.forbidden ?? "You don't have access to this space.");
+    if (!res.ok || !json?.status) {
+      const msg = Array.isArray(json?.message) ? json.message[0] : json?.message;
+      throw new Error(msg || opts.fallbackError);
+    }
+    return json as JobView;
+  };
+
+  let view = await call({
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  const started = Date.now();
+  while (view.status === "pending") {
+    if (Date.now() - started > MAX_WAIT_MS)
+      throw new Error(`${opts.fallbackError} It is taking too long; try again.`);
+    await sleep(POLL_MS, opts.signal);
+    const q = new URLSearchParams({ ...opts.pollQuery, signature: view.signature });
+    view = await call(undefined, `${base}?${q}`);
+  }
+  if (view.status === "done") return view.result as T;
+  if (view.status === "error") throw new Error(view.error || opts.fallbackError);
+  throw new Error(opts.fallbackError); // "missing": the job vanished
+}
+
+/** Summary or card suggestions for one space. */
 export async function runAiJob<T>(
   kind: "summary" | "suggestions",
   input: {
@@ -72,31 +124,9 @@ export async function runAiJob<T>(
 ): Promise<T> {
   const { token, orgId } = readAuth();
   if (!token || orgId == null) throw new Error("Sign in to use this.");
-  const base = `/nest-api/orgs/${orgId}/homefeed/layers/${input.layerId}/ai/${kind}`;
-  const headers = { Authorization: `Bearer ${token}` };
-
-  const call = async (init?: RequestInit, url = base): Promise<JobView> => {
-    let res: Response;
-    try {
-      res = await fetch(url, { ...init, headers: { ...headers, ...init?.headers }, signal: opts.signal });
-    } catch (e: any) {
-      if (e?.name === "AbortError") throw e;
-      throw new Error(`${opts.fallbackError} Check your connection.`);
-    }
-    const json: any = await res.json().catch(() => null);
-    if (res.status === 401) throw new Error("Session expired. Please sign in again.");
-    if (res.status === 403) throw new Error("You don't have access to this space.");
-    if (!res.ok || !json?.status) {
-      const msg = Array.isArray(json?.message) ? json.message[0] : json?.message;
-      throw new Error(msg || opts.fallbackError);
-    }
-    return json as JobView;
-  };
-
-  let view = await call({
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+  return runJob<T>(
+    `/nest-api/orgs/${orgId}/homefeed/layers/${input.layerId}/ai/${kind}`,
+    {
       category: input.category,
       phases: input.phases,
       force: !!input.force,
@@ -106,17 +136,25 @@ export async function runAiJob<T>(
         description: preclip(c.description),
         text: preclip(c.text),
       })),
-    }),
-  });
+    },
+    { ...opts, token },
+  );
+}
 
-  const started = Date.now();
-  while (view.status === "pending") {
-    if (Date.now() - started > MAX_WAIT_MS)
-      throw new Error(`${opts.fallbackError} It is taking too long; try again.`);
-    await sleep(POLL_MS, opts.signal);
-    view = await call(undefined, `${base}?signature=${view.signature}`);
-  }
-  if (view.status === "done") return view.result as T;
-  if (view.status === "error") throw new Error(view.error || opts.fallbackError);
-  throw new Error(opts.fallbackError); // "missing": the job vanished
+/**
+ * New-space ideas for an Explore category. The backend reads every space
+ * the user can see itself, so only the category goes up.
+ */
+export async function runSpaceIdeas<T>(
+  input: { category: string; categoryName: string; categoryDescription?: string; force?: boolean },
+  opts: { signal?: AbortSignal; fallbackError: string },
+): Promise<T> {
+  const { token, orgId } = readAuth();
+  if (!token || orgId == null) throw new Error("Sign in to use this.");
+  return runJob<T>(`/nest-api/orgs/${orgId}/homefeed/ai/space-ideas`, input, {
+    ...opts,
+    token,
+    pollQuery: { category: input.category },
+    forbidden: "You don't have access to this organization.",
+  });
 }

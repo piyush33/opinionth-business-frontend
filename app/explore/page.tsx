@@ -43,6 +43,7 @@ import {
   hydrateForUI,
 } from "@/utils/customCategories";
 import { FolderOpen } from "lucide-react";
+import SpaceIdeas, { type SpaceIdea } from "@/components/ai/SpaceIdeas";
 
 interface CardItem {
   id: number;
@@ -620,6 +621,31 @@ export default function ExplorePage() {
     const cardElement = document.getElementById(`card-${cardId}`);
   };
 
+  // "Start this space": open Create with the idea's opening card filled in.
+  // No selectedCard, so Create starts a new space in this category.
+  const startSpaceFromIdea = (
+    idea: SpaceIdea,
+    category: { id: string; name: string }
+  ) => {
+    localStorage.removeItem("selectedCard");
+    localStorage.setItem("selectedCategory", category.id);
+    localStorage.setItem(
+      "aiDraftCard",
+      JSON.stringify({
+        title: idea.title,
+        description: idea.description,
+        text: idea.text,
+        phase: idea.seedPhase,
+        roleTypes: idea.roleTypes,
+        category: category.id,
+        categoryName: category.name,
+        newSpace: true,
+        at: Date.now(),
+      })
+    );
+    router.push("/create");
+  };
+
   const handleMobileCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setIsMobileSidebarOpen(false); // Auto-close on mobile after selection
@@ -1007,6 +1033,26 @@ export default function ExplorePage() {
                     {selectedCategoryData.description}
                   </p>
                 </div>
+                {selectedCategoryData.id !== "all" && (
+                  <SpaceIdeas
+                    key={selectedCategoryData.id}
+                    category={{
+                      id: selectedCategoryData.id,
+                      name: selectedCategoryData.name,
+                      description: selectedCategoryData.description,
+                    }}
+                    categoryName={(id) =>
+                      categories.find((c) => c.id === id)?.name ?? id
+                    }
+                    phaseLabel={
+                      selectedCategoryData.id === "roadmap"
+                        ? (id) => PHASE_ID_TO_ROADMAP[id]
+                        : undefined
+                    }
+                    onOpenCard={(id) => router.push(`/event/${id}`)}
+                    onStart={startSpaceFromIdea}
+                  />
+                )}
               </div>
 
               <div className="flex items-center space-x-3 md:space-x-4 text-xs md:text-sm text-gray-500">

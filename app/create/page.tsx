@@ -299,6 +299,8 @@ export default function CreatePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [selectedCard, setSelectedCard] = useState<any>(null);
+  // Opening card of a space suggested on Explore; after Create we go to it.
+  const [startsSuggestedSpace, setStartsSuggestedSpace] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -425,6 +427,49 @@ export default function CreatePage() {
         if (draft.title) setTitle(String(draft.title));
         if (draft.description) setDescription(String(draft.description));
         if (draft.text) setModalText(String(draft.text));
+
+        // Explore "Start this space": the opening card of a new space, with
+        // its category, phase and role types chosen by the suggestion.
+        if (draft.newSpace) {
+          setStartsSuggestedSpace(true);
+          const catId = draft.category ? String(draft.category) : "";
+          const isRoadmapDraft = catId.toLowerCase() === "roadmap";
+          if (catId) {
+            setSelectedCategory(
+              DEFAULT_CATEGORIES.find((c) => c.id === catId) ?? {
+                id: catId,
+                name: String(draft.categoryName || catId),
+                icon: Tag,
+                color: "text-indigo-700",
+                bgColor: "bg-indigo-100",
+                description: "Custom category",
+                isCustom: true,
+              }
+            );
+          }
+          if (draft.phase) {
+            if (isRoadmapDraft) {
+              const bucketId = backendToBucket(String(draft.phase));
+              if (bucketId) {
+                setSelectedPhase({
+                  id: bucketId,
+                  name:
+                    ROADMAP_BUCKET_OPTIONS.find((b) => b.id === bucketId)
+                      ?.name || "Backlog",
+                  description: "",
+                });
+              }
+            } else {
+              const match = PHASES.find((p) => p.id === draft.phase);
+              if (match) setSelectedPhase(match);
+            }
+          }
+          if (Array.isArray(draft.roleTypes)) {
+            setSelectedRoleTypes(
+              ROLE_TYPES.filter((rt) => draft.roleTypes.includes(rt.id))
+            );
+          }
+        }
       }
     } catch {
       /* ignore malformed draft */
@@ -624,7 +669,7 @@ export default function CreatePage() {
       localStorage.removeItem("selectedCard");
       // Added to an existing collection: open the collection on the new
       // card (selected and scrolled to), not on the card we came from.
-      if (selectedCard && homefeedId) {
+      if ((selectedCard || startsSuggestedSpace) && homefeedId) {
         router.replace(`/event/${homefeedId}`);
       } else {
         router.back();
