@@ -1253,7 +1253,9 @@ export default function EventPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
       {/* Desktop Navbar - Hidden on Mobile */}
-      <nav className="hidden md:block fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
+      <nav
+        data-summary-clear
+        className="hidden md:block fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -1344,7 +1346,9 @@ export default function EventPage() {
       </nav>
 
       {/* Mobile Header - Hidden on Desktop */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+      <header
+        data-summary-clear
+        className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
         <div className="px-4 py-3 space-y-3">
           {/* Top Row - Back, Logo and Menu */}
           <div className="flex items-center justify-between">
