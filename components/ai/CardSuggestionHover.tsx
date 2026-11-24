@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { Sparkles, X, Shuffle, Compass, PenLine, Tag } from "lucide-react";
 import { getRoleTypeById } from "@/lib/phases";
 import { runAiJob, signatureOf } from "@/lib/ai/client";
+import { withCardRefs } from "@/components/ai/cardRefs";
 import type { SummaryCardInput } from "@/components/modals/SpaceSummaryModal";
 
 export type CardSuggestion = {
@@ -47,27 +48,9 @@ const GAP = 12;
 const REVEAL_DELAY = 10_000;
 const HIDE_DELAY = 300;
 
-/** Render "@49" card references like a card does; click scrolls to it. */
-function withCardRefs(text: string) {
-  return text.split(/(@\d+\b)/g).map((part, i) => {
-    const id = /^@(\d+)$/.exec(part)?.[1];
-    if (!id) return <span key={i}>{part}</span>;
-    return (
-      <button
-        key={i}
-        type="button"
-        className="text-purple-600 hover:underline"
-        onClick={() =>
-          document
-            .getElementById(`card-${id}`)
-            ?.scrollIntoView({ behavior: "smooth", block: "center" })
-        }
-      >
-        {part}
-      </button>
-    );
-  });
-}
+const scrollToCard = (id: number) =>
+  document.getElementById(`card-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+const refs = (text: string) => withCardRefs(text, scrollToCard);
 
 function useCardSuggestions({
   layerId,
@@ -452,21 +435,21 @@ export default function CardSuggestionHover({
 
               {s.text && (
                 <p className="mb-3 whitespace-pre-line break-words px-4 text-sm leading-relaxed text-gray-800">
-                  {withCardRefs(s.text)}
+                  {refs(s.text)}
                 </p>
               )}
 
               <div className="px-4 pb-1 pt-2">
-                <h3 className="mb-2 text-lg font-bold leading-tight text-gray-900">{withCardRefs(s.title)}</h3>
+                <h3 className="mb-2 text-lg font-bold leading-tight text-gray-900">{refs(s.title)}</h3>
                 {s.description && (
-                  <p className="mb-3 text-sm leading-relaxed text-gray-600">{withCardRefs(s.description)}</p>
+                  <p className="mb-3 text-sm leading-relaxed text-gray-600">{refs(s.description)}</p>
                 )}
               </div>
 
               {s.rationale && (
                 <div className="mx-4 mb-1 flex gap-2 rounded-xl bg-violet-50 px-3 py-2 text-xs leading-relaxed text-violet-900">
                   <Compass className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-600" />
-                  <span>{withCardRefs(s.rationale)}</span>
+                  <span>{refs(s.rationale)}</span>
                 </div>
               )}
             </div>
