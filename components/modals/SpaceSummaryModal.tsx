@@ -208,7 +208,7 @@ export default function SpaceSummaryModal({
       <button
         onClick={() => setMinimized(false)}
         className="ai-glass-pill fixed bottom-6 left-6 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-slate-800"
-        aria-label="Reopen AI summary"
+        aria-label="Reopen space summary"
       >
         <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-blue-500 to-cyan-400 text-white shadow-inner">
           <Sparkles className="h-3.5 w-3.5" />
@@ -228,7 +228,7 @@ export default function SpaceSummaryModal({
     >
       {/* Barely-there veil: the collection stays visible and alive behind */}
       <div
-        className="absolute inset-0 bg-gradient-to-br from-white/10 via-violet-200/10 to-cyan-200/15 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-gradient-to-br from-white/20 via-violet-100/15 to-cyan-100/20 backdrop-blur-[3px]"
         onClick={handleClose}
       />
 
@@ -257,10 +257,10 @@ export default function SpaceSummaryModal({
               <Sparkles className="h-4 w-4" />
             </span>
             <div className="leading-tight">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                AI Space Summary
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                Space Summary
               </div>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-slate-600">
                 {data
                   ? `${data.cardCount} cards · ${data.phases.length} phases · ${timeAgo(
                       data.generatedAt,
@@ -325,7 +325,7 @@ export default function SpaceSummaryModal({
                   {data.topic}
                 </h2>
                 {data.tagline && (
-                  <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
+                  <p className="mt-1.5 text-[15px] leading-relaxed text-slate-700">
                     {data.tagline}
                   </p>
                 )}
@@ -342,13 +342,13 @@ export default function SpaceSummaryModal({
 
               {/* Collective summary */}
               <section className="ai-glass-card ai-rise p-4 sm:p-5" style={{ animationDelay: "120ms" }}>
-                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
                   <Waves className="h-3.5 w-3.5 text-blue-500" />
                   The whole space
                 </div>
-                <p className="text-[14.5px] leading-relaxed text-slate-700">{data.overview}</p>
+                <p className="text-[14.5px] leading-relaxed text-slate-800">{data.overview}</p>
                 {data.momentum && (
-                  <div className="mt-3 flex items-start gap-2 rounded-2xl bg-white/40 px-3 py-2 text-[13px] text-slate-600 ring-1 ring-white/60">
+                  <div className="mt-3 flex items-start gap-2 rounded-2xl bg-white/55 px-3 py-2 text-[13px] text-slate-700 ring-1 ring-white/70">
                     <Compass className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-violet-500" />
                     <span>{data.momentum}</span>
                   </div>
@@ -359,7 +359,7 @@ export default function SpaceSummaryModal({
               {data.phases.length > 0 && (
                 <section>
                   <div
-                    className="ai-rise mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500"
+                    className="ai-rise mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600"
                     style={{ animationDelay: "180ms" }}
                   >
                     Phase by phase
@@ -382,10 +382,10 @@ export default function SpaceSummaryModal({
                           <div className="ai-glass-card group p-4">
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex min-w-0 items-baseline gap-2">
-                                <h3 className="truncate text-[15px] font-semibold text-slate-800">
+                                <h3 className="truncate text-[15px] font-semibold text-slate-900">
                                   {p.phase}
                                 </h3>
-                                <span className="flex-shrink-0 text-xs text-slate-500">
+                                <span className="flex-shrink-0 text-xs text-slate-600">
                                   {count} {count === 1 ? "card" : "cards"}
                                 </span>
                               </div>
@@ -396,7 +396,7 @@ export default function SpaceSummaryModal({
                                 View <ArrowUpRight className="h-3.5 w-3.5" />
                               </button>
                             </div>
-                            <p className="mt-1.5 text-[13.5px] leading-relaxed text-slate-700">
+                            <p className="mt-1.5 text-[13.5px] leading-relaxed text-slate-800">
                               {p.summary}
                             </p>
                             {p.keyPoints.length > 0 && (
@@ -404,7 +404,7 @@ export default function SpaceSummaryModal({
                                 {p.keyPoints.map((k, j) => (
                                   <li
                                     key={j}
-                                    className="flex items-start gap-2 text-[13px] text-slate-600"
+                                    className="flex items-start gap-2 text-[13px] text-slate-700"
                                   >
                                     <span className="mt-[7px] h-1 w-1 flex-shrink-0 rounded-full bg-slate-400" />
                                     <span>{k}</span>
@@ -435,8 +435,8 @@ export default function SpaceSummaryModal({
                 </section>
               )}
 
-              <p className="pt-1 text-center text-[11px] text-slate-400">
-                Generated by AI from the cards you can see. It can be wrong; check the cards.
+              <p className="pt-1 text-center text-[11px] text-slate-600">
+                Auto-generated from the cards you can see. It can be wrong; check the cards.
               </p>
             </div>
           )}
@@ -449,7 +449,7 @@ export default function SpaceSummaryModal({
 function SummarySkeleton({ cards, phases }: { cards: number; phases: number }) {
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2 text-sm text-slate-600">
+      <div className="flex items-center gap-2 text-sm text-slate-700">
         <span className="ai-dots">
           <i />
           <i />
