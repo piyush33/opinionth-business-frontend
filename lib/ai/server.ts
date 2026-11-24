@@ -178,7 +178,7 @@ export async function geminiJson<T>(opts: {
     console.error(`[${opts.tag}] gemini error`, res.status, detail.slice(0, 500));
     return { ok: false, status: 502, error: `AI service error (${res.status}).` };
   }
-  const json = await res.json();
+  const json = await res.json().catch(() => null);
   const raw: string | undefined = json?.candidates?.[0]?.content?.parts
     ?.map((p: { text?: string }) => p.text ?? "")
     .join("");

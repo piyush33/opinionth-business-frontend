@@ -27,3 +27,46 @@ export const readAuth = (): { token: string | null; orgId: number | null } => {
     return { token: null, orgId: null };
   }
 };
+
+/**
+ * POST to one of our AI routes. Never throws a raw JSON parse error: a
+ * response that isn't JSON (a gateway timeout, a cold start, a dev
+ * recompile) is retried once, then reported as a readable message.
+ */
+export async function postAi<T>(
+  url: string,
+  body: unknown,
+  opts: { signal?: AbortSignal; fallbackError: string },
+): Promise<T> {
+  const { token } = readAuth();
+  const send = async () => {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+      signal: opts.signal,
+    });
+    const raw = await res.text();
+    let json: any = null;
+    try {
+      json = raw ? JSON.parse(raw) : null;
+    } catch {
+      /* not JSON */
+    }
+    return { res, json };
+  };
+
+  let { res, json } = await send();
+  // Retry once on an unreadable reply or a server/gateway failure; our own
+  // 4xx errors (auth, access, bad input) are final.
+  if (!json || res.status >= 500) {
+    await new Promise((r) => setTimeout(r, 1200));
+    ({ res, json } = await send());
+  }
+  if (!json) throw new Error(`${opts.fallbackError} Please try again.`);
+  if (!res.ok) throw new Error(json.error || opts.fallbackError);
+  return json as T;
+}
