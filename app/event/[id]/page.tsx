@@ -42,6 +42,7 @@ import NotificationsPopup from "@/components/popups/notifications-popup";
 import MasonryGrid from "@/components/masonry-grid";
 import LayerInviteModal from "@/components/modals/LayerInviteModal";
 import SpaceSummaryModal, {
+  useSpaceSummary,
   type SummaryCardInput,
 } from "@/components/modals/SpaceSummaryModal";
 import {
@@ -1153,6 +1154,20 @@ export default function EventPage() {
     return { cards, phases };
   }, [homeFeed, user?.username, isRoadmap]);
 
+  // Spaces with enough cards get their summary topic/tagline as the header.
+  const SUMMARY_HEADER_MIN_CARDS = 10;
+  const summaryHeaderOn = summaryInput.cards.length >= SUMMARY_HEADER_MIN_CARDS;
+  const spaceSummary = useSpaceSummary({
+    layerId,
+    username: user?.username,
+    category: collectionCategory.name,
+    phases: summaryInput.phases,
+    cards: summaryInput.cards,
+    auto: summaryHeaderOn,
+  });
+  const headerSummary = summaryHeaderOn ? spaceSummary.data : null;
+  const headerLoading = summaryHeaderOn && !spaceSummary.data && !spaceSummary.error;
+
   const phaseAnchorId = (title: string) => `phase-${slugify(title)}`;
 
   const jumpToPhaseSection = (phase: string) => {
@@ -1555,9 +1570,30 @@ export default function EventPage() {
                 {/* Main Info */}
                 <div className="text-center lg:text-left w-full lg:w-auto">
                   <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                      Connected Collection
-                    </h1>
+                    {headerSummary ? (
+                      <h1>
+                        <button
+                          type="button"
+                          onClick={() => setShowSummary(true)}
+                          className="group inline-flex items-center gap-2 text-center lg:text-left text-xl sm:text-2xl lg:text-3xl font-bold"
+                          title="Open space summary"
+                        >
+                          <span className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                            {headerSummary.topic}
+                          </span>
+                          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-violet-500 opacity-70 transition group-hover:rotate-12 group-hover:opacity-100" />
+                        </button>
+                      </h1>
+                    ) : headerLoading ? (
+                      <div
+                        className="h-7 sm:h-8 lg:h-9 w-56 sm:w-72 rounded-lg bg-gradient-to-r from-purple-100 via-blue-100 to-cyan-100 animate-pulse"
+                        aria-label="Loading space topic"
+                      />
+                    ) : (
+                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                        Connected Collection
+                      </h1>
+                    )}
                     {stats.isLocked && (
                       <div className="flex items-center space-x-1 bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm font-medium">
                         <Lock className="w-4 h-4" />
@@ -1565,10 +1601,23 @@ export default function EventPage() {
                       </div>
                     )}
                   </div>
-                  <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
-                    Discover interconnected perspectives and ideas in this
-                    collaborative space
-                  </p>
+                  {headerSummary ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowSummary(true)}
+                      className="text-center lg:text-left text-gray-600 text-sm sm:text-base lg:text-lg hover:text-gray-800 transition-colors"
+                    >
+                      {headerSummary.tagline ||
+                        "Discover interconnected perspectives and ideas in this collaborative space"}
+                    </button>
+                  ) : headerLoading ? (
+                    <div className="mx-auto lg:mx-0 h-4 sm:h-5 w-64 sm:w-96 max-w-full rounded-md bg-gray-100 animate-pulse" />
+                  ) : (
+                    <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
+                      Discover interconnected perspectives and ideas in this
+                      collaborative space
+                    </p>
+                  )}
                 </div>
 
                 {/* Stats Grid */}
@@ -2137,8 +2186,7 @@ export default function EventPage() {
       <SpaceSummaryModal
         open={showSummary}
         onClose={() => setShowSummary(false)}
-        layerId={layerId}
-        category={collectionCategory.name}
+        summary={spaceSummary}
         phases={summaryInput.phases}
         cards={summaryInput.cards}
         onJumpToPhase={jumpToPhaseSection}
