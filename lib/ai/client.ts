@@ -63,7 +63,10 @@ export async function postAi<T>(
   // Retry once on an unreadable reply or a server/gateway failure; our own
   // 4xx errors (auth, access, bad input) are final.
   if (!json || res.status >= 500) {
-    await new Promise((r) => setTimeout(r, 1200));
+    // An unreadable reply is usually the hosting gateway timing out while
+    // the route keeps running and saves its result; wait so the retry can
+    // pick that up instead of generating again.
+    await new Promise((r) => setTimeout(r, json ? 1200 : 6000));
     ({ res, json } = await send());
   }
   if (!json) throw new Error(`${opts.fallbackError} Please try again.`);

@@ -149,6 +149,9 @@ export async function POST(req: Request) {
     model,
     prompt,
     schema: RESPONSE_SCHEMA,
+    // Default thinking took 20-23s on a 32-card space, close to Amplify's
+    // 28s request limit; a small budget keeps some reasoning at ~11s.
+    thinkingBudget: 1024,
     tag: "space-summary",
   });
   if (!out.ok) {
