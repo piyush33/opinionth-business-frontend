@@ -148,6 +148,8 @@ export async function geminiJson<T>(opts: {
   prompt: string;
   schema: object;
   temperature?: number;
+  /** Gemini 2.5 "thinking" tokens; 0 turns it off (much faster). */
+  thinkingBudget?: number;
   tag: string;
 }): Promise<{ ok: true; value: T } | Fail> {
   let res: Response;
@@ -165,6 +167,9 @@ export async function geminiJson<T>(opts: {
             temperature: opts.temperature ?? 0.4,
             responseMimeType: "application/json",
             responseSchema: opts.schema,
+            ...(opts.thinkingBudget !== undefined && {
+              thinkingConfig: { thinkingBudget: opts.thinkingBudget },
+            }),
           },
         }),
       },

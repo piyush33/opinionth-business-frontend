@@ -176,6 +176,9 @@ export async function POST(req: Request) {
     prompt,
     schema: RESPONSE_SCHEMA,
     temperature: 0.6,
+    // Thinking pushed this past Amplify's 28s request limit (33-36s on a
+    // 32-card space); off it takes ~10s with comparable suggestions.
+    thinkingBudget: 0,
     tag: "card-suggestions",
   });
   if (!out.ok) {
