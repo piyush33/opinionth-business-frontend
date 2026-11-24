@@ -35,7 +35,8 @@ type Props = {
 };
 
 export const SUGGEST_MIN_CARDS = 3;
-const STORAGE_PREFIX = "cardSuggest:v1:";
+// v2: suggestions reference cards as @id and use phase/role voice.
+const STORAGE_PREFIX = "cardSuggest:v2:";
 // Width follows the hovered card, within these bounds.
 const MIN_W = 300;
 const MAX_W = 400;
@@ -45,6 +46,28 @@ const GAP = 12;
 // pops anything up.
 const REVEAL_DELAY = 10_000;
 const HIDE_DELAY = 300;
+
+/** Render "@49" card references like a card does; click scrolls to it. */
+function withCardRefs(text: string) {
+  return text.split(/(@\d+\b)/g).map((part, i) => {
+    const id = /^@(\d+)$/.exec(part)?.[1];
+    if (!id) return <span key={i}>{part}</span>;
+    return (
+      <button
+        key={i}
+        type="button"
+        className="text-purple-600 hover:underline"
+        onClick={() =>
+          document
+            .getElementById(`card-${id}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" })
+        }
+      >
+        {part}
+      </button>
+    );
+  });
+}
 
 function useCardSuggestions({
   layerId,
@@ -429,21 +452,21 @@ export default function CardSuggestionHover({
 
               {s.text && (
                 <p className="mb-3 whitespace-pre-line break-words px-4 text-sm leading-relaxed text-gray-800">
-                  {s.text}
+                  {withCardRefs(s.text)}
                 </p>
               )}
 
               <div className="px-4 pb-1 pt-2">
-                <h3 className="mb-2 text-lg font-bold leading-tight text-gray-900">{s.title}</h3>
+                <h3 className="mb-2 text-lg font-bold leading-tight text-gray-900">{withCardRefs(s.title)}</h3>
                 {s.description && (
-                  <p className="mb-3 text-sm leading-relaxed text-gray-600">{s.description}</p>
+                  <p className="mb-3 text-sm leading-relaxed text-gray-600">{withCardRefs(s.description)}</p>
                 )}
               </div>
 
               {s.rationale && (
                 <div className="mx-4 mb-1 flex gap-2 rounded-xl bg-violet-50 px-3 py-2 text-xs leading-relaxed text-violet-900">
                   <Compass className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-600" />
-                  <span>{s.rationale}</span>
+                  <span>{withCardRefs(s.rationale)}</span>
                 </div>
               )}
             </div>
