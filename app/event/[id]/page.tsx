@@ -594,7 +594,31 @@ export default function EventPage() {
         const token = localStorage.getItem("token");
         const org = JSON.parse(localStorage.getItem("activeOrg") || "{}");
         const orgId = org?.id;
-        const layerId = localStorage.getItem("lastVisitedCardLayerid");
+        // Show the space the card in the URL belongs to. The stored id is
+        // only a fallback: it is whatever space was opened last, which is
+        // wrong after creating a new space or following an @id link.
+        let layerId = localStorage.getItem("lastVisitedCardLayerid");
+        if (cardId) {
+          try {
+            const own = await fetch(
+              `/nest-api/orgs/${orgId}/homefeed/item/${cardId}/user/${user.username}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+                signal: abort.signal,
+              },
+            );
+            if (own.ok) {
+              const card = await own.json();
+              if (card?.layer?.id) layerId = String(card.layer.id);
+            }
+          } catch (e: any) {
+            if (e?.name === "AbortError") throw e;
+          }
+        }
+        if (layerId) {
+          localStorage.setItem("lastVisitedCardLayerid", layerId);
+          setLayerId(Number(layerId));
+        }
 
         const response = await fetch(
           `/nest-api/orgs/${orgId}/homefeed/layers/${layerId}/cards?username=${user.username}`,
@@ -638,9 +662,12 @@ export default function EventPage() {
       }
     };
 
+    // A new card id (e.g. an @id link into another space) starts fresh.
+    hasAutoScrolledRef.current = false;
+    setSelectedCard(null);
     fetchHomeFeedData();
     return () => abort.abort();
-  }, [user, router]);
+  }, [user, router, cardId]);
 
   // Filter cards based on selected card's parent
   useEffect(() => {
@@ -992,9 +1019,16 @@ export default function EventPage() {
     }
   };
 
+  // @id link: select the card here if it's in this space, otherwise open
+  // the space it belongs to with it selected.
   const handleCardTagClick = (cardId: number) => {
+    const here = homeFeed.find((c) => c.id === cardId);
+    if (!here) {
+      router.push(`/event/${cardId}`);
+      return;
+    }
     scrollToCard(cardId, "smooth");
-    setSelectedCard(homeFeed.find((c) => c.id === cardId) || null);
+    setSelectedCard(here);
   };
 
   useEffect(() => {

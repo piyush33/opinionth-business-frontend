@@ -617,8 +617,9 @@ export default function ExplorePage() {
     }
   };
 
+  // @id link: open that card in its own space, selected.
   const handleCardTagClick = (cardId: number) => {
-    const cardElement = document.getElementById(`card-${cardId}`);
+    router.push(`/event/${cardId}`);
   };
 
   // "Start this space": open Create with the idea's opening card filled in.
