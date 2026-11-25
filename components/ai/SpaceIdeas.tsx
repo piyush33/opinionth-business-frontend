@@ -405,7 +405,8 @@ export default function SpaceIdeasPanel({
                     <button
                       type="button"
                       onClick={() => onStart(idea, category)}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700"
+                      // Category colours, like the icon tile and the header icon
+                      className={`inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold shadow-sm ring-1 ring-black/5 transition hover:brightness-95 ${tone?.bgColor ?? "bg-violet-100"} ${tone?.color ?? "text-violet-700"}`}
                     >
                       <PenLine className="h-4 w-4" />
                       Start this space
