@@ -355,8 +355,9 @@ export default function CardSuggestionHover({
       >
         {/* Header, like the card's author row */}
         <div className="flex shrink-0 items-center gap-3 p-4 pb-2">
-          <span className="ai-orb relative grid h-8 w-8 shrink-0 place-items-center rounded-full">
-            <Sparkles className="h-4 w-4 text-white" />
+          {/* Plain tile, like the Explore section and category icons */}
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-violet-100">
+            <Sparkles className="h-4 w-4 text-violet-700" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
@@ -466,7 +467,7 @@ export default function CardSuggestionHover({
                   onDraft(anchorId, s);
                   hide();
                 }}
-                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700"
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-violet-100 px-3 py-2 text-sm font-semibold text-violet-700 shadow-sm ring-1 ring-violet-200 transition hover:bg-violet-200/70 hover:text-violet-800"
               >
                 <PenLine className="h-4 w-4" />
                 Draft this card
