@@ -41,7 +41,10 @@ import {
   hydrateForUI,
 } from "@/utils/customCategories";
 import { FolderOpen } from "lucide-react";
-import SpaceIdeas, { type SpaceIdea } from "@/components/ai/SpaceIdeas";
+import SpaceIdeasPanel, {
+  SpaceIdeasButton,
+  type SpaceIdea,
+} from "@/components/ai/SpaceIdeas";
 import {
   type CategoryCount,
   type FeedFilters,
@@ -248,6 +251,9 @@ export default function ExplorePage() {
   const [selectedRoleTypes, setSelectedRoleTypes] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [unreadCount, setUnreadCount] = useState(0);
+  // Inline "suggested new space" section; closes when the category changes.
+  const [ideasOpen, setIdeasOpen] = useState(false);
+  useEffect(() => setIdeasOpen(false), [selectedCategory]);
 
   useEffect(() => {
     // Get user from localStorage
@@ -954,23 +960,10 @@ export default function ExplorePage() {
                   </p>
                 </div>
                 {selectedCategoryData.id !== "all" && (
-                  <SpaceIdeas
-                    key={selectedCategoryData.id}
-                    category={{
-                      id: selectedCategoryData.id,
-                      name: selectedCategoryData.name,
-                      description: selectedCategoryData.description,
-                    }}
-                    categoryName={(id) =>
-                      categories.find((c) => c.id === id)?.name ?? id
-                    }
-                    phaseLabel={
-                      selectedCategoryData.id === "roadmap"
-                        ? (id) => PHASE_ID_TO_ROADMAP[id]
-                        : undefined
-                    }
-                    onOpenCard={(id) => router.push(`/event/${id}`)}
-                    onStart={startSpaceFromIdea}
+                  <SpaceIdeasButton
+                    open={ideasOpen}
+                    onToggle={() => setIdeasOpen((o) => !o)}
+                    categoryName={selectedCategoryData.name}
                   />
                 )}
               </div>
@@ -984,6 +977,30 @@ export default function ExplorePage() {
                 <span className="sm:hidden">Updated today</span>
               </div>
             </div>
+
+            {/* Suggested new space: in the page, above the cards */}
+            {ideasOpen && selectedCategoryData.id !== "all" && (
+              <SpaceIdeasPanel
+                key={selectedCategoryData.id}
+                category={{
+                  id: selectedCategoryData.id,
+                  name: selectedCategoryData.name,
+                  description: selectedCategoryData.description,
+                }}
+                viewer={{ username: user.username, picture: user.image }}
+                categoryName={(id) =>
+                  categories.find((c) => c.id === id)?.name ?? id
+                }
+                phaseLabel={
+                  selectedCategoryData.id === "roadmap"
+                    ? (id) => PHASE_ID_TO_ROADMAP[id]
+                    : undefined
+                }
+                onOpenCard={(id) => router.push(`/event/${id}`)}
+                onStart={startSpaceFromIdea}
+                onClose={() => setIdeasOpen(false)}
+              />
+            )}
 
             {/* Controls Bar */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4 mb-4 md:mb-6">
