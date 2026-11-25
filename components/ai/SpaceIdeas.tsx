@@ -221,34 +221,9 @@ export default function SpaceIdeasPanel({
             {data
               ? `Read ${data.read.spaces} spaces and ${data.read.cards} cards across ${data.read.categories} ${data.read.categories === 1 ? "category" : "categories"}`
               : "Reads every space you can see, then the cards across all categories"}
-            {idea && ideas.length > 1 ? ` · idea ${(pick % ideas.length) + 1} of ${ideas.length}` : ""}
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          {ideas.length > 1 && (
-            <button
-              type="button"
-              onClick={() => setPick((p) => p + 1)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
-              title="Show another idea"
-            >
-              <Shuffle className="h-3.5 w-3.5" />
-              Another
-            </button>
-          )}
-          {(idea || error) && (
-            <button
-              type="button"
-              onClick={() => load(true)}
-              disabled={loading}
-              className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 disabled:opacity-60"
-              title="Read everything again and suggest new ideas"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              Fresh ideas
-            </button>
-          )}
-          <button
+        <button
             type="button"
             onClick={onClose}
             className="grid h-8 w-8 place-items-center rounded-full text-gray-500 hover:bg-violet-50 hover:text-violet-700"
@@ -256,7 +231,6 @@ export default function SpaceIdeasPanel({
           >
             <X className="h-4 w-4" />
           </button>
-        </div>
       </div>
 
       {/* Same columns as the card grid below: card in one, context across the rest */}
@@ -418,14 +392,40 @@ export default function SpaceIdeasPanel({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-violet-100 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => onStart(idea, category)}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700"
-                  >
-                    <PenLine className="h-4 w-4" />
-                    Start this space
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onStart(idea, category)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700"
+                    >
+                      <PenLine className="h-4 w-4" />
+                      Start this space
+                    </button>
+                    {ideas.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setPick((p) => p + 1)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
+                        title="Show another idea"
+                      >
+                        <Shuffle className="h-4 w-4" />
+                        Another
+                        <span className="text-xs text-gray-400 tabular-nums">
+                          {(pick % ideas.length) + 1}/{ideas.length}
+                        </span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => load(true)}
+                      disabled={loading}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 disabled:opacity-60"
+                      title="Read everything again and suggest new ideas"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                      Fresh ideas
+                    </button>
+                  </div>
                   <span className="text-[11px] text-gray-500">
                     {loading
                       ? "Checking for changes since these ideas…"
