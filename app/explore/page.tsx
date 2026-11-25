@@ -988,6 +988,10 @@ export default function ExplorePage() {
                   description: selectedCategoryData.description,
                 }}
                 viewer={{ username: user.username, picture: user.image }}
+                tone={{
+                  color: selectedCategoryData.color,
+                  bgColor: selectedCategoryData.bgColor,
+                }}
                 categoryName={(id) =>
                   categories.find((c) => c.id === id)?.name ?? id
                 }

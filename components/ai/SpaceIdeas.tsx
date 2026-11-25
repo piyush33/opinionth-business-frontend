@@ -183,7 +183,13 @@ export default function SpaceIdeasPanel({
   onStart,
   onClose,
   viewer,
-}: Props & { onClose: () => void; viewer: { username: string; picture?: string } }) {
+  tone,
+}: Props & {
+  onClose: () => void;
+  viewer: { username: string; picture?: string };
+  /** The category's icon colours (Tailwind classes), e.g. text-orange-700 / bg-orange-100. */
+  tone?: { color: string; bgColor: string };
+}) {
   const { data, loading, error, load } = useSpaceIdeas(category, true);
   const [pick, setPick] = useState(0);
   const [step, setStep] = useState(0);
@@ -210,8 +216,11 @@ export default function SpaceIdeasPanel({
     >
       {/* Section header: what this is, what it read, and the controls */}
       <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="ai-orb relative grid h-7 w-7 shrink-0 place-items-center rounded-full">
-          <Sparkles className="h-3.5 w-3.5 text-white" />
+        {/* Same tile as the category header icon, in the category's colours */}
+        <span
+          className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${tone?.bgColor ?? "bg-violet-100"}`}
+        >
+          <Sparkles className={`h-4 w-4 ${tone?.color ?? "text-violet-700"}`} />
         </span>
         <div className="min-w-0 flex-1 leading-tight">
           <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
