@@ -215,3 +215,45 @@ body {
     .ai-rise, .ai-panel-in, .ai-fade-in, .ai-glass-pill { animation-duration: 0.01s !important; }
   }
 }
+
+/* ───────────── Marketing site (collabrr.io) ─────────────
+   Palette from the logo: indigo and cyan cards on a cool paper ground. */
+.mk {
+  --mk-ink: #15162b;
+  --mk-ink-2: #545873;
+  --mk-paper: #f7f8fc;
+  --mk-card: #ffffff;
+  --mk-rule: #e3e5f0;
+  --mk-indigo: #5b5cf0;
+  --mk-indigo-deep: #3f40c9;
+  --mk-indigo-soft: #ecebff;
+  --mk-cyan: #15a9c8;
+  --mk-cyan-soft: #e1f5fa;
+  --mk-amber: #c2620c;
+  --mk-amber-soft: #fdf0e2;
+  --mk-green: #1f7a4d;
+  --mk-green-soft: #e4f4ea;
+  background: var(--mk-paper);
+  color: var(--mk-ink);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+.mk .mk-display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.mk :focus-visible {
+  outline: 2px solid var(--mk-indigo);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.mk .mk-tilt-l { transform: rotate(-2.2deg); }
+.mk .mk-tilt-r { transform: rotate(1.8deg); }
+@media (prefers-reduced-motion: no-preference) {
+  .mk .mk-float { animation: mk-float 7s ease-in-out infinite; }
+  .mk .mk-float-2 { animation: mk-float 8s ease-in-out -3s infinite; }
+}
+@keyframes mk-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -6px; }
+}

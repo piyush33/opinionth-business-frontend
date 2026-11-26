@@ -354,7 +354,7 @@ export default function CardExpansionPage() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("profileUser");
-    setTimeout(() => router.replace("/"), 1000);
+    setTimeout(() => router.replace("/login"), 1000);
   }, [router]);
 
   const apiService = useMemo(

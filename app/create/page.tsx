@@ -967,7 +967,7 @@ export default function CreatePage() {
                 <span className="text-gray-900">Messages</span>
               </button>
               <Link
-                href="/"
+                href="/login"
                 className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
                 onClick={() => {
                   localStorage.removeItem("token");

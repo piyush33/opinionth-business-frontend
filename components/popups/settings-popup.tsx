@@ -32,7 +32,7 @@ export default function SettingsPopup({ isOpen, onClose }: SettingsPopupProps) {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.push("/");
+    router.push("/login");
     onClose();
   };
 
