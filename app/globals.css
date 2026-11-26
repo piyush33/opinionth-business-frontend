@@ -217,43 +217,91 @@ body {
 }
 
 /* ───────────── Marketing site (collabrr.io) ─────────────
-   Palette from the logo: indigo and cyan cards on a cool paper ground. */
+   Story: 1968, linked ideas on a shared bitmap screen, rendered crisp today.
+   Type: Inter everywhere, set tight; a pixel face only for small labels.
+   Palette: the logo's indigo and cyan as "phosphor" on cool paper and ink. */
 .mk {
-  --mk-ink: #15162b;
-  --mk-ink-2: #545873;
-  --mk-paper: #f7f8fc;
+  --mk-ink: #0d0e18;
+  --mk-ink-2: #4a4e62;
+  --mk-paper: #f3f4f7;
   --mk-card: #ffffff;
-  --mk-rule: #e3e5f0;
-  --mk-indigo: #5b5cf0;
-  --mk-indigo-deep: #3f40c9;
-  --mk-indigo-soft: #ecebff;
-  --mk-cyan: #15a9c8;
-  --mk-cyan-soft: #e1f5fa;
-  --mk-amber: #c2620c;
-  --mk-amber-soft: #fdf0e2;
-  --mk-green: #1f7a4d;
-  --mk-green-soft: #e4f4ea;
+  --mk-rule: #d7dae4;
+  --mk-indigo: #4f50ef;
+  --mk-indigo-bright: #8f90ff;
+  --mk-indigo-deep: #3132c2;
+  --mk-indigo-soft: #e8e8ff;
+  --mk-cyan: #0ea3c3;
+  --mk-cyan-soft: #dcf3f8;
+  --mk-amber: #b85c0a;
+  --mk-amber-soft: #fcefe1;
+  --mk-green: #1c7548;
+  --mk-green-soft: #e2f3e8;
   background: var(--mk-paper);
   color: var(--mk-ink);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01", "ss03";
+  -webkit-font-smoothing: antialiased;
 }
 .mk .mk-display {
-  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: -0.02em;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 760;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
   text-wrap: balance;
+}
+/* Small tags: Inter, tracked caps (sharp at any size). */
+.mk .mk-pixel {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+/* The pixel face, only at its native 8px grid (16px here) so it stays crisp. */
+.mk .mk-bit {
+  font-family: var(--font-pixel), ui-monospace, monospace;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
 }
 .mk :focus-visible {
   outline: 2px solid var(--mk-indigo);
   outline-offset: 2px;
-  border-radius: 6px;
 }
-.mk .mk-tilt-l { transform: rotate(-2.2deg); }
-.mk .mk-tilt-r { transform: rotate(1.8deg); }
+/* Hard, offset shadows: printed, not blurred. */
+.mk .mk-hard { border: 1px solid var(--mk-ink); box-shadow: 4px 4px 0 var(--mk-ink); }
+.mk .mk-hard-sm { border: 1px solid var(--mk-ink); box-shadow: 2px 2px 0 var(--mk-ink); }
+.mk .mk-btn {
+  border: 1px solid var(--mk-ink);
+  box-shadow: 3px 3px 0 var(--mk-ink);
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+.mk .mk-btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--mk-ink); }
+.mk .mk-btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--mk-ink); }
+.mk .mk-lift { transition: transform 120ms ease, box-shadow 120ms ease; }
+.mk .mk-lift:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--mk-ink); }
+/* A dot grid like a plotter's paper. */
+.mk .mk-grid {
+  background-image: radial-gradient(var(--mk-rule) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.mk .mk-scan {
+  background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
+}
+.mk .mk-cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.82em;
+  margin-left: 0.06em;
+  vertical-align: -0.04em;
+  background: var(--mk-cyan);
+}
 @media (prefers-reduced-motion: no-preference) {
-  .mk .mk-float { animation: mk-float 7s ease-in-out infinite; }
-  .mk .mk-float-2 { animation: mk-float 8s ease-in-out -3s infinite; }
+  .mk .mk-cursor { animation: mk-blink 1.06s steps(1) infinite; }
 }
-@keyframes mk-float {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -6px; }
+@keyframes mk-blink {
+  50% { opacity: 0; }
 }

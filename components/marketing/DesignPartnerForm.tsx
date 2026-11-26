@@ -16,8 +16,8 @@ const TIME_ZONES = [
 ];
 
 const field =
-  "w-full rounded-xl border border-[var(--mk-rule)] bg-white px-3.5 py-2.5 text-[15px] text-[var(--mk-ink)] placeholder:text-[#9a9db3] focus:border-[var(--mk-indigo)] focus:outline-none focus:ring-2 focus:ring-[var(--mk-indigo-soft)]";
-const label = "mb-1.5 block text-[13px] font-semibold text-[var(--mk-ink)]";
+  "w-full rounded-[4px] border border-[var(--mk-ink)] bg-white px-3 py-2.5 text-[15px] tracking-tight text-[var(--mk-ink)] placeholder:text-[#9a9db3] transition-shadow focus:outline-none focus:shadow-[3px_3px_0_var(--mk-indigo)]";
+const label = "mk-pixel mb-1.5 block text-[10px] text-[var(--mk-ink)]";
 
 function Choice({
   name,
@@ -41,10 +41,8 @@ function Choice({
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.v)}
-            className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
-              on
-                ? "border-[var(--mk-indigo)] bg-[var(--mk-indigo-soft)] text-[var(--mk-indigo-deep)]"
-                : "border-[var(--mk-rule)] bg-white text-[var(--mk-ink-2)] hover:border-[var(--mk-indigo)]"
+            className={`rounded-[4px] border border-[var(--mk-ink)] px-3 py-1.5 text-[14px] font-semibold tracking-tight transition ${
+              on ? "bg-[var(--mk-ink)] text-white" : "bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
             }`}
           >
             {o.l}
@@ -101,9 +99,9 @@ export default function DesignPartnerForm() {
 
   if (state === "sent") {
     return (
-      <div className="flex flex-col items-start gap-3 rounded-2xl border border-[var(--mk-rule)] bg-white p-6 sm:p-8" role="status">
+      <div className="mk-hard flex flex-col items-start gap-3 rounded-[6px] bg-white p-6 sm:p-8" role="status">
         <CheckCircle2 className="h-8 w-8 text-[var(--mk-green)]" />
-        <h3 className="mk-display text-2xl font-bold">Thanks. We&apos;ll be in touch.</h3>
+        <h3 className="mk-display text-3xl">Thanks. We&apos;ll be in touch.</h3>
         <p className="max-w-md text-[15px] leading-relaxed text-[var(--mk-ink-2)]">
           We&apos;ll email you to set up your first session: one live decision, run in Collabrr with your team.
         </p>
@@ -112,7 +110,7 @@ export default function DesignPartnerForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-4 rounded-2xl border border-[var(--mk-rule)] bg-white p-5 shadow-[0_20px_50px_-30px_rgba(21,22,43,0.35)] sm:p-7" noValidate>
+    <form onSubmit={onSubmit} className="mk-hard grid gap-4 rounded-[6px] bg-white p-5 sm:p-7" noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="dp-name" className={label}>Name</label>
@@ -128,7 +126,7 @@ export default function DesignPartnerForm() {
         </div>
         <div>
           <label htmlFor="dp-role" className={label}>
-            Role <span className="font-normal text-[var(--mk-ink-2)]">(optional)</span>
+            Role <span className="text-[var(--mk-ink-2)]">· optional</span>
           </label>
           <input id="dp-role" name="role" autoComplete="organization-title" placeholder="e.g. Head of Product" className={field} />
         </div>
@@ -143,7 +141,7 @@ export default function DesignPartnerForm() {
       </div>
       <div>
         <label htmlFor="dp-decision" className={label}>
-          One decision you&apos;d bring <span className="font-normal text-[var(--mk-ink-2)]">(optional)</span>
+          One decision you&apos;d bring <span className="text-[var(--mk-ink-2)]">· optional</span>
         </label>
         <textarea
           id="dp-decision"
@@ -163,7 +161,7 @@ export default function DesignPartnerForm() {
         <button
           type="submit"
           disabled={state === "sending"}
-          className="inline-flex items-center gap-2 rounded-full bg-[var(--mk-indigo)] px-5 py-3 text-[15px] font-semibold text-white shadow-sm hover:bg-[var(--mk-indigo-deep)] disabled:opacity-70"
+          className="mk-btn inline-flex items-center gap-2 rounded-[4px] bg-[var(--mk-indigo)] px-5 py-3 text-[15px] font-semibold tracking-tight text-white disabled:opacity-70"
         >
           {state === "sending" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Request a design-partner spot

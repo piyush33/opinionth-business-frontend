@@ -1,41 +1,31 @@
-// collabrr.io marketing site. Copy draws on the founder's essays; the claims
-// with numbers carry their sources in the footnotes at the bottom.
+// collabrr.io marketing site.
+// Story: in 1968 Douglas Engelbart showed linked ideas on a shared bitmap
+// screen. The page borrows that era's dot-matrix and dithering, set crisp,
+// with Inter as the one typeface and a pixel face only for small labels.
+// Claims with numbers carry their sources in the footer.
 import Link from "next/link";
-import {
-  ArrowRight,
-  MessagesSquare,
-  History,
-  Network,
-  Scale,
-  Sparkles,
-  Compass,
-  PenLine,
-  Layers,
-  Check,
-  Globe2,
-  ChevronDown,
-  ArrowUpRight,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, Plus } from "lucide-react";
 import MarketingNav, { Logo } from "./MarketingNav";
 import DesignPartnerForm from "./DesignPartnerForm";
 import { HeroSpace, LayersDiagram, DecisionFlow, ModesDiagram } from "./Visuals";
+import { DitherBand, LinkedCardsScreen, LogoBitmap, PixelIcon } from "./Bitmap";
 
 const wrap = "mx-auto w-full max-w-6xl px-4 sm:px-6";
-const eyebrow = "text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--mk-indigo)]";
-const h2 = "mk-display text-[2rem] font-bold leading-[1.1] sm:text-[2.6rem]";
-const lede = "text-[17px] leading-relaxed text-[var(--mk-ink-2)] sm:text-[18px]";
+const h2 = "mk-display text-[2.4rem] sm:text-[3.4rem]";
+const lede = "text-[17px] leading-[1.6] tracking-[-0.01em] text-[var(--mk-ink-2)] sm:text-[18px]";
 
-function Section({
-  id,
-  children,
-  className = "",
-}: {
-  id?: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
+function Label({ children, tone = "ink" }: { children: React.ReactNode; tone?: "ink" | "light" }) {
   return (
-    <section id={id} className={`scroll-mt-20 py-20 sm:py-28 ${className}`}>
+    <p className={`mk-bit flex items-center gap-2 ${tone === "light" ? "text-[#8fe3f3]" : "text-[var(--mk-indigo)]"}`}>
+      <span aria-hidden className={`inline-block h-2 w-2 ${tone === "light" ? "bg-[#8fe3f3]" : "bg-[var(--mk-indigo)]"}`} />
+      {children}
+    </p>
+  );
+}
+
+function Section({ id, children, className = "" }: { id?: string; children: React.ReactNode; className?: string }) {
+  return (
+    <section id={id} className={`scroll-mt-16 py-20 sm:py-28 ${className}`}>
       <div className={wrap}>{children}</div>
     </section>
   );
@@ -43,22 +33,22 @@ function Section({
 
 const PILLARS = [
   {
-    icon: MessagesSquare,
+    icon: "chat" as const,
     title: "Complex discussions, asynchronously",
     body: "Long, multi-branch discussions get a space of their own. People research before they reply, contribute when they think best, and nobody has to take the 6 a.m. call.",
   },
   {
-    icon: History,
+    icon: "clock" as const,
     title: "Context that survives",
     body: "Join hours or months late and see where the argument stands: what's settled, what's contested, what's still open, and why. New hires read the why, not just the what.",
   },
   {
-    icon: Network,
+    icon: "network" as const,
     title: "Cross-department osmosis",
     body: "Product, design, engineering and business add their angle as linked cards in the same space. Insights reach the teams that need them instead of dying in one channel.",
   },
   {
-    icon: Scale,
+    icon: "scale" as const,
     title: "Decision intelligence",
     body: "Every decision keeps its trace: the question, the options, the evidence, the objections and the rationale. Your organisation builds a memory of how it decides.",
   },
@@ -174,56 +164,53 @@ export default function Landing() {
 
       <main>
         {/* Hero */}
-        <section className="relative pb-16 pt-10 sm:pb-24 sm:pt-16">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[560px] bg-[radial-gradient(60%_60%_at_80%_10%,var(--mk-cyan-soft),transparent_70%),radial-gradient(50%_50%_at_10%_0%,var(--mk-indigo-soft),transparent_70%)]"
-          />
-          <div className={`${wrap} relative grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]`}>
+        <section className="mk-grid relative border-b border-[var(--mk-ink)] pb-16 pt-8 sm:pb-24 sm:pt-14">
+          <div className={`${wrap} grid items-center gap-14 lg:grid-cols-[1.05fr_1fr]`}>
             <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--mk-rule)] bg-white/80 px-3 py-1 text-[13px] font-medium text-[var(--mk-ink-2)]">
-                <Globe2 className="h-4 w-4 text-[var(--mk-cyan)]" />
-                Built first for distributed product teams
-              </div>
-              <h1 className="mk-display text-[2.6rem] font-extrabold leading-[1.02] sm:text-[3.6rem] lg:text-[4rem]">
-                A home for the discussions that outgrow Slack.
+              <Label>A reasoning layer for distributed teams</Label>
+              <h1 className="mk-display mt-6 text-[3rem] sm:text-[4.2rem] lg:text-[4.6rem]">
+                A home for the discussions that outgrow Slack
+                <span className="mk-cursor" aria-hidden />
               </h1>
-              <p className={`${lede} mt-6 max-w-xl`}>
-                When a thread hits 63 replies and the call would span three time zones, Collabrr gives the thinking a place to live.
-                Questions, claims, evidence, risks and decisions become linked cards your team develops asynchronously, so anyone can
-                join hours late and see exactly where the argument stands.
+              <p className={`${lede} mt-7 max-w-[34rem]`}>
+                When a thread hits 63 replies and the call would span three time zones, give the thinking a place to live. Questions,
+                claims, evidence, risks and decisions become linked cards your team develops asynchronously, so anyone can join hours
+                late and see exactly where the argument stands.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
+              <div className="mt-9 flex flex-wrap items-center gap-3">
                 <a
                   href="#design-partners"
-                  className="inline-flex items-center gap-2 rounded-full bg-[var(--mk-indigo)] px-6 py-3.5 text-[15px] font-semibold text-white shadow-[0_10px_30px_-12px_rgba(91,92,240,0.8)] hover:bg-[var(--mk-indigo-deep)]"
+                  className="mk-btn inline-flex items-center gap-2 rounded-[4px] bg-[var(--mk-indigo)] px-6 py-3.5 text-[15px] font-semibold tracking-tight text-white"
                 >
                   Become a design partner <ArrowRight className="h-4 w-4" />
                 </a>
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--mk-rule)] bg-white px-6 py-3.5 text-[15px] font-semibold text-[var(--mk-ink)] hover:border-[var(--mk-indigo)]"
+                  className="mk-btn inline-flex items-center rounded-[4px] bg-white px-6 py-3.5 text-[15px] font-semibold tracking-tight text-[var(--mk-ink)]"
                 >
                   Log in
                 </Link>
               </div>
-              <p className="mt-5 text-[13.5px] text-[var(--mk-ink-2)]">
-                For teams of 20–200 working across locations and schedules, alongside Slack, Notion and Linear.
+              <p className="mt-6 text-[13.5px] tracking-tight text-[var(--mk-ink-2)]">
+                For teams of 20–200 across locations and schedules. Works alongside Slack, Notion and Linear.
               </p>
             </div>
-            <div className="mk-float relative">
-              <HeroSpace />
+            <div className="relative pb-6 pl-0 sm:pl-10">
+              <LogoBitmap className="absolute -top-14 right-2 hidden w-[50%] sm:block" title="Collabrr logo, as a bitmap" />
+              <div className="relative sm:mt-36">
+                <HeroSpace />
+              </div>
             </div>
           </div>
         </section>
 
         {/* Problem */}
-        <Section id="problem" className="border-t border-[var(--mk-rule)] bg-white">
-          <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
+        <Section id="problem" className="bg-white">
+          <div className="grid gap-14 lg:grid-cols-[1fr_1.05fr]">
             <div>
-              <p className={eyebrow}>The gap</p>
-              <h2 className={`${h2} mt-3`}>Hard decisions have nowhere to live.</h2>
-              <div className={`${lede} mt-6 grid gap-4`}>
+              <Label>The gap</Label>
+              <h2 className={`${h2} mt-4`}>Hard decisions have nowhere to live.</h2>
+              <div className={`${lede} mt-7 grid gap-4`}>
                 <p>
                   Someone in Berlin asks whether to rebuild billing. By the time Singapore wakes up, the thread has 63 replies, three
                   design docs, a Loom, two half-formed positions, a risk nobody answered, and a thumbs-up that could mean
@@ -231,224 +218,259 @@ export default function Landing() {
                 </p>
                 <p>
                   In an office, someone would say &ldquo;let&apos;s grab thirty minutes&rdquo;. Distributed teams can&apos;t, or one
-                  region takes the 6 a.m. call. So the thread keeps growing, the reasoning scatters across five tools, and months later
-                  nobody can say why the decision was made.
+                  region takes the 6 a.m. call. The reasoning scatters across five tools, and months later nobody can say why the
+                  decision was made.
                 </p>
-                <p className="font-medium text-[var(--mk-ink)]">
+                <p className="font-semibold tracking-tight text-[var(--mk-ink)]">
                   Chat is fast but forgets. Docs remember but go stale. Meetings compress reasoning into an hour and lose it when the
                   hour ends.
                 </p>
               </div>
-              <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                {[
-                  ["61%", "of managers say most of their decision-making time is used ineffectively.", "1"],
-                  ["~⅓", "of business decisions studied were never implemented.", "2"],
-                  ["2.8 h", "a week the average knowledge worker spends looking for or asking for information.", "3"],
-                ].map(([n, t, fn]) => (
-                  <div key={fn} className="border-t-2 border-[var(--mk-ink)] pt-3">
-                    <div className="mk-display text-3xl font-bold">{n}</div>
-                    <p className="mt-1 text-[13.5px] leading-snug text-[var(--mk-ink-2)]">
-                      {t}
-                      <sup>
-                        <a href={`#fn-${fn}`} className="ml-0.5 text-[var(--mk-indigo)]">
-                          {fn}
-                        </a>
-                      </sup>
-                    </p>
-                  </div>
-                ))}
-              </div>
             </div>
-            <div className="self-start rounded-3xl border border-[var(--mk-rule)] bg-[var(--mk-paper)] p-5 sm:p-7">
-              <LayersDiagram />
-              <p className="mt-6 text-[15px] leading-relaxed text-[var(--mk-ink-2)]">
+            <div className="self-start">
+              <div className="border border-[var(--mk-ink)] bg-[var(--mk-paper)] p-5 sm:p-6">
+                <LayersDiagram />
+              </div>
+              <p className="mt-4 text-[14.5px] leading-relaxed tracking-tight text-[var(--mk-ink-2)]">
                 Complex discussion falls into the gap between chat and meetings. Collabrr adds the missing middle layer, so meetings
                 become the exception for converging, not the default container for thinking.
               </p>
             </div>
           </div>
+          <div className="mt-16 grid border-y border-[var(--mk-ink)] sm:grid-cols-3">
+            {[
+              ["61%", "of managers say most of their decision-making time is used ineffectively.", "1"],
+              ["~1/3", "of business decisions studied were never implemented.", "2"],
+              ["2.8h", "a week the average knowledge worker spends looking for or asking for information.", "3"],
+            ].map(([n, t, fn], i) => (
+              <div key={fn} className={`py-6 sm:px-6 ${i ? "border-t border-[var(--mk-ink)] sm:border-l sm:border-t-0" : "sm:pl-0"}`}>
+                <div className="mk-display text-[3.4rem] tabular-nums">{n}</div>
+                <p className="mt-2 max-w-[18rem] text-[14px] leading-snug tracking-tight text-[var(--mk-ink-2)]">
+                  {t}
+                  <sup>
+                    <a href={`#fn-${fn}`} className="ml-0.5 font-semibold text-[var(--mk-indigo)]">
+                      {fn}
+                    </a>
+                  </sup>
+                </p>
+              </div>
+            ))}
+          </div>
         </Section>
 
+        {/* 1968 */}
+        <section className="mk-scan relative overflow-hidden bg-[var(--mk-ink)] text-white">
+          <DitherBand color="var(--mk-ink)" flip className="bg-white" />
+          <div className={`${wrap} grid items-center gap-12 py-20 sm:py-24 lg:grid-cols-[1fr_1fr]`}>
+            <div>
+              <Label tone="light">Dec 9, 1968 · San Francisco</Label>
+              <h2 className="mk-display mt-4 text-[2.4rem] sm:text-[3.4rem]">
+                In 1968, Douglas Engelbart linked ideas on a shared screen.
+              </h2>
+              <div className="mt-7 grid gap-4 text-[17px] leading-[1.6] tracking-[-0.01em] text-white/75">
+                <p>
+                  The demo later called the &ldquo;Mother of All Demos&rdquo; introduced the mouse, hypertext links and real-time
+                  collaborative editing, all in service of one idea: augmenting how groups think together.
+                </p>
+                <p>
+                  Teams now have chat, docs and video calls, and still no place where a hard argument can live. Collabrr picks up the
+                  thread: cards instead of messages, links instead of scrollback, and AI that reads everything so people can say what
+                  matters.
+                </p>
+              </div>
+            </div>
+            <div className="border border-white/20 bg-black/30 p-4 sm:p-6">
+              <LinkedCardsScreen className="block w-full" />
+              <div className="mk-pixel mt-4 flex items-center justify-between text-[10px] text-white/50">
+                <span>cards · links · phases</span>
+                <span>58 years later</span>
+              </div>
+            </div>
+          </div>
+          <DitherBand color="var(--mk-ink)" className="bg-[var(--mk-paper)]" />
+        </section>
+
         {/* Pillars */}
-        <Section className="pt-0 sm:pt-0">
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <Section>
+          <div className="grid border-l border-t border-[var(--mk-ink)] sm:grid-cols-2 lg:grid-cols-4">
             {PILLARS.map((p) => (
-              <div key={p.title} className="rounded-2xl border border-[var(--mk-rule)] bg-white p-5">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--mk-indigo-soft)]">
-                  <p.icon className="h-5 w-5 text-[var(--mk-indigo)]" />
-                </span>
-                <h3 className="mk-display mt-4 text-[1.2rem] font-bold leading-snug">{p.title}</h3>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-[var(--mk-ink-2)]">{p.body}</p>
+              <div key={p.title} className="border-b border-r border-[var(--mk-ink)] bg-white p-6">
+                <PixelIcon name={p.icon} color="var(--mk-indigo)" className="h-8 w-8" />
+                <h3 className="mt-6 text-[1.3rem] font-bold leading-tight tracking-[-0.035em]">{p.title}</h3>
+                <p className="mt-3 text-[14.5px] leading-relaxed tracking-tight text-[var(--mk-ink-2)]">{p.body}</p>
               </div>
             ))}
           </div>
         </Section>
 
         {/* How it works */}
-        <Section id="how" className="border-t border-[var(--mk-rule)] bg-white">
-          <div className="max-w-2xl">
-            <p className={eyebrow}>How it works</p>
-            <h2 className={`${h2} mt-3`}>The line of reasoning is the primary object.</h2>
-            <p className={`${lede} mt-5`}>
+        <Section id="how" className="border-t border-[var(--mk-ink)] bg-white">
+          <div className="max-w-3xl">
+            <Label>How it works</Label>
+            <h2 className={`${h2} mt-4`}>The line of reasoning is the primary object.</h2>
+            <p className={`${lede} mt-6 max-w-2xl`}>
               Slack is built around the message, Notion around the page, Miro around the shape. Collabrr is built around the line of
-              reasoning. It&apos;s documentation in conversational format: nobody stops to write up the thinking, because the
-              thinking is the documentation.
+              reasoning: documentation in conversational format, where the thinking is the documentation.
             </p>
           </div>
-          <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_1fr]">
-            <ol className="grid gap-4">
+          <div className="mt-14 grid gap-12 lg:grid-cols-[1fr_1fr]">
+            <ol className="grid content-start border-t border-[var(--mk-ink)]">
               {PRIMITIVES.map((p, i) => (
-                <li key={p.k} className="flex gap-4 rounded-2xl border border-[var(--mk-rule)] bg-[var(--mk-paper)] p-5">
-                  <span className="mk-display grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--mk-ink)] text-[15px] font-bold text-white">
-                    {i + 1}
-                  </span>
+                <li key={p.k} className="grid grid-cols-[3.5rem_1fr] gap-2 border-b border-[var(--mk-ink)] py-6">
+                  <span className="mk-display text-[2.2rem] tabular-nums text-[var(--mk-indigo)]">{String(i + 1).padStart(2, "0")}</span>
                   <div>
-                    <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--mk-cyan)]">{p.k}</div>
-                    <h3 className="mk-display mt-0.5 text-[1.15rem] font-bold">{p.t}</h3>
-                    <p className="mt-1.5 text-[14.5px] leading-relaxed text-[var(--mk-ink-2)]">{p.d}</p>
+                    <div className="mk-pixel text-[10px] text-[var(--mk-cyan)]">{p.k}</div>
+                    <h3 className="mt-1 text-[1.25rem] font-bold leading-tight tracking-[-0.035em]">{p.t}</h3>
+                    <p className="mt-2 text-[14.5px] leading-relaxed tracking-tight text-[var(--mk-ink-2)]">{p.d}</p>
                   </div>
                 </li>
               ))}
             </ol>
             <div>
-              <div className="mb-3 text-[13px] font-semibold text-[var(--mk-ink-2)]">Example: a checkout redesign</div>
               <DecisionFlow />
             </div>
           </div>
-          <div className="mt-12 grid gap-4 rounded-3xl bg-[var(--mk-ink)] p-6 text-white sm:grid-cols-3 sm:p-8">
+          <div className="mt-16 grid border border-[var(--mk-ink)] sm:grid-cols-3">
             {[
               ["Slack", "Now", "presence and pulse"],
               ["Notion", "Know", "policy, spec and record"],
               ["Collabrr", "How", "the path from first question to decision"],
-            ].map(([tool, w, d]) => (
-              <div key={tool}>
-                <div className="text-[13px] text-white/60">{tool}</div>
-                <div className={`mk-display text-3xl font-bold ${tool === "Collabrr" ? "text-[#8fe3f3]" : ""}`}>{w}</div>
-                <div className="text-[14px] text-white/75">{d}</div>
+            ].map(([tool, w, d], i) => (
+              <div
+                key={tool}
+                className={`p-6 ${i ? "border-t border-[var(--mk-ink)] sm:border-l sm:border-t-0" : ""} ${tool === "Collabrr" ? "bg-[var(--mk-indigo)] text-white" : ""}`}
+              >
+                <div className={`mk-pixel text-[10px] ${tool === "Collabrr" ? "text-white/80" : "text-[var(--mk-ink-2)]"}`}>{tool}</div>
+                <div className="mk-display mt-1 text-[3rem]">{w}</div>
+                <div className={`mt-1 text-[14px] tracking-tight ${tool === "Collabrr" ? "text-white/85" : "text-[var(--mk-ink-2)]"}`}>{d}</div>
               </div>
             ))}
           </div>
         </Section>
 
         {/* AI */}
-        <Section id="ai">
-          <div className="grid gap-12 lg:grid-cols-[1fr_1fr]">
+        <Section id="ai" className="border-t border-[var(--mk-ink)]">
+          <div className="grid gap-14 lg:grid-cols-[1fr_1fr]">
             <div>
-              <p className={eyebrow}>AI, with humans at both ends</p>
-              <h2 className={`${h2} mt-3`}>AI that helps people reach people.</h2>
-              <p className={`${lede} mt-5`}>
+              <Label>AI, with humans at both ends</Label>
+              <h2 className={`${h2} mt-4`}>AI that helps people reach people.</h2>
+              <p className={`${lede} mt-6`}>
                 In Collabrr, AI doesn&apos;t talk to itself. It reads the whole discussion so people can say what matters. Sometimes
-                your team&apos;s cards are the base and the AI enriches them. Sometimes the AI lays down a draft and your team enriches
-                it. Either way, a person posts every card, under their own name.
+                your team&apos;s cards are the base and the AI enriches them; sometimes the AI lays down a draft and your team enriches
+                it. A person posts every card, under their own name.
               </p>
-              <div className="mt-8">
+              <div className="mt-9">
                 <ModesDiagram />
               </div>
             </div>
-            <div className="grid gap-4">
+            <div className="grid content-start gap-4">
               {[
                 {
-                  icon: Layers,
                   k: "Consolidation",
                   t: "A topic nobody had to choose",
-                  d: "Once a space has enough cards, Collabrr names what it's become and summarises where each phase stands. Every point links back to the cards behind it, so the summary is a way in, never a substitute.",
+                  d: "Once a space has enough cards, Collabrr names what it has become and summarises where each phase stands. Every point links to the cards behind it, so the summary is a way in, never a substitute.",
                 },
                 {
-                  icon: PenLine,
                   k: "Expansion",
                   t: "The next card worth writing",
-                  d: "Linger on a card and Collabrr suggests what that phase is missing: an unanswered question, a risk without a mitigation, a claim without evidence. It's drafted in the voice the phase calls for, and you edit it before posting.",
+                  d: "Linger on a card and Collabrr suggests what that phase is missing: an unanswered question, a risk without a mitigation, a claim without evidence. It is drafted in the voice the phase calls for, and you edit it before posting.",
                 },
                 {
-                  icon: Compass,
                   k: "Initiation",
                   t: "The space nobody has opened yet",
                   d: "On Explore, Collabrr reads every space and card you can see, across all categories, and proposes new spaces for open threads, cross-team signals and unresolved tensions, each with the opening card to start it.",
                 },
               ].map((f) => (
-                <div key={f.k} className="flex gap-4 rounded-2xl border border-[var(--mk-rule)] bg-white p-5">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-100">
-                    <f.icon className="h-5 w-5 text-violet-700" />
-                  </span>
-                  <div>
-                    <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-violet-700">{f.k}</div>
-                    <h3 className="mk-display mt-0.5 text-[1.15rem] font-bold">{f.t}</h3>
-                    <p className="mt-1.5 text-[14.5px] leading-relaxed text-[var(--mk-ink-2)]">{f.d}</p>
+                <div key={f.k} className="mk-hard-sm rounded-[5px] bg-white p-5">
+                  <div className="mk-pixel flex items-center gap-2 text-[10px] text-[var(--mk-indigo)]">
+                    <PixelIcon name="spark" color="var(--mk-indigo)" className="h-3 w-3" />
+                    {f.k}
                   </div>
+                  <h3 className="mt-2 text-[1.25rem] font-bold leading-tight tracking-[-0.035em]">{f.t}</h3>
+                  <p className="mt-2 text-[14.5px] leading-relaxed tracking-tight text-[var(--mk-ink-2)]">{f.d}</p>
                 </div>
               ))}
-              <p className="flex items-center gap-2 px-1 text-[13px] text-[var(--mk-ink-2)]">
-                <Sparkles className="h-4 w-4 text-violet-600" />
-                Built only from the cards the person viewing it is allowed to see.
-              </p>
+              <p className="text-[13px] tracking-tight text-[var(--mk-ink-2)]">Built only from the cards the person viewing it is allowed to see.</p>
             </div>
           </div>
         </Section>
 
         {/* Use cases */}
-        <Section id="use-cases" className="border-t border-[var(--mk-rule)] bg-white">
-          <div className="max-w-2xl">
-            <p className={eyebrow}>Use cases</p>
-            <h2 className={`${h2} mt-3`}>Wherever a decision has a multi-day tail.</h2>
-            <p className={`${lede} mt-5`}>
+        <Section id="use-cases" className="border-t border-[var(--mk-ink)] bg-white">
+          <div className="max-w-3xl">
+            <Label>Use cases</Label>
+            <h2 className={`${h2} mt-4`}>Wherever a decision has a multi-day tail.</h2>
+            <p className={`${lede} mt-6 max-w-2xl`}>
               The discussions that matter recur, involve several people, run over days, have real consequences, and lose their
               continuity in today&apos;s tools.
             </p>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {USE_CASES.map((u) => (
-              <div key={u.t} className="flex flex-col rounded-2xl border border-[var(--mk-rule)] bg-[var(--mk-paper)] p-5">
+          <div className="mt-12 grid border-l border-t border-[var(--mk-ink)] sm:grid-cols-2 lg:grid-cols-3">
+            {USE_CASES.map((u, i) => (
+              <div key={u.t} className="flex flex-col border-b border-r border-[var(--mk-ink)] p-6">
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="mk-display text-[1.12rem] font-bold leading-snug">{u.t}</h3>
+                  <span className="mk-pixel text-[10px] tabular-nums text-[var(--mk-ink-2)]">{String(i + 1).padStart(2, "0")}</span>
                   {u.tag && (
-                    <span className="shrink-0 rounded-full bg-[var(--mk-green-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--mk-green)]">
+                    <span className="mk-pixel border border-[var(--mk-green)] bg-[var(--mk-green-soft)] px-1.5 py-0.5 text-[9px] text-[var(--mk-green)]">
                       {u.tag}
                     </span>
                   )}
                 </div>
-                <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-[var(--mk-ink-2)]">{u.d}</p>
-                <p className="mt-3 text-[12.5px] font-medium text-[var(--mk-ink)]">{u.who}</p>
+                <h3 className="mt-3 text-[1.2rem] font-bold leading-tight tracking-[-0.035em]">{u.t}</h3>
+                <p className="mt-2 flex-1 text-[14.5px] leading-relaxed tracking-tight text-[var(--mk-ink-2)]">{u.d}</p>
+                <p className="mt-4 text-[12.5px] font-semibold tracking-tight">{u.who}</p>
               </div>
             ))}
+            <a
+              href="#design-partners"
+              className="group flex flex-col justify-between border-b border-r border-[var(--mk-ink)] bg-[var(--mk-indigo)] p-6 text-white lg:col-span-2"
+            >
+              <span className="mk-pixel text-[10px] text-white/75">Not on the list?</span>
+              <span className="mt-3 block max-w-xl text-[1.5rem] font-bold leading-tight tracking-[-0.035em]">
+                If it takes days, involves several people and has real consequences, it belongs in Collabrr.
+              </span>
+              <span className="mt-6 inline-flex items-center gap-2 text-[15px] font-semibold tracking-tight">
+                Bring it as a design partner <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              </span>
+            </a>
           </div>
         </Section>
 
         {/* Compare */}
-        <Section id="compare">
-          <div className="max-w-2xl">
-            <p className={eyebrow}>Compare</p>
-            <h2 className={`${h2} mt-3`}>Keep your tools. Give the thinking a home.</h2>
-            <p className={`${lede} mt-5`}>
+        <Section id="compare" className="border-t border-[var(--mk-ink)]">
+          <div className="max-w-3xl">
+            <Label>Compare</Label>
+            <h2 className={`${h2} mt-4`}>Keep your tools. Give the thinking a home.</h2>
+            <p className={`${lede} mt-6 max-w-2xl`}>
               Collabrr sits alongside them. Move a thread that&apos;s outgrown Slack into a space, think it through there, and link the
               final spec and the tickets from the decision card, so the reasoning stays one click away.
             </p>
           </div>
-          <div className="mt-10 overflow-x-auto rounded-2xl border border-[var(--mk-rule)] bg-white">
-            <table className="w-full min-w-[720px] border-collapse text-left text-[14.5px]">
+          <div className="mt-12 overflow-x-auto border border-[var(--mk-ink)] bg-white">
+            <table className="w-full min-w-[760px] border-collapse text-left text-[14.5px] tracking-tight">
               <thead>
-                <tr className="text-[12px] uppercase tracking-[0.12em] text-[var(--mk-ink-2)]">
-                  <th className="px-5 py-4 font-semibold">Tool</th>
-                  <th className="px-5 py-4 font-semibold">Built around</th>
-                  <th className="px-5 py-4 font-semibold">Great for</th>
-                  <th className="px-5 py-4 font-semibold">What gets lost in long discussions</th>
+                <tr className="border-b border-[var(--mk-ink)]">
+                  {["Tool", "Built around", "Great for", "What gets lost in long discussions"].map((h) => (
+                    <th key={h} className="mk-pixel px-5 py-3.5 text-[10px] font-normal text-[var(--mk-ink-2)]">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {COMPARE.map((r) => (
-                  <tr key={r.tool} className="border-t border-[var(--mk-rule)] align-top">
-                    <td className="px-5 py-4 font-semibold">{r.tool}</td>
+                  <tr key={r.tool} className="border-b border-[var(--mk-rule)] align-top">
+                    <td className="px-5 py-4 font-bold">{r.tool}</td>
                     <td className="px-5 py-4 text-[var(--mk-ink-2)]">{r.object}</td>
                     <td className="px-5 py-4 text-[var(--mk-ink-2)]">{r.good}</td>
                     <td className="px-5 py-4 text-[var(--mk-ink-2)]">{r.loses}</td>
                   </tr>
                 ))}
-                <tr className="border-t border-[var(--mk-rule)] bg-[var(--mk-indigo-soft)] align-top">
-                  <td className="px-5 py-4 font-bold text-[var(--mk-indigo-deep)]">Collabrr</td>
-                  <td className="px-5 py-4 font-medium text-[var(--mk-indigo-deep)]">The line of reasoning</td>
-                  <td className="px-5 py-4 font-medium text-[var(--mk-indigo-deep)]">Long, multi-branch, cross-team discussions, asynchronously</td>
-                  <td className="px-5 py-4 font-medium text-[var(--mk-indigo-deep)]">
-                    Kept: the options, objections, evidence and rationale, linked to the decision.
-                  </td>
+                <tr className="bg-[var(--mk-indigo)] align-top text-white">
+                  <td className="px-5 py-4 font-bold">Collabrr</td>
+                  <td className="px-5 py-4 font-medium">The line of reasoning</td>
+                  <td className="px-5 py-4 font-medium">Long, multi-branch, cross-team discussions, asynchronously</td>
+                  <td className="px-5 py-4 font-medium">Kept: the options, objections, evidence and rationale, linked to the decision.</td>
                 </tr>
               </tbody>
             </table>
@@ -456,12 +478,12 @@ export default function Landing() {
         </Section>
 
         {/* Vision */}
-        <Section className="border-t border-[var(--mk-rule)] bg-white">
-          <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
+        <Section className="border-t border-[var(--mk-ink)] bg-white">
+          <div className="grid gap-14 lg:grid-cols-[1fr_1.05fr]">
             <div>
-              <p className={eyebrow}>Where this goes</p>
-              <h2 className={`${h2} mt-3`}>Two layers got us here. Three will get us further.</h2>
-              <div className={`${lede} mt-5 grid gap-4`}>
+              <Label>Where this goes</Label>
+              <h2 className={`${h2} mt-4`}>Two layers got us here. Three will get us further.</h2>
+              <div className={`${lede} mt-6 grid gap-4`}>
                 <p>
                   We start with distributed teams, because for them the meeting is already broken. The bigger shift is for every
                   organisation: a reasoning layer between chat and meetings, where complex work is developed, kept and reused.
@@ -472,21 +494,23 @@ export default function Landing() {
                 </p>
               </div>
             </div>
-            <div className="overflow-x-auto rounded-2xl border border-[var(--mk-rule)]">
-              <table className="w-full min-w-[520px] border-collapse text-left text-[14.5px]">
-                <thead className="bg-[var(--mk-paper)]">
-                  <tr className="text-[12px] uppercase tracking-[0.12em] text-[var(--mk-ink-2)]">
-                    <th className="px-5 py-3.5 font-semibold">Company stage</th>
-                    <th className="px-5 py-3.5 font-semibold">Dominant reasoning problem</th>
-                    <th className="px-5 py-3.5 font-semibold">Collabrr helps with</th>
+            <div className="self-start overflow-x-auto border border-[var(--mk-ink)]">
+              <table className="w-full min-w-[520px] border-collapse text-left text-[14.5px] tracking-tight">
+                <thead>
+                  <tr className="border-b border-[var(--mk-ink)] bg-[var(--mk-paper)]">
+                    {["Company stage", "Dominant reasoning problem", "Collabrr helps with"].map((h) => (
+                      <th key={h} className="mk-pixel px-5 py-3.5 text-[10px] font-normal text-[var(--mk-ink-2)]">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {STAGES.map(([s, p, c]) => (
-                    <tr key={s} className="border-t border-[var(--mk-rule)]">
-                      <td className="px-5 py-3.5 font-semibold">{s}</td>
-                      <td className="px-5 py-3.5 text-[var(--mk-ink-2)]">{p}</td>
-                      <td className="px-5 py-3.5 font-medium text-[var(--mk-indigo-deep)]">{c}</td>
+                    <tr key={s} className="border-b border-[var(--mk-rule)] last:border-b-0">
+                      <td className="px-5 py-4 font-bold">{s}</td>
+                      <td className="px-5 py-4 text-[var(--mk-ink-2)]">{p}</td>
+                      <td className="px-5 py-4 font-semibold text-[var(--mk-indigo-deep)]">{c}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -496,18 +520,18 @@ export default function Landing() {
         </Section>
 
         {/* Design partners */}
-        <Section id="design-partners">
+        <Section id="design-partners" className="mk-grid border-t border-[var(--mk-ink)]">
           <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
-              <p className={eyebrow}>Design partners</p>
-              <h2 className={`${h2} mt-3`}>Bring one live decision. We&apos;ll run it in Collabrr with you.</h2>
-              <p className={`${lede} mt-5`}>
+              <Label>Design partners</Label>
+              <h2 className={`${h2} mt-4`}>Bring one live decision. We&apos;ll run it in Collabrr with you.</h2>
+              <p className={`${lede} mt-6`}>
                 We&apos;re working closely with a small number of teams whose important discussions are outgrowing messages, documents
                 and meetings.
               </p>
-              <div className="mt-8 rounded-2xl border border-[var(--mk-rule)] bg-white p-5">
-                <div className="text-[13px] font-semibold text-[var(--mk-ink)]">A good fit if your team</div>
-                <ul className="mt-3 grid gap-2 text-[14.5px] text-[var(--mk-ink-2)]">
+              <div className="mt-8 border border-[var(--mk-ink)] bg-white p-5">
+                <div className="mk-pixel text-[10px]">A good fit if your team</div>
+                <ul className="mt-3 grid gap-2 text-[14.5px] tracking-tight text-[var(--mk-ink-2)]">
                   {[
                     "Has 20–200 people with product, design and engineering functions",
                     "Works across locations, schedules or at least three time zones",
@@ -520,8 +544,8 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <div className="mt-5 text-[13px] font-semibold text-[var(--mk-ink)]">What you get</div>
-                <ul className="mt-3 grid gap-2 text-[14.5px] text-[var(--mk-ink-2)]">
+                <div className="mk-pixel mt-5 text-[10px]">What you get</div>
+                <ul className="mt-3 grid gap-2 text-[14.5px] tracking-tight text-[var(--mk-ink-2)]">
                   {["Early access for your team", "A direct line to the founder", "A real say in what gets built next"].map((t) => (
                     <li key={t} className="flex gap-2">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--mk-indigo)]" />
@@ -530,9 +554,9 @@ export default function Landing() {
                   ))}
                 </ul>
               </div>
-              <p className="mt-5 text-[14px] text-[var(--mk-ink-2)]">
+              <p className="mt-5 text-[14px] tracking-tight text-[var(--mk-ink-2)]">
                 Already have a workspace?{" "}
-                <Link href="/login" className="font-semibold text-[var(--mk-indigo-deep)] underline-offset-4 hover:underline">
+                <Link href="/login" className="font-semibold text-[var(--mk-ink)] underline underline-offset-4">
                   Log in
                 </Link>
               </p>
@@ -544,12 +568,12 @@ export default function Landing() {
         </Section>
 
         {/* Essays */}
-        <Section id="essays" className="border-t border-[var(--mk-rule)]">
+        <Section id="essays" className="border-t border-[var(--mk-ink)] bg-white">
           <div className="flex flex-wrap items-end justify-between gap-6">
-            <div className="max-w-2xl">
-              <p className={eyebrow}>From the founder</p>
-              <h2 className={`${h2} mt-3`}>The thinking behind Collabrr.</h2>
-              <p className={`${lede} mt-5`}>
+            <div className="max-w-3xl">
+              <Label>From the founder</Label>
+              <h2 className={`${h2} mt-4`}>The thinking behind Collabrr.</h2>
+              <p className={`${lede} mt-6 max-w-2xl`}>
                 Essays on how teams reason together, why meetings and chat fall short for hard decisions, and how AI should join the
                 conversation.
               </p>
@@ -558,28 +582,26 @@ export default function Landing() {
               href={MEDIUM}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--mk-rule)] bg-white px-5 py-2.5 text-[14px] font-semibold hover:border-[var(--mk-indigo)]"
+              className="mk-btn inline-flex items-center gap-2 rounded-[4px] bg-white px-5 py-2.5 text-[14px] font-semibold tracking-tight"
             >
               All essays on Medium <ArrowUpRight className="h-4 w-4" />
             </a>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {ESSAYS.map((e) => (
               <a
                 key={e.href}
                 href={e.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-col rounded-2xl border border-[var(--mk-rule)] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--mk-indigo)] hover:shadow-[0_18px_40px_-28px_rgba(63,64,201,0.6)]"
+                className="mk-hard-sm mk-lift group flex flex-col rounded-[5px] bg-white p-5"
               >
-                <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--mk-cyan)]">{e.theme}</span>
-                <h3 className="mk-display mt-2 text-[1.18rem] font-bold leading-snug group-hover:text-[var(--mk-indigo-deep)]">
-                  {e.title}
-                </h3>
-                <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-[var(--mk-ink-2)]">{e.dek}</p>
-                <span className="mt-4 flex items-center justify-between text-[12.5px] text-[var(--mk-ink-2)]">
+                <span className="mk-pixel text-[10px] text-[var(--mk-cyan)]">{e.theme}</span>
+                <h3 className="mt-3 text-[1.2rem] font-bold leading-tight tracking-[-0.035em] group-hover:text-[var(--mk-indigo)]">{e.title}</h3>
+                <p className="mt-2 flex-1 text-[14.5px] leading-relaxed tracking-tight text-[var(--mk-ink-2)]">{e.dek}</p>
+                <span className="mt-5 flex items-center justify-between border-t border-[var(--mk-rule)] pt-3 text-[12.5px] tracking-tight text-[var(--mk-ink-2)]">
                   {e.meta}
-                  <ArrowUpRight className="h-4 w-4 text-[var(--mk-ink-2)] transition group-hover:text-[var(--mk-indigo)]" />
+                  <ArrowUpRight className="h-4 w-4 transition group-hover:text-[var(--mk-indigo)]" />
                 </span>
               </a>
             ))}
@@ -587,20 +609,20 @@ export default function Landing() {
         </Section>
 
         {/* FAQ */}
-        <Section className="border-t border-[var(--mk-rule)] bg-white">
+        <Section className="border-t border-[var(--mk-ink)]">
           <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
             <div>
-              <p className={eyebrow}>Questions</p>
-              <h2 className={`${h2} mt-3`}>What teams ask first.</h2>
+              <Label>Questions</Label>
+              <h2 className={`${h2} mt-4`}>What teams ask first.</h2>
             </div>
-            <div className="divide-y divide-[var(--mk-rule)] border-y border-[var(--mk-rule)]">
+            <div className="border-t border-[var(--mk-ink)]">
               {FAQ.map((f) => (
-                <details key={f.q} className="group py-4">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[16px] font-semibold">
+                <details key={f.q} className="group border-b border-[var(--mk-ink)] py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-semibold tracking-[-0.02em]">
                     {f.q}
-                    <ChevronDown className="h-5 w-5 shrink-0 text-[var(--mk-ink-2)] transition group-open:rotate-180" />
+                    <Plus className="h-5 w-5 shrink-0 transition group-open:rotate-45" />
                   </summary>
-                  <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--mk-ink-2)]">{f.a}</p>
+                  <p className="mt-3 max-w-2xl text-[15px] leading-relaxed tracking-tight text-[var(--mk-ink-2)]">{f.a}</p>
                 </details>
               ))}
             </div>
@@ -608,53 +630,52 @@ export default function Landing() {
         </Section>
 
         {/* Closing */}
-        <section className="py-20 sm:py-24">
-          <div className={wrap}>
-            <div className="relative overflow-hidden rounded-[32px] bg-[var(--mk-ink)] px-6 py-14 text-white sm:px-12">
-              <div aria-hidden className="mk-float-2 absolute -right-10 -top-10 h-48 w-56 rotate-12 rounded-[28px] bg-[var(--mk-cyan)]/30" />
-              <div aria-hidden className="mk-float absolute -bottom-14 right-24 h-40 w-48 -rotate-6 rounded-[28px] bg-[var(--mk-indigo)]/40" />
-              <div className="relative max-w-2xl">
-                <h2 className="mk-display text-[2rem] font-bold leading-[1.1] sm:text-[2.6rem]">
-                  The next time a thread hits 63 replies, don&apos;t ask who can jump on a call.
-                </h2>
-                <p className="mt-4 text-[17px] text-white/75">Ask where this thinking should live.</p>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <a
-                    href="#design-partners"
-                    className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-[15px] font-semibold text-[var(--mk-ink)] hover:bg-[#dff6fb]"
-                  >
-                    Become a design partner <ArrowRight className="h-4 w-4" />
-                  </a>
-                  <Link
-                    href="/login"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-3.5 text-[15px] font-semibold text-white hover:bg-white/10"
-                  >
-                    Log in
-                  </Link>
-                </div>
+        <section className="mk-scan relative overflow-hidden bg-[var(--mk-ink)] text-white">
+          <DitherBand color="var(--mk-ink)" flip className="bg-[var(--mk-paper)]" />
+          <div className={`${wrap} grid items-center gap-12 py-20 sm:py-24 lg:grid-cols-[1.3fr_0.7fr]`}>
+            <div>
+              <p className="mk-bit text-[#8fe3f3]">&gt; thread.replies = 63</p>
+              <h2 className="mk-display mt-5 text-[2.4rem] sm:text-[3.6rem]">
+                Don&apos;t ask who can jump on a call. Ask where this thinking should live
+                <span className="mk-cursor" aria-hidden />
+              </h2>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <a
+                  href="#design-partners"
+                  className="inline-flex items-center gap-2 rounded-[4px] border border-white bg-white px-6 py-3.5 text-[15px] font-semibold tracking-tight text-[var(--mk-ink)] shadow-[3px_3px_0_var(--mk-cyan)] transition hover:-translate-x-px hover:-translate-y-px hover:shadow-[4px_4px_0_var(--mk-cyan)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+                >
+                  Become a design partner <ArrowRight className="h-4 w-4" />
+                </a>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center rounded-[4px] border border-white/40 px-6 py-3.5 text-[15px] font-semibold tracking-tight text-white hover:border-white"
+                >
+                  Log in
+                </Link>
               </div>
             </div>
+            <LogoBitmap className="mx-auto w-full max-w-[320px]" />
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-[var(--mk-rule)] bg-white">
-        <div className={`${wrap} grid gap-8 py-12 sm:grid-cols-[1.4fr_1fr]`}>
+      <footer className="bg-[var(--mk-ink)] text-white">
+        <div className={`${wrap} grid gap-10 border-t border-white/15 py-12 sm:grid-cols-[1.3fr_1fr]`}>
           <div>
-            <Logo size={26} />
-            <p className="mt-3 max-w-sm text-[14px] text-[var(--mk-ink-2)]">
+            <Logo size={24} inverted />
+            <p className="mt-3 max-w-sm text-[14px] tracking-tight text-white/65">
               Infrastructure for collaborative thinking. The reasoning layer between chat and meetings.
             </p>
-            <div className="mt-5 flex flex-wrap gap-4 text-[14px] font-medium">
-              <Link href="/login" className="hover:text-[var(--mk-indigo)]">Log in</Link>
-              <a href="#design-partners" className="hover:text-[var(--mk-indigo)]">Design partners</a>
-              <a href="#how" className="hover:text-[var(--mk-indigo)]">How it works</a>
-              <a href="#ai" className="hover:text-[var(--mk-indigo)]">AI</a>
-              <a href={MEDIUM} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--mk-indigo)]">Essays on Medium</a>
+            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[14px] font-medium tracking-tight">
+              <Link href="/login" className="hover:text-[#8fe3f3]">Log in</Link>
+              <a href="#design-partners" className="hover:text-[#8fe3f3]">Design partners</a>
+              <a href="#how" className="hover:text-[#8fe3f3]">How it works</a>
+              <a href="#ai" className="hover:text-[#8fe3f3]">AI</a>
+              <a href={MEDIUM} target="_blank" rel="noopener noreferrer" className="hover:text-[#8fe3f3]">Essays on Medium</a>
             </div>
           </div>
-          <div className="text-[12.5px] leading-relaxed text-[var(--mk-ink-2)]">
-            <div className="mb-2 font-semibold text-[var(--mk-ink)]">Sources</div>
+          <div className="text-[12.5px] leading-relaxed tracking-tight text-white/60">
+            <div className="mk-pixel mb-3 text-[10px] text-white/80">Sources</div>
             <ol className="grid gap-1.5">
               <li id="fn-1">
                 1.{" "}
@@ -678,7 +699,7 @@ export default function Landing() {
                 .
               </li>
             </ol>
-            <p className="mt-6">© {new Date().getFullYear()} Collabrr</p>
+            <p className="mk-pixel mt-6 text-[10px] text-white/50">© {new Date().getFullYear()} Collabrr</p>
           </div>
         </div>
       </footer>
