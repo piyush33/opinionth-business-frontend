@@ -13,7 +13,7 @@ export function withCardRefs(text: string, onOpen: (id: number) => void) {
       <button
         key={i}
         type="button"
-        className="text-purple-600 hover:underline"
+        className="font-semibold text-[var(--mk-indigo)] hover:underline"
         onClick={(e) => {
           e.stopPropagation();
           onOpen(Number(id));

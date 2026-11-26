@@ -26,10 +26,10 @@ export default function MasonryGrid({
   arr.forEach((child, i) => cols[i % columns].push(child));
 
   return (
-    <div className="flex w-full max-w-full box-border items-start gap-2 overflow-visible">
+    <div className="flex w-full max-w-full box-border items-start gap-6 overflow-visible">
       {cols.map((col, i) => (
         <div key={i} className="flex-1 min-w-0">
-          <div className="space-y-4">{col}</div>
+          <div className="space-y-6">{col}</div>
         </div>
       ))}
     </div>

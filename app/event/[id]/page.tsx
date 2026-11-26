@@ -1,6 +1,9 @@
 "use client";
 
 import type React from "react";
+import AppNav from "@/components/app/AppNav";
+import { PixelLabel, btn } from "@/components/app/ui";
+import { LogoBitmap, PixelIcon } from "@/components/marketing/Bitmap";
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -1250,10 +1253,10 @@ export default function EventPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="mk-grid flex min-h-screen items-center justify-center bg-[var(--mk-paper)]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <LogoBitmap className="mx-auto w-16" />
+          <p className="mt-4 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]">Loading…</p>
         </div>
       </div>
     );
@@ -1330,529 +1333,152 @@ export default function EventPage() {
   ].reduce((a, b) => a + b, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-      {/* Desktop Navbar - Hidden on Mobile */}
-      <nav
-        data-summary-clear
-        className="hidden md:block fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <Link href="/explore" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">C</span>
-                </div>
-                <span className="font-bold text-xl text-gray-900">
-                  Collabrr
-                </span>
-              </Link>
-            </div>
-
-            {/* Navigation Links */}
-            <div className="flex items-center space-x-1">
-              {[
-                { name: "Home", href: "/home", key: "home" },
-                { name: "Explore", href: "/explore", key: "explore" },
-                { name: "Create", href: "/create", key: "create" },
-              ].map((item) => (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  className="px-4 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-
-            {/* Search Bar */}
-            <div className="flex-1 max-w-md mx-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search posts..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border-0 rounded-full text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
-                />
-              </div>
-            </div>
-
-            {/* Action Icons */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsNotificationsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200 relative"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
-                )}
-              </button>
-
-              <button
-                onClick={() => setIsInboxPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200 relative"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></span>
-              </button>
-
-              <Link
-                href="/profile"
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
-              >
-                <User className="w-5 h-5" />
-              </Link>
-
-              <button
-                onClick={() => setIsSettingsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
-              >
-                <ChevronDown className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Header - Hidden on Desktop */}
-      <header
-        data-summary-clear
-        className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
-        <div className="px-4 py-3 space-y-3">
-          {/* Top Row - Back, Logo and Menu */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <Link href="/explore" className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-blue-600 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">C</span>
-                </div>
-                <span className="font-bold text-lg text-gray-900">
-                  Collection
-                </span>
-              </Link>
-            </div>
-
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <Menu className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search posts..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-0 rounded-full text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
-            />
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsMobileMenuOpen(false)}
-          ></div>
-          <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-xl">
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-900">Menu</span>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                  <X className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <Link
-                href="/home"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Home className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Home</span>
-              </Link>
-              <Link
-                href="/explore"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Compass className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Explore</span>
-              </Link>
-              <Link
-                href="/create"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Plus className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Create</span>
-              </Link>
-              <Link
-                href="/profile"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <User className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Profile</span>
-              </Link>
-              <button
-                onClick={() => {
-                  setIsNotificationsPopupOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
-              >
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Notifications</span>
-                {unreadCount > 0 && (
-                  <span className="ml-auto w-2 h-2 bg-red-500 rounded-full"></span>
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  setIsInboxPopupOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
-              >
-                <MessageCircle className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Messages</span>
-                <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></span>
-              </button>
-              <Link
-                href="/login"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  localStorage.removeItem("user");
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                <User className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Logout</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen bg-[var(--mk-paper)]">
+      <div data-summary-clear>
+        <AppNav
+          active={null}
+          search={{ value: searchTerm, onChange: setSearchTerm, placeholder: "Search this space…" }}
+          unreadCount={unreadCount}
+          onNotifications={() => setIsNotificationsPopupOpen(true)}
+          onInbox={() => setIsInboxPopupOpen(true)}
+          onSettings={() => setIsSettingsPopupOpen(true)}
+        />
+      </div>
 
       {/* Main Content */}
-      <main className="pt-34 md:pt-24 px-4 pb-8">
+      <main className="mk-grid px-4 pb-24 pt-32 md:pt-24">
         <div className="max-w-7xl mx-auto">
           {/* Sophisticated Collection Header */}
           <div className="mb-8">
-            {/* Connection Visualization */}
-            <div className="relative mb-6 ">
-              <div className="flex items-center justify-center px-4">
-                <div className="flex items-center space-x-2 sm:space-x-4 max-w-full">
-                  {/* Connection nodes */}
-                  <div className="flex -space-x-1 sm:-space-x-2">
-                    {contributors.slice(0, 3).map((username, index) => (
-                      <div
-                        key={username}
-                        className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 sm:border-4 border-white shadow-lg bg-gradient-to-br ${
-                          index === 0
-                            ? "from-purple-400 to-pink-400"
-                            : index === 1
-                              ? "from-blue-400 to-cyan-400"
-                              : "from-green-400 to-emerald-400"
-                        } flex items-center justify-center text-white font-bold text-xs sm:text-sm z-${
-                          10 + index
-                        }`}
+            <div className="mk-hard overflow-hidden rounded-[6px] bg-white">
+              <div className="flex items-center gap-2 border-b border-[var(--mk-ink)] px-3 py-1.5">
+                <span className="flex gap-1" aria-hidden>
+                  <span className="h-2 w-2 bg-[var(--mk-ink)]" />
+                  <span className="h-2 w-2 bg-[#868896]" />
+                  <span className="h-2 w-2 bg-[#c2c4cc]" />
+                </span>
+                <span className="truncate text-[10.5px] font-semibold uppercase tracking-[0.09em]">
+                  space://{(headerSummary?.topic ?? "connected-collection").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}
+                </span>
+                {stats.isLocked && (
+                  <span className="ml-auto inline-flex items-center gap-1 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-amber)]">
+                    <Lock className="h-3 w-3" /> Curated
+                  </span>
+                )}
+              </div>
+
+              <div className="grid gap-8 p-5 sm:p-8 lg:grid-cols-[1fr_auto]">
+                <div className="min-w-0">
+                  <PixelLabel>Space · {collectionCategory.name}</PixelLabel>
+                  {headerSummary ? (
+                    <h1 className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowSummary(true)}
+                        className="mk-display text-left text-[2.2rem] transition-colors hover:text-[var(--mk-indigo)] sm:text-[3rem]"
+                        title="Open space summary"
                       >
-                        {username.charAt(0).toUpperCase()}
-                      </div>
-                    ))}
-                    {displayCards.length > 3 && (
-                      <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 sm:border-4 border-white text-white shadow-lg bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
-                        +{displayCards.length - 1}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Connection lines */}
-                  <div className="flex items-center space-x-1 sm:space-x-2">
-                    <div className="w-4 sm:w-8 h-0.5 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full"></div>
-                    <Link2 className="w-4 h-4 sm:w-6 sm:h-6 text-purple-500 animate-pulse" />
-                    <div className="w-4 sm:w-8 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"></div>
-                  </div>
-
-                  {/* Central connection hub */}
-                  <div className="relative">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-purple-500 via-blue-500 to-cyan-500 shadow-2xl flex items-center justify-center">
-                      <Layers className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                    </div>
-                    <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                      <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating connection indicators */}
-              <div className="absolute top-0 left-1/4 animate-bounce delay-100">
-                <div className="w-2 h-2 bg-purple-400 rounded-full opacity-60"></div>
-              </div>
-              <div className="absolute top-4 right-1/3 animate-bounce delay-300">
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full opacity-60"></div>
-              </div>
-              <div className="absolute bottom-2 left-1/3 animate-bounce delay-500">
-                <div className="w-1 h-1 bg-cyan-400 rounded-full opacity-60"></div>
-              </div>
-            </div>
-
-            {/* Collection Info Panel */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-4 sm:p-6 mb-6 mx-auto max-w-full overflow-hidden">
-              <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
-                {/* Main Info */}
-                <div className="text-center lg:text-left w-full lg:w-auto lg:flex-1 lg:min-w-0 lg:pr-8">
-                  <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
-                    {headerSummary ? (
-                      <h1>
-                        <button
-                          type="button"
-                          onClick={() => setShowSummary(true)}
-                          className="group inline-flex items-center gap-2 text-center lg:text-left text-xl sm:text-2xl lg:text-3xl font-bold"
-                          title="Open space summary"
-                        >
-                          <span className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                            {headerSummary.topic}
-                          </span>
-                          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-violet-500 opacity-70 transition group-hover:rotate-12 group-hover:opacity-100" />
-                        </button>
-                      </h1>
-                    ) : headerLoading ? (
-                      <div
-                        className="h-7 sm:h-8 lg:h-9 w-56 sm:w-72 rounded-lg bg-gradient-to-r from-purple-100 via-blue-100 to-cyan-100 animate-pulse"
-                        aria-label="Loading space topic"
-                      />
-                    ) : (
-                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                        Connected Collection
-                      </h1>
-                    )}
-                    {stats.isLocked && (
-                      <div className="flex items-center space-x-1 bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm font-medium">
-                        <Lock className="w-4 h-4" />
-                        <span>Curated</span>
-                      </div>
-                    )}
-                  </div>
+                        {headerSummary.topic}
+                      </button>
+                    </h1>
+                  ) : headerLoading ? (
+                    <div className="mt-4 h-10 w-72 max-w-full animate-pulse bg-[var(--mk-indigo-soft)]" aria-label="Loading space topic" />
+                  ) : (
+                    <h1 className="mk-display mt-4 text-[2.2rem] sm:text-[3rem]">Connected Collection</h1>
+                  )}
                   {headerSummary ? (
                     <button
                       type="button"
                       onClick={() => setShowSummary(true)}
-                      className="text-center lg:text-left text-gray-600 text-sm sm:text-base lg:text-lg hover:text-gray-800 transition-colors"
+                      className="mt-4 block max-w-2xl text-left text-[16px] leading-relaxed tracking-tight text-[var(--mk-ink-2)] hover:text-[var(--mk-ink)] sm:text-[16.5px]"
                     >
-                      {headerSummary.tagline ||
-                        "Discover interconnected perspectives and ideas in this collaborative space"}
+                      {headerSummary.tagline || "Discover interconnected perspectives and ideas in this collaborative space"}
                     </button>
                   ) : headerLoading ? (
-                    <div className="mx-auto lg:mx-0 h-4 sm:h-5 w-64 sm:w-96 max-w-full rounded-md bg-gray-100 animate-pulse" />
+                    <div className="mt-4 h-4 w-96 max-w-full animate-pulse bg-[#eceef3]" />
                   ) : (
-                    <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
-                      Discover interconnected perspectives and ideas in this
-                      collaborative space
+                    <p className="mt-4 max-w-2xl text-[16px] leading-relaxed tracking-tight text-[var(--mk-ink-2)]">
+                      Discover interconnected perspectives and ideas in this collaborative space
                     </p>
                   )}
-                </div>
+                  {headerSummary && (
+                    <p className="mt-3 flex items-center gap-1.5 text-[12.5px] tracking-tight text-[#868a9c]">
+                      <PixelIcon name="spark" color="var(--mk-indigo)" className="h-3 w-3" />
+                      Title and summary derived from the cards
+                    </p>
+                  )}
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:shrink-0">
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-purple-200">
-                    <div className="flex items-center justify-center mb-1 sm:mb-2">
-                      <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
-                    </div>
-                    <div className="text-lg sm:text-2xl font-bold text-purple-700">
-                      {stats.totalCards}
-                    </div>
-                    <div className="text-xs text-purple-600 font-medium">
-                      Cards
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-blue-200">
-                    <div className="flex items-center justify-center mb-1 sm:mb-2">
-                      <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                    </div>
-                    <div className="text-lg sm:text-2xl font-bold text-blue-700">
-                      {stats.contributors}
-                    </div>
-                    <div className="text-xs text-blue-600 font-medium">
-                      Contributors
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-green-200">
-                    <div className="flex items-center justify-center mb-1 sm:mb-2">
-                      <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-                    </div>
-                    <div className="text-lg sm:text-2xl font-bold text-green-700">
-                      {stats.hasWeblinks}
-                    </div>
-                    <div className="text-xs text-green-600 font-medium">
-                      Links
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-orange-200">
-                    <div className="flex items-center justify-center mb-1 sm:mb-2">
-                      <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
-                    </div>
-                    <div className="text-lg sm:text-2xl font-bold text-orange-700">
-                      {Math.floor(Math.random() * 100) + 50}%
-                    </div>
-                    <div className="text-xs text-orange-600 font-medium">
-                      Engagement
-                    </div>
+                  <div className="mt-6 flex flex-wrap items-center gap-3">
+                    <button onClick={() => setShowSummary(true)} className={`${btn.plain} px-3.5 py-1.5 text-[14px]`} title="Summary of this space" aria-label="Open space summary">
+                      <PixelIcon name="spark" color="var(--mk-indigo)" className="h-3.5 w-3.5" /> Summary
+                    </button>
+                    <button onClick={() => setShowInvite(true)} className={`${btn.primary} px-3.5 py-1.5 text-[14px]`}>
+                      Invite
+                    </button>
+                    <span className="inline-flex items-center gap-1.5 rounded-[4px] border border-[var(--mk-ink)] px-2 py-1 text-[13px] font-semibold tracking-tight">
+                      <CategoryIcon className="h-3.5 w-3.5 text-[var(--mk-indigo)]" />
+                      {collectionCategory.name}
+                    </span>
+                    {contributors.length > 0 && (
+                      <span className="flex items-center gap-1 pl-1">
+                        {contributors.slice(0, 8).map((username, index) => (
+                          <span
+                            key={username}
+                            title={`@${username}`}
+                            className="grid h-7 w-7 place-items-center rounded-[3px] border border-[var(--mk-ink)] text-[11px] font-bold text-white"
+                            style={{ background: ["var(--mk-indigo)", "var(--mk-cyan)", "#d8628a", "#6b5a3e"][index % 4] }}
+                          >
+                            {username.charAt(0).toUpperCase()}
+                          </span>
+                        ))}
+                        {contributors.length > 8 && (
+                          <span className="pl-1 text-[12.5px] tabular-nums text-[var(--mk-ink-2)]">+{contributors.length - 8}</span>
+                        )}
+                      </span>
+                    )}
                   </div>
                 </div>
+
+                <dl className="grid grid-cols-2 self-start border-l border-t border-[var(--mk-ink)] lg:w-[300px]">
+                  {[
+                    { label: "Cards", value: stats.totalCards, color: "var(--mk-ink)" },
+                    { label: "Contributors", value: stats.contributors, color: "var(--mk-ink)" },
+                    { label: "Links", value: stats.hasWeblinks, color: "var(--mk-indigo)" },
+                    { label: "Phases", value: groupedCards.filter((g) => g.items.length > 0).length, color: "var(--mk-cyan)" },
+                  ].map((st) => (
+                    <div key={st.label} className="border-b border-r border-[var(--mk-ink)] px-4 py-3">
+                      <dd className="mk-display text-[2rem] tabular-nums" style={{ color: st.color }}>{st.value}</dd>
+                      <dt className="mt-1 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]">{st.label}</dt>
+                    </div>
+                  ))}
+                </dl>
               </div>
 
-              {/* Contributors Preview */}
-              {contributors.length > 0 && (
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-                  {/* Contributors */}
-                  <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200 w-full">
-                    <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-sm font-medium text-gray-600">
-                          Contributors:
-                        </span>
-                        <div className="flex -space-x-1 sm:-space-x-2">
-                          {contributors.map((username, index) => (
-                            <div
-                              key={username}
-                              className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-white shadow-md bg-gradient-to-br ${
-                                index % 4 === 0
-                                  ? "from-purple-400 to-pink-400"
-                                  : index % 4 === 1
-                                    ? "from-blue-400 to-cyan-400"
-                                    : index % 4 === 2
-                                      ? "from-green-400 to-emerald-400"
-                                      : "from-orange-400 to-red-400"
-                              } flex items-center justify-center text-white font-bold text-xs`}
-                              title={username}
-                            >
-                              {username.charAt(0).toUpperCase()}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row items-center  ">
-                    {/* Space summary trigger */}
-                    <div className="mt-1 lg:mt-6 pt-1 lg:pt-6">
-                      <button
-                        onClick={() => setShowSummary(true)}
-                        className="group relative inline-flex items-center gap-1.5 rounded-full p-[1px] bg-gradient-to-r from-violet-500 via-blue-500 to-cyan-400 shadow-[0_6px_20px_-8px_rgba(99,102,241,.6)] transition hover:shadow-[0_8px_26px_-8px_rgba(99,102,241,.8)]"
-                        title="Summary of this space"
-                        aria-label="Open space summary"
-                      >
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-sm font-medium text-slate-700 backdrop-blur group-hover:bg-white/70">
-                          <Sparkles className="w-4 h-4 text-violet-600 transition-transform group-hover:rotate-12" />
-                          <span className="bg-gradient-to-r from-violet-700 to-blue-700 bg-clip-text text-transparent">
-                            Summary
-                          </span>
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* Category pill */}
-                    <div className="mt-1 lg:mt-6 pt-1 lg:pt-6 inline-flex items-center ml-4">
-                      <span className="text-sm font-medium text-gray-600 mr-2">
-                        Category:
-                      </span>
-                      <span
-                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${collectionCategory.bgColor} ${collectionCategory.color}`}
-                      >
-                        <CategoryIcon className="w-4 h-4" />
-                        <span>{collectionCategory.name}</span>
-                      </span>
-                    </div>
-
-                    {/* Invite button */}
-                    <div className="mt-2 lg:mt-6 pt-2 lg:pt-6">
-                      <button
-                        onClick={() => setShowInvite(true)}
-                        className="ml-0 lg:ml-4 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-full hover:bg-purple-700"
-                      >
-                        Invite
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4">
-                  {/* <div className="flex items-center gap-3">
-                  <SlidersHorizontal className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">
-                    Filters
-                  </span>
-                  {activeFilterCount > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-xs bg-purple-600 text-white">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </div> */}
-                  <div className="flex items-center gap-3">
+              <div className="border-t border-[var(--mk-ink)] px-5 py-3 sm:px-8">
+                <div className="flex flex-wrap items-center gap-3">
                     <button
                       onClick={() => setShowFilters((v) => !v)}
-                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition ${
-                        showFilters
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      className={`inline-flex items-center gap-2 rounded-[4px] border border-[var(--mk-ink)] px-3 py-1.5 text-[13.5px] font-semibold tracking-tight transition-colors ${
+                        showFilters ? "bg-[var(--mk-ink)] text-white" : "bg-white hover:bg-[var(--mk-indigo-soft)]"
                       }`}
+                      aria-expanded={showFilters}
                     >
-                      <FilterIcon className="w-4 h-4" />
-                      <span>{showFilters ? "Hide" : "Show"} Filters</span>
+                      <FilterIcon className="h-3.5 w-3.5" />
+                      {showFilters ? "Hide filters" : "Filters"}
                     </button>
-                    <button
-                      onClick={clearAllFilters}
-                      className="text-sm text-gray-600 hover:text-gray-900"
-                    >
-                      Clear All
+                    <button onClick={clearAllFilters} className="text-[13.5px] font-semibold tracking-tight text-[var(--mk-ink-2)] hover:text-[var(--mk-ink)]">
+                      Clear all
                     </button>
-                  </div>
                 </div>
                 {showFilters && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="mt-4 border-t border-[var(--mk-rule)] pt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Phase */}
                       <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                          <Workflow className="w-4 h-4 text-purple-600" />
+                        <label className="flex items-center gap-2 text-sm font-medium text-[var(--mk-ink)] mb-2">
+                          <Workflow className="w-4 h-4 text-[var(--mk-indigo)]" />
                           <span>Phase</span>
-                          <span className="text-xs text-gray-500 font-normal">
+                          <span className="text-xs text-[var(--mk-ink-2)] font-normal">
                             (Work cycle stage)
                           </span>
                         </label>
@@ -1860,7 +1486,7 @@ export default function EventPage() {
                           <select
                             value={selectedPhase}
                             onChange={(e) => setSelectedPhase(e.target.value)}
-                            className="w-full bg-gray-50 text-gray-600 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none pr-10"
+                            className="w-full bg-white text-[var(--mk-ink-2)] border border-[var(--mk-ink)] rounded-[4px] px-3 py-2.5 text-sm focus:outline-none  focus:shadow-[3px_3px_0_var(--mk-indigo)] focus:ring-0 appearance-none pr-10"
                           >
                             <option value="all">
                               {isRoadmap ? "All Roadmap Phases" : "All Phases"}
@@ -1884,11 +1510,11 @@ export default function EventPage() {
                               </option>
                             ))}
                           </select>
-                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--mk-ink-2)] pointer-events-none" />
                         </div>
                         {selectedPhase !== "all" && (
                           <div className="mt-2 flex items-center justify-between text-xs">
-                            <span className="text-purple-600 font-medium">
+                            <span className="text-[var(--mk-indigo)] font-medium">
                               {isRoadmap
                                 ? selectedPhase // "Backlog" / "Planned" / ...
                                 : PHASE_OPTIONS.find(
@@ -1897,7 +1523,7 @@ export default function EventPage() {
                             </span>
                             <button
                               onClick={() => setSelectedPhase("all")}
-                              className="text-gray-500 hover:text-gray-700"
+                              className="text-[var(--mk-ink-2)] hover:text-[var(--mk-ink)]"
                             >
                               Clear
                             </button>
@@ -1907,7 +1533,7 @@ export default function EventPage() {
 
                       {/* Date */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-[var(--mk-ink)] mb-2">
                           Date Range
                         </label>
                         <select
@@ -1920,7 +1546,7 @@ export default function EventPage() {
                               setCustomEnd("");
                             }
                           }}
-                          className="w-full bg-gray-50 text-gray-600 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full bg-white text-[var(--mk-ink-2)] border border-[var(--mk-ink)] rounded-[4px] px-3 py-2 text-sm focus:outline-none  focus:shadow-[3px_3px_0_var(--mk-indigo)] focus:ring-0"
                         >
                           <option value="all">All Time</option>
                           <option value="today">Today</option>
@@ -1932,7 +1558,7 @@ export default function EventPage() {
                         {dateFilter === "custom" && (
                           <div className="mt-2 grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-xs text-gray-500 mb-1">
+                              <label className="block text-xs text-[var(--mk-ink-2)] mb-1">
                                 From
                               </label>
                               <input
@@ -1940,11 +1566,11 @@ export default function EventPage() {
                                 value={customStart}
                                 max={customEnd || undefined}
                                 onChange={(e) => setCustomStart(e.target.value)}
-                                className="w-full bg-gray-50 text-gray-600 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                className="w-full bg-white text-[var(--mk-ink-2)] border border-[var(--mk-ink)] rounded-[4px] px-3 py-2 text-sm focus:outline-none  focus:shadow-[3px_3px_0_var(--mk-indigo)] focus:ring-0"
                               />
                             </div>
                             <div>
-                              <label className="block text-xs text-gray-500 mb-1">
+                              <label className="block text-xs text-[var(--mk-ink-2)] mb-1">
                                 To
                               </label>
                               <input
@@ -1953,7 +1579,7 @@ export default function EventPage() {
                                 min={customStart || undefined}
                                 max={new Date().toISOString().slice(0, 10)}
                                 onChange={(e) => setCustomEnd(e.target.value)}
-                                className="w-full bg-gray-50 text-gray-600 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                className="w-full bg-white text-[var(--mk-ink-2)] border border-[var(--mk-ink)] rounded-[4px] px-3 py-2 text-sm focus:outline-none  focus:shadow-[3px_3px_0_var(--mk-indigo)] focus:ring-0"
                               />
                             </div>
                             {(customStart || customEnd) && (
@@ -1964,7 +1590,7 @@ export default function EventPage() {
                                     setCustomStart("");
                                     setCustomEnd("");
                                   }}
-                                  className="text-xs text-gray-500 hover:text-gray-700"
+                                  className="text-xs text-[var(--mk-ink-2)] hover:text-[var(--mk-ink)]"
                                 >
                                   Clear custom range
                                 </button>
@@ -1976,14 +1602,14 @@ export default function EventPage() {
 
                       {/* Role / Type */}
                       <div className="sm:col-span-2">
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                          <Tag className="w-4 h-4 text-blue-600" />
+                        <label className="flex items-center gap-2 text-sm font-medium text-[var(--mk-ink)] mb-2">
+                          <Tag className="w-4 h-4 text-[var(--mk-cyan)]" />
                           <span>Role / Type</span>
-                          <span className="text-xs text-gray-500 font-normal">
+                          <span className="text-xs text-[var(--mk-ink-2)] font-normal">
                             (What the card contributes)
                           </span>
                           {selectedRoleTypes.size > 0 && (
-                            <span className="ml-auto text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                            <span className="ml-auto text-xs px-2 py-0.5 bg-[var(--mk-cyan-soft)] text-[var(--mk-cyan-deep)] rounded-[4px]">
                               {selectedRoleTypes.size} selected
                             </span>
                           )}
@@ -1997,10 +1623,10 @@ export default function EventPage() {
                               <button
                                 key={roleType.id}
                                 onClick={() => toggleRoleType(roleType.id)}
-                                className={`relative flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                                className={`relative flex items-center justify-between px-3 py-2 rounded-[4px] text-xs font-medium transition-all duration-200 ${
                                   isSelected
-                                    ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
-                                    : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
+                                    ? "bg-[var(--mk-cyan-soft)] text-[var(--mk-cyan-deep)] border border-[var(--mk-cyan)]"
+                                    : "bg-white text-[var(--mk-ink-2)] border border-[var(--mk-ink)] hover:bg-white border border-[var(--mk-rule)]"
                                 }`}
                               >
                                 <span className="truncate">
@@ -2017,7 +1643,7 @@ export default function EventPage() {
                           <div className="mt-2 flex items-center justify-end">
                             <button
                               onClick={() => setSelectedRoleTypes(new Set())}
-                              className="text-xs text-gray-500 hover:text-gray-700"
+                              className="text-xs text-[var(--mk-ink-2)] hover:text-[var(--mk-ink)]"
                             >
                               Clear all role types
                             </button>
@@ -2029,7 +1655,7 @@ export default function EventPage() {
                       <div className="sm:col-span-2 flex justify-between items-center">
                         <div className="flex flex-wrap gap-2">
                           {selectedPhase !== "all" && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-[var(--mk-indigo-soft)] text-[var(--mk-indigo-deep)] rounded-[4px] text-xs">
                               <Workflow className="w-3 h-3" />
                               <span>
                                 {isRoadmap
@@ -2040,7 +1666,7 @@ export default function EventPage() {
                               </span>
                               <button
                                 onClick={() => setSelectedPhase("all")}
-                                className="ml-1 hover:bg-purple-200 rounded-full p-0.5"
+                                className="ml-1 hover:bg-[var(--mk-indigo-soft)] rounded-[4px] p-0.5"
                               >
                                 <X className="w-3 h-3" />
                               </button>
@@ -2054,13 +1680,13 @@ export default function EventPage() {
                             return (
                               <span
                                 key={rtId}
-                                className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs"
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-[var(--mk-cyan-soft)] text-[var(--mk-cyan-deep)] rounded-[4px] text-xs"
                               >
                                 <Tag className="w-3 h-3" />
                                 <span>{roleType?.name}</span>
                                 <button
                                   onClick={() => toggleRoleType(rtId)}
-                                  className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+                                  className="ml-1 hover:bg-[var(--mk-cyan-soft)] rounded-[4px] p-0.5"
                                 >
                                   <X className="w-3 h-3" />
                                 </button>
@@ -2069,7 +1695,7 @@ export default function EventPage() {
                           })}
                           {dateFilter === "custom" &&
                             (customStart || customEnd) && (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs">
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-[var(--mk-rule)] text-[var(--mk-ink)] rounded-[4px] text-xs">
                                 <Calendar className="w-3 h-3" />
                                 <span>
                                   {customStart
@@ -2086,7 +1712,7 @@ export default function EventPage() {
                                     setCustomStart("");
                                     setCustomEnd("");
                                   }}
-                                  className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                                  className="ml-1 hover:bg-[var(--mk-indigo-soft)] rounded-[4px] p-0.5"
                                 >
                                   <X className="w-3 h-3" />
                                 </button>
@@ -2095,7 +1721,7 @@ export default function EventPage() {
                         </div>
                         <button
                           onClick={clearAllFilters}
-                          className="text-sm text-gray-600 hover:text-gray-900"
+                          className="text-sm text-[var(--mk-ink-2)] hover:text-[var(--mk-ink)]"
                         >
                           Clear All Filters
                         </button>
@@ -2109,50 +1735,40 @@ export default function EventPage() {
 
           {/* Cards Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {[...Array(8)].map((_, index) => (
-                <div key={index} className="animate-pulse">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="h-48 bg-gray-200"></div>
-                    <div className="p-4">
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                    </div>
-                  </div>
+                <div key={index} className="animate-pulse rounded-[5px] border border-[var(--mk-rule)] bg-white p-5">
+                  <div className="h-2.5 w-1/3 bg-[var(--mk-indigo-soft)]" />
+                  <div className="mt-4 h-4 w-5/6 bg-[var(--mk-rule)]" />
+                  <div className="mt-2 h-4 w-2/3 bg-[var(--mk-rule)]" />
+                  <div className="mt-4 h-3 w-full bg-[#eceef3]" />
+                  <div className="mt-6 h-3 w-1/2 bg-[#eceef3]" />
                 </div>
               ))}
             </div>
           ) : error ? (
-            <div className="text-center py-16">
-              <div className="text-red-500 text-lg mb-2">
-                Error loading cards
-              </div>
-              <div className="text-gray-500 text-sm mb-4">{error}</div>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
+            <div className="mx-auto max-w-md py-16 text-center">
+              <h2 className="mk-display text-[1.8rem]">Couldn&apos;t load this space</h2>
+              <p className="mt-3 text-[15px] tracking-tight text-[var(--mk-ink-2)]">{error}</p>
+              <button onClick={() => window.location.reload()} className={`${btn.primary} mt-6 px-4 py-2 text-[14px]`}>
                 Retry
               </button>
             </div>
           ) : (
-            <div className="space-y-10">
-              {groupedCards.map((group) => {
+            <div className="space-y-14">
+              {groupedCards.map((group, groupIndex) => {
                 if (group.items.length === 0) return null;
 
                 return (
                   <div key={group.title}>
-                    {/* 🔥 Phase Header */}
+                    {/* Phase header: numbered, like sections of a report */}
                     <div
                       id={phaseAnchorId(group.title)}
-                      className="flex items-center gap-3 mb-4 scroll-mt-28"
+                      className="mb-6 flex scroll-mt-28 items-center gap-3 border-b border-[var(--mk-ink)] pb-3"
                     >
-                      <div className="h-1 w-6 bg-purple-500 rounded-full" />
-                      <h2 className="text-lg font-semibold text-gray-800">
-                        {group.title}
-                      </h2>
-                      <span className="text-xs text-gray-500">
-                        {group.items.length} cards
+                      <PixelLabel>{`§${groupIndex + 1} ${group.title}`}</PixelLabel>
+                      <span className="ml-auto text-[12px] font-semibold tabular-nums tracking-tight text-[var(--mk-ink-2)]">
+                        {group.items.length} {group.items.length === 1 ? "card" : "cards"}
                       </span>
                     </div>
 
@@ -2209,28 +1825,22 @@ export default function EventPage() {
           )}
 
           {filteredCards.length === 0 && !isLoading && (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Layers className="w-12 h-12 text-gray-400" />
-              </div>
-              <div className="text-gray-400 text-lg mb-2">
-                No cards match your filters
-              </div>
-              <div className="text-gray-500 text-sm">
-                Try adjusting your search criteria
-              </div>
+            <div className="mx-auto max-w-md py-16 text-center">
+              <LogoBitmap className="mx-auto w-24 opacity-90" />
+              <h2 className="mk-display mt-6 text-[1.8rem]">No cards match your filters</h2>
+              <p className="mt-3 text-[15px] tracking-tight text-[var(--mk-ink-2)]">Try adjusting your search or clearing filters.</p>
             </div>
           )}
         </div>
       </main>
 
-      {/* Enhanced Floating Add Button */}
+      {/* Add a card */}
       <button
         onClick={handleCreate}
-        className="fixed bottom-6 right-6 w-20 h-20 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 flex items-center justify-center z-30 group"
+        className={`${btn.primary} fixed bottom-6 right-6 z-30 px-4 py-3 text-[14px]`}
+        aria-label="Add a card to this space"
       >
-        <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+        <Plus className="h-4 w-4" /> Add a card
       </button>
 
       {/* Popups */}

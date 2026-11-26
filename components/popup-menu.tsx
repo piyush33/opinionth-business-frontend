@@ -38,15 +38,15 @@ export function PopupMenu({ position, onClose, onDelete, canDelete }: PopupMenuP
         <div className="fixed inset-0 z-50">
             <div
                 ref={menuRef}
-                className="absolute bg-white shadow-xl border border-gray-200 rounded-xl py-2 min-w-[160px] backdrop-blur-sm"
+                className="mk-hard-sm absolute min-w-[160px] overflow-hidden rounded-[5px] bg-white py-1"
                 style={{
                     left: Math.min(position.x, window.innerWidth - 180),
                     top: Math.min(position.y, window.innerHeight - 200),
                 }}
             >
-                <div className="space-y-1">
+                <div>
                     <button
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-3 transition-colors duration-200"
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium tracking-tight text-[var(--mk-ink)] transition-colors hover:bg-[var(--mk-indigo-soft)]"
                         onClick={() => {
                             // Handle share
                             onClose()
@@ -64,7 +64,7 @@ export function PopupMenu({ position, onClose, onDelete, canDelete }: PopupMenuP
                     </button>
 
                     <button
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-3 transition-colors duration-200"
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium tracking-tight text-[var(--mk-ink)] transition-colors hover:bg-[var(--mk-indigo-soft)]"
                         onClick={() => {
                             // Handle report
                             onClose()
@@ -83,9 +83,9 @@ export function PopupMenu({ position, onClose, onDelete, canDelete }: PopupMenuP
 
                     {canDelete && (
                         <>
-                            <div className="border-t border-gray-100 my-1"></div>
+                            <div className="my-1 border-t border-[var(--mk-rule)]"></div>
                             <button
-                                className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-3 transition-colors duration-200"
+                                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold tracking-tight text-[var(--mk-ink)] transition-colors hover:bg-[var(--mk-amber-soft)]"
                                 onClick={onDelete}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

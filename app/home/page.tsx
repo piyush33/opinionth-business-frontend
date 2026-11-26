@@ -4,24 +4,13 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useDebounced, useLoadMoreSentinel, usePagedFeed } from "@/lib/feed";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import Link from "next/link";
-import {
-  Bell,
-  MessageCircle,
-  User,
-  ChevronDown,
-  Search,
-  X,
-  Menu,
-  Home,
-  Compass,
-  Plus,
-} from "lucide-react";
 import Card from "@/components/card";
 import MasonryGrid from "@/components/masonry-grid";
 import InboxPopup from "@/components/popups/inbox-popup";
 import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
+import AppNav from "@/components/app/AppNav";
+import { btn } from "@/components/app/ui";
 
 export default function HomePage() {
   const router = useRouter();
@@ -31,7 +20,6 @@ export default function HomePage() {
   const [isSettingsPopupOpen, setIsSettingsPopupOpen] = useState(false);
   const [isNotificationsPopupOpen, setIsNotificationsPopupOpen] =
     useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Check authentication and get user data
@@ -128,10 +116,10 @@ export default function HomePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--mk-paper)]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin border-2 border-[var(--mk-rule)] border-t-[var(--mk-indigo)] motion-reduce:animate-none"></div>
+          <p className="tracking-tight text-[var(--mk-ink-2)]">Loading...</p>
         </div>
       </div>
     );
@@ -152,218 +140,15 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Desktop Navbar - Hidden on Mobile */}
-      <nav className="hidden md:block fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center space-x-4">
-              <Link href="/explore" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">C</span>
-                </div>
-                <span className="font-bold text-xl text-gray-900">
-                  Collabrr
-                </span>
-              </Link>
-            </div>
-
-            {/* Navigation Links */}
-            <div className="flex items-center space-x-1">
-              {[
-                { name: "Home", href: "/home", key: "home" },
-                { name: "Explore", href: "/explore", key: "explore" },
-                { name: "Create", href: "/create", key: "create" },
-              ].map((item) => (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  className="px-4 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-
-            {/* Search Bar */}
-            <div className="flex-1 max-w-md mx-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search posts..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border-0 rounded-full text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
-                />
-              </div>
-            </div>
-
-            {/* Action Icons */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsNotificationsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200 relative"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
-                )}
-              </button>
-
-              <button
-                onClick={() => setIsInboxPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200 relative"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></span>
-              </button>
-
-              <Link
-                href="/profile"
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
-              >
-                <User className="w-5 h-5" />
-              </Link>
-
-              <button
-                onClick={() => setIsSettingsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
-              >
-                <ChevronDown className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Header - Hidden on Desktop */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
-        <div className="px-4 py-3 space-y-3">
-          {/* Top Row - Logo and Menu */}
-          <div className="flex items-center justify-between">
-            <Link href="/explore" className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-blue-600 rounded-md flex items-center justify-center">
-                <span className="text-white font-bold text-xs">C</span>
-              </div>
-              <span className="font-bold text-lg text-gray-900">Collabrr</span>
-            </Link>
-
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <Menu className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search posts..."
-              value={searchTerm}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-0 rounded-full text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
-            />
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsMobileMenuOpen(false)}
-          ></div>
-          <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-xl">
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-900">Menu</span>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                  <X className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <Link
-                href="/home"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Home className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Home</span>
-              </Link>
-              <Link
-                href="/explore"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Compass className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Explore</span>
-              </Link>
-              <Link
-                href="/create"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Plus className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Create</span>
-              </Link>
-              <Link
-                href="/profile"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <User className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Profile</span>
-              </Link>
-              <button
-                onClick={() => {
-                  setIsNotificationsPopupOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
-              >
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Notifications</span>
-                {unreadCount > 0 && (
-                  <span className="ml-auto w-2 h-2 bg-red-500 rounded-full"></span>
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  setIsInboxPopupOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
-              >
-                <MessageCircle className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Messages</span>
-                <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></span>
-              </button>
-              <Link
-                href="/login"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  localStorage.removeItem("user");
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                <User className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Logout</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen bg-[var(--mk-paper)] text-[var(--mk-ink)]">
+      <AppNav
+        active="home"
+        search={{ value: searchTerm, onChange: handleSearchChange, placeholder: "Search posts…" }}
+        unreadCount={unreadCount}
+        onNotifications={() => setIsNotificationsPopupOpen(true)}
+        onInbox={() => setIsInboxPopupOpen(true)}
+        onSettings={() => setIsSettingsPopupOpen(true)}
+      />
 
       {/* Main Content */}
       <main className="pt-32 md:pt-20 px-4 pb-8">
@@ -371,30 +156,31 @@ export default function HomePage() {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[...Array(8)].map((_, index) => (
-                <div key={index} className="animate-pulse">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div key={index} className="animate-pulse motion-reduce:animate-none">
+                  <div className="overflow-hidden rounded-[6px] border border-[var(--mk-rule)] bg-white">
                     <div className="p-4">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                      <div className="mb-4 flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-[3px] bg-[var(--mk-rule)]"></div>
+                        <div className="h-4 w-24 rounded-[2px] bg-[var(--mk-rule)]"></div>
                       </div>
-                      <div className="h-32 bg-gray-200 rounded-lg mb-4"></div>
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      <div className="mb-4 h-32 rounded-[4px] bg-[var(--mk-paper)]"></div>
+                      <div className="mb-2 h-4 w-3/4 rounded-[2px] bg-[var(--mk-rule)]"></div>
+                      <div className="h-3 w-1/2 rounded-[2px] bg-[var(--mk-rule)]"></div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : error ? (
-            <div className="text-center py-16">
-              <div className="text-red-500 text-lg mb-2">
+            <div className="mx-auto max-w-md py-16 text-center">
+              <div className="mb-2 text-lg font-bold tracking-[-0.03em] text-[var(--mk-ink)]">
+                <span aria-hidden className="mr-2 inline-block h-2.5 w-2.5 bg-[var(--mk-amber)] align-middle" />
                 Error loading posts
               </div>
-              <div className="text-gray-500 text-sm mb-4">{error}</div>
+              <div className="mb-4 text-sm tracking-tight text-[var(--mk-ink-2)]">{error}</div>
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className={`${btn.primary} px-4 py-2 text-[14px]`}
               >
                 Retry
               </button>
@@ -422,24 +208,24 @@ export default function HomePage() {
               <div ref={sentinelRef} aria-hidden className="h-px" />
               {feed.loadingMore && (
                 <div className="flex justify-center py-6">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
+                  <div className="h-6 w-6 animate-spin border-2 border-[var(--mk-rule)] border-t-[var(--mk-indigo)] motion-reduce:animate-none" />
                 </div>
               )}
               {feed.error && feed.items.length > 0 && !feed.loadingMore && (
-                <div className="flex justify-center py-6 text-sm text-rose-600">
+                <div className="flex justify-center py-6 text-sm tracking-tight text-[var(--mk-ink)]">
                   {feed.error}.
-                  <button type="button" onClick={feed.loadMore} className="ml-2 underline">
+                  <button type="button" onClick={feed.loadMore} className="ml-2 font-semibold text-[var(--mk-indigo-deep)] underline underline-offset-2">
                     Retry
                   </button>
                 </div>
               )}
 
               {filteredHomeFeed.length === 0 && (
-                <div className="text-center py-16">
-                  <div className="text-gray-400 text-lg mb-2">
+                <div className="py-16 text-center">
+                  <div className="mb-2 text-lg font-bold tracking-[-0.03em] text-[var(--mk-ink)]">
                     No posts found
                   </div>
-                  <div className="text-gray-500 text-sm">
+                  <div className="text-sm tracking-tight text-[var(--mk-ink-2)]">
                     {searchTerm
                       ? "Try adjusting your search terms"
                       : "No posts available"}

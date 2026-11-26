@@ -20,6 +20,8 @@ import { getPhaseById, getRoleTypeById } from "@/lib/phases";
 import { readAuth, runSpaceIdeas } from "@/lib/ai/client";
 import { withCardRefs } from "@/components/ai/cardRefs";
 import Card from "@/components/card";
+import { PixelIcon } from "@/components/marketing/Bitmap";
+import { PixelLabel, btn } from "@/components/app/ui";
 
 export type SpaceIdea = {
   kind: string;
@@ -153,19 +155,13 @@ export function SpaceIdeasButton({
       aria-expanded={open}
       aria-controls="space-ideas"
       title={`Suggest a new space for ${categoryName}`}
-      className="group relative inline-flex shrink-0 items-center gap-1.5 rounded-full p-[1px] bg-gradient-to-r from-violet-500 via-blue-500 to-cyan-400 shadow-[0_6px_20px_-8px_rgba(99,102,241,.6)] transition hover:shadow-[0_8px_26px_-8px_rgba(99,102,241,.8)]"
+      className={`mk-btn inline-flex shrink-0 items-center gap-2 rounded-[4px] px-4 py-2.5 text-[14px] font-semibold tracking-tight ${
+        open ? "bg-[var(--mk-ink)] text-white" : "bg-white text-[var(--mk-ink)]"
+      }`}
     >
-      <span
-        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium text-slate-700 backdrop-blur ${
-          open ? "bg-white/70" : "bg-white/90 group-hover:bg-white/70"
-        }`}
-      >
-        <Sparkles className="h-4 w-4 text-violet-600 transition-transform group-hover:rotate-12" />
-        <span className="bg-gradient-to-r from-violet-700 to-blue-700 bg-clip-text text-transparent">
-          <span className="hidden sm:inline">Suggest a new space</span>
-          <span className="sm:hidden">New space</span>
-        </span>
-      </span>
+      <PixelIcon name="spark" color={open ? "#8fe3f3" : "var(--mk-indigo)"} className="h-4 w-4" />
+      <span className="hidden sm:inline">Suggest a new space</span>
+      <span className="sm:hidden">New space</span>
     </button>
   );
 }
@@ -215,35 +211,25 @@ export default function SpaceIdeasPanel({
       className="ai-fade-in mb-4 md:mb-6 px-2 md:px-0"
     >
       {/* Section header: what this is, what it read, and the controls */}
-      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-        {/* Same tile as the category header icon, in the category's colours */}
-        <span
-          className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${tone?.bgColor ?? "bg-violet-100"}`}
-        >
-          <Sparkles className={`h-4 w-4 ${tone?.color ?? "text-violet-700"}`} />
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <PixelLabel>Suggested new space</PixelLabel>
+        <span className="min-w-0 flex-1 truncate text-[12.5px] tracking-tight text-[var(--mk-ink-2)]">
+          {data
+            ? `Read ${data.read.spaces} spaces and ${data.read.cards} cards across ${data.read.categories} ${data.read.categories === 1 ? "category" : "categories"}`
+            : "Reads every space you can see, then the cards across all categories"}
         </span>
-        <div className="min-w-0 flex-1 leading-tight">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
-            Suggested new space
-          </div>
-          <div className="truncate text-xs text-slate-500">
-            {data
-              ? `Read ${data.read.spaces} spaces and ${data.read.cards} cards across ${data.read.categories} ${data.read.categories === 1 ? "category" : "categories"}`
-              : "Reads every space you can see, then the cards across all categories"}
-          </div>
-        </div>
         <button
-            type="button"
-            onClick={onClose}
-            className="grid h-8 w-8 place-items-center rounded-full text-gray-500 hover:bg-violet-50 hover:text-violet-700"
-            aria-label="Hide suggested space"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          type="button"
+          onClick={onClose}
+          className="grid h-8 w-8 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white hover:bg-[var(--mk-indigo-soft)]"
+          aria-label="Hide suggested space"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Same columns as the card grid below: card in one, context across the rest */}
-      <div className="grid grid-cols-1 items-start gap-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-3 lg:grid-cols-4">
         <div className="min-w-0">
           {idea ? (
             <div key={`${data?.generatedAt}-${pick}`} className="ai-fade-in">
@@ -261,40 +247,40 @@ export default function SpaceIdeasPanel({
                 phaseLabelOverride={phaseLabel?.(idea.seedPhase)}
                 feed="explore"
               />
-              <p className="mt-1 px-1 text-[11px] text-slate-500">
+              <p className="mt-3 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]">
                 How the opening card would look. Click it to draft.
               </p>
             </div>
           ) : (
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-lg" aria-hidden>
+            <div className="rounded-[5px] border border-[var(--mk-ink)] bg-white p-5 shadow-[2px_2px_0_var(--mk-ink)]" aria-hidden>
               <div className="mb-3 flex items-center gap-3">
-                <div className="ai-shimmer h-8 w-8 rounded-full" />
-                <div className="ai-shimmer h-3 w-24 rounded-md" />
+                <div className="ai-shimmer h-8 w-8 rounded-[3px]" />
+                <div className="ai-shimmer h-3 w-24 rounded-[3px]" />
               </div>
               <div className="mb-3 flex gap-2">
-                <div className="ai-shimmer h-6 w-28 rounded-full" />
-                <div className="ai-shimmer h-6 w-20 rounded-full" />
+                <div className="ai-shimmer h-6 w-28 rounded-[3px]" />
+                <div className="ai-shimmer h-6 w-20 rounded-[3px]" />
               </div>
               <div className="space-y-2">
-                <div className="ai-shimmer h-3 w-full rounded-md" />
-                <div className="ai-shimmer h-3 w-11/12 rounded-md" />
-                <div className="ai-shimmer h-3 w-4/5 rounded-md" />
-                <div className="ai-shimmer h-3 w-full rounded-md" />
-                <div className="ai-shimmer h-3 w-2/3 rounded-md" />
+                <div className="ai-shimmer h-3 w-full rounded-[3px]" />
+                <div className="ai-shimmer h-3 w-11/12 rounded-[3px]" />
+                <div className="ai-shimmer h-3 w-4/5 rounded-[3px]" />
+                <div className="ai-shimmer h-3 w-full rounded-[3px]" />
+                <div className="ai-shimmer h-3 w-2/3 rounded-[3px]" />
               </div>
-              <div className="ai-shimmer mt-4 h-5 w-3/4 rounded-md" />
+              <div className="ai-shimmer mt-4 h-5 w-3/4 rounded-[3px]" />
             </div>
           )}
         </div>
 
         <div className="min-w-0 md:sticky md:top-20 md:col-span-2 lg:col-span-3">
-          <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/70 via-white to-sky-50/60 p-4 sm:p-5">
+          <div className="mk-hard rounded-[6px] bg-white p-5 sm:p-6">
             {!idea && !error && (
               <div className="flex min-h-[14rem] flex-col justify-center gap-3" aria-live="polite">
-                <div className="ai-shimmer h-6 w-2/3 rounded-md" />
-                <div className="ai-shimmer h-3 w-full rounded-md" />
-                <div className="ai-shimmer h-3 w-5/6 rounded-md" />
-                <div className="flex items-center gap-2 pt-1 text-xs text-gray-600">
+                <div className="ai-shimmer h-6 w-2/3 rounded-[3px]" />
+                <div className="ai-shimmer h-3 w-full rounded-[3px]" />
+                <div className="ai-shimmer h-3 w-5/6 rounded-[3px]" />
+                <div className="flex items-center gap-2 pt-1 text-xs text-[var(--mk-ink-2)]">
                   <span className="ai-dots">
                     <i />
                     <i />
@@ -307,12 +293,12 @@ export default function SpaceIdeasPanel({
 
             {!idea && error && !loading && (
               <div className="flex min-h-[14rem] flex-col justify-center gap-2 text-sm">
-                <div className="font-medium text-rose-600">{error}</div>
+                <div className="font-medium text-[var(--mk-amber)]">{error}</div>
                 <div>
                   <button
                     type="button"
                     onClick={() => load(false)}
-                    className="rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white hover:bg-gray-700"
+                    className="mk-btn rounded-[4px] bg-[var(--mk-ink)] px-3 py-1.5 text-[13px] font-semibold text-white"
                   >
                     Try again
                   </button>
@@ -323,15 +309,15 @@ export default function SpaceIdeasPanel({
             {idea && (
               <div key={`${data?.generatedAt}-${pick}`} className="ai-fade-in flex flex-col gap-4">
                 <div>
-                  <span className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2 py-1 text-xs font-semibold text-violet-700">
+                  <span className="mb-2 inline-flex items-center gap-1.5 rounded-[3px] border border-[var(--mk-amber)] bg-[var(--mk-amber-soft)] px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-amber)]">
                     <Compass className="h-3.5 w-3.5" />
                     {KIND_LABEL[idea.kind] ?? "Idea"}
                   </span>
-                  <h2 className="text-xl font-bold leading-tight text-gray-900 sm:text-2xl">
+                  <h2 className="mk-display mt-2 text-[1.9rem] sm:text-[2.2rem]">
                     {idea.spaceTopic || idea.title}
                   </h2>
                   {idea.rationale && (
-                    <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-700">
+                    <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--mk-ink)]">
                       {refs(idea.rationale)}
                     </p>
                   )}
@@ -340,7 +326,7 @@ export default function SpaceIdeasPanel({
                 <div className="grid gap-4 lg:grid-cols-2">
                   {idea.sourceCardIds.length > 0 && (
                     <div className="min-w-0">
-                      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                      <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]">
                         Grows from
                       </div>
                       <ul className="space-y-0.5">
@@ -351,13 +337,13 @@ export default function SpaceIdeasPanel({
                               <button
                                 type="button"
                                 onClick={() => onOpenCard(id)}
-                                className="flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-white/80"
+                                className="flex w-full items-start gap-2 border-t border-[var(--mk-rule)] px-1 py-2 text-left text-[14px] tracking-tight hover:bg-[var(--mk-indigo-soft)]"
                               >
-                                <span className="shrink-0 font-medium text-purple-600">@{id}</span>
+                                <span className="shrink-0 font-medium text-[var(--mk-indigo)]">@{id}</span>
                                 <span className="min-w-0 flex-1">
-                                  <span className="block truncate text-gray-800">{src?.title || "Card"}</span>
+                                  <span className="block truncate text-[var(--mk-ink)]">{src?.title || "Card"}</span>
                                   {src && (
-                                    <span className="flex items-center gap-1 truncate text-xs text-gray-500">
+                                    <span className="flex items-center gap-1 truncate text-xs text-[var(--mk-ink-2)]">
                                       <Layers className="h-3 w-3 shrink-0" />
                                       <span className="truncate">
                                         {src.spaceName} · {categoryName(src.category)}
@@ -375,22 +361,22 @@ export default function SpaceIdeasPanel({
 
                   {idea.nextCards.length > 0 && (
                     <div className="min-w-0">
-                      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                      <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]">
                         Where it could go
                       </div>
                       <ol className="space-y-2 px-2 pt-1.5">
                         {idea.nextCards.map((n, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                            <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400" />
+                          <li key={i} className="flex items-start gap-2 text-sm text-[var(--mk-ink)]">
+                            <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--mk-ink-2)]" />
                             <span>
-                              <span className="font-medium text-indigo-700">{phaseName(n.phase)}</span>
+                              <span className="font-semibold text-[var(--mk-indigo)]">{phaseName(n.phase)}</span>
                               {n.roleType && (
-                                <span className="text-sky-700">
+                                <span className="text-[var(--mk-cyan)]">
                                   {" "}
                                   · {getRoleTypeById(n.roleType)?.name ?? n.roleType}
                                 </span>
                               )}
-                              <span className="text-gray-400">: </span>
+                              <span className="text-[var(--mk-ink-2)]">: </span>
                               {refs(n.title)}
                             </span>
                           </li>
@@ -400,13 +386,13 @@ export default function SpaceIdeasPanel({
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-violet-100 pt-3">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-dashed border-[#b6b8c2] pt-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => onStart(idea, category)}
                       // Soft violet: the primary action without a bright fill
-                      className="inline-flex items-center justify-center gap-1.5 rounded-full bg-violet-100 px-4 py-2 text-sm font-semibold text-violet-700 shadow-sm ring-1 ring-violet-200 transition hover:bg-violet-200/70 hover:text-violet-800"
+                      className={`${btn.primary} px-4 py-2 text-[14px]`}
                     >
                       <PenLine className="h-4 w-4" />
                       Start this space
@@ -415,12 +401,12 @@ export default function SpaceIdeasPanel({
                       <button
                         type="button"
                         onClick={() => setPick((p) => p + 1)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
+                        className={`${btn.plain} px-3 py-2 text-[14px]`}
                         title="Show another idea"
                       >
                         <Shuffle className="h-4 w-4" />
                         Another
-                        <span className="text-xs text-gray-400 tabular-nums">
+                        <span className="text-xs text-[var(--mk-ink-2)] tabular-nums">
                           {(pick % ideas.length) + 1}/{ideas.length}
                         </span>
                       </button>
@@ -429,14 +415,14 @@ export default function SpaceIdeasPanel({
                       type="button"
                       onClick={() => load(true)}
                       disabled={loading}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 disabled:opacity-60"
+                      className={`${btn.plain} px-3 py-2 text-[14px]`}
                       title="Read everything again and suggest new ideas"
                     >
                       <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                       Fresh ideas
                     </button>
                   </div>
-                  <span className="text-[11px] text-gray-500">
+                  <span className="text-[11px] text-[var(--mk-ink-2)]">
                     {loading
                       ? "Checking for changes since these ideas…"
                       : error

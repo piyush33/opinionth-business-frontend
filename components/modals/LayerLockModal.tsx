@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search, X, Check, Lock } from "lucide-react";
 import { OrgApi } from "@/utils/api";
+import { Window, btn, field } from "@/components/app/ui";
 
 type Person = { id: number; username: string; name?: string; image?: string };
 
@@ -77,42 +78,45 @@ export default function LayerLockModal({
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="absolute inset-x-4 top-16 bottom-16 md:inset-x-1/3 bg-white rounded-xl shadow-lg flex flex-col overflow-hidden">
+      <div className="absolute inset-0 bg-[var(--mk-ink)]/40" onClick={onClose} />
+      <Window
+        title="space://lock"
+        className="absolute inset-x-4 top-16 bottom-16 flex flex-col md:inset-x-1/3"
+      >
         {/* Header */}
-        <div className="p-4 border-b flex items-center justify-between text-gray-900">
-          <div className="font-semibold text-gray-900 flex items-center gap-2">
-            <Lock className="w-4 h-4" />
+        <div className="flex items-center justify-between border-b border-[var(--mk-rule)] p-4 text-[var(--mk-ink)]">
+          <div className="flex items-center gap-2 text-[18px] font-bold tracking-[-0.03em]">
+            <Lock className="h-4 w-4" />
             Lock layer
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full text-gray-900"
+            className="grid h-9 w-9 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
             aria-label="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Mode toggle */}
         <div className="px-4 pt-4">
-          <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+          <div className="inline-flex gap-1 rounded-[4px] border border-[var(--mk-ink)] bg-white p-1">
             <button
               onClick={() => setMode("private")}
-              className={`px-3 py-2 text-sm ${
+              className={`rounded-[4px] px-3 py-1.5 text-[13.5px] font-semibold tracking-tight ${
                 mode === "private"
-                  ? "bg-purple-600 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  ? "bg-[var(--mk-ink)] text-white"
+                  : "text-[var(--mk-ink-2)] hover:bg-[var(--mk-indigo-soft)]"
               }`}
             >
               Only me (private)
             </button>
             <button
               onClick={() => setMode("members")}
-              className={`px-3 py-2 text-sm border-l border-gray-200 ${
+              className={`rounded-[4px] px-3 py-1.5 text-[13.5px] font-semibold tracking-tight ${
                 mode === "members"
-                  ? "bg-purple-600 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  ? "bg-[var(--mk-ink)] text-white"
+                  : "text-[var(--mk-ink-2)] hover:bg-[var(--mk-indigo-soft)]"
               }`}
             >
               Specific members
@@ -121,11 +125,11 @@ export default function LayerLockModal({
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b text-gray-900">
+        <div className="border-b border-[var(--mk-rule)] p-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--mk-ink-2)]" />
             <input
-              className="w-full pl-9 pr-3 py-2 border rounded-lg disabled:bg-gray-100 disabled:text-gray-500"
+              className={`${field} pl-9 disabled:bg-[var(--mk-paper)] disabled:text-[var(--mk-ink-2)]`}
               placeholder={
                 mode === "private"
                   ? "Member search disabled for private"
@@ -137,80 +141,84 @@ export default function LayerLockModal({
             />
           </div>
           {mode === "private" && (
-            <div className="mt-2 text-xs text-gray-500">
+            <div className="mt-2 text-[12.5px] tracking-tight text-[var(--mk-ink-2)]">
               Only you will be able to view and add cards in this layer.
             </div>
           )}
         </div>
 
         {/* Members list */}
-        <div className="flex-1 overflow-auto">
+        <div className="min-h-0 flex-1 overflow-auto">
           {mode === "private" ? (
-            <div className="p-4 text-gray-700">
+            <div className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-indigo-soft)]">
                   {/* We don’t have the current user's avatar here; keep it simple */}
-                  <span className="text-xs text-gray-900">You</span>
+                  <span className="text-[11px] font-semibold text-[var(--mk-ink)]">You</span>
                 </div>
                 <div>
-                  <div className="font-medium text-gray-900">Only you</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="font-semibold tracking-tight text-[var(--mk-ink)]">Only you</div>
+                  <div className="text-[12.5px] tracking-tight text-[var(--mk-ink-2)]">
                     The layer will be locked to just your account.
                   </div>
                 </div>
               </div>
             </div>
           ) : loading ? (
-            <div className="p-4 text-gray-500">Loading…</div>
+            <div className="p-4 text-[14px] tracking-tight text-[var(--mk-ink-2)]">Loading…</div>
           ) : peopleWithYou.length ? (
             peopleWithYou.map((p) => (
               <button
                 key={p.id}
                 onClick={() => toggle(p.id)}
-                className="w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-gray-50"
+                className={`flex w-full items-center gap-3 border-b border-[var(--mk-rule)] px-4 py-3 text-left ${
+                  selected.has(p.id)
+                    ? "bg-[var(--mk-indigo-soft)]"
+                    : "hover:bg-[var(--mk-paper)]"
+                }`}
               >
-                <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-indigo-soft)]">
                   {p.image ? (
                     <img
                       src={p.image}
                       alt=""
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                   ) : (
-                    <span className="text-xs text-gray-900">
+                    <span className="text-[11px] font-semibold text-[var(--mk-ink)]">
                       {p.username?.[0]?.toUpperCase() || "?"}
                     </span>
                   )}
                 </div>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-semibold tracking-tight text-[var(--mk-ink)]">
                     {p.name || p.username}
                   </div>
-                  <div className="text-xs text-gray-500">@{p.username}</div>
+                  <div className="text-[12.5px] tracking-tight text-[var(--mk-ink-2)]">@{p.username}</div>
                 </div>
                 {selected.has(p.id) && (
-                  <Check className="w-4 h-4 text-purple-600" />
+                  <Check className="h-4 w-4 text-[var(--mk-indigo)]" />
                 )}
               </button>
             ))
           ) : (
-            <div className="p-4 text-gray-500">No members found.</div>
+            <div className="p-4 text-[14px] tracking-tight text-[var(--mk-ink-2)]">No members found.</div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t flex justify-end gap-2 text-gray-900">
-          <button onClick={onClose} className="px-4 py-2 text-gray-900">
+        <div className="flex justify-end gap-2 border-t border-[var(--mk-ink)] p-4">
+          <button onClick={onClose} className={`${btn.plain} px-4 py-2 text-[14px]`}>
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg"
+            className={`${btn.primary} px-4 py-2 text-[14px]`}
           >
             Save & lock
           </button>
         </div>
-      </div>
+      </Window>
     </div>
   );
 }

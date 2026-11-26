@@ -238,14 +238,14 @@ export default function SpaceSummaryModal({
     return (
       <button
         onClick={() => setMinimized(false)}
-        className="ai-glass-pill fixed bottom-6 left-6 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-slate-800"
+        className="mk-btn fixed bottom-6 left-6 z-50 flex items-center gap-2 rounded-[4px] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--mk-ink)]"
         aria-label="Reopen space summary"
       >
-        <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-violet-700 text-white shadow-inner">
+        <span className="grid h-6 w-6 place-items-center rounded-[3px] bg-[var(--mk-indigo)] text-white">
           <Sparkles className="h-3.5 w-3.5" />
         </span>
         <span className="max-w-[180px] truncate">{data?.topic || "Summary"}</span>
-        <ArrowUpRight className="h-4 w-4 text-slate-500" />
+        <ArrowUpRight className="h-4 w-4 text-[var(--mk-ink-2)]" />
       </button>
     );
   }
@@ -260,7 +260,7 @@ export default function SpaceSummaryModal({
     >
       {/* Soft frosted veil: the collection stays visible, gently out of focus */}
       <div
-        className={`ai-veil absolute inset-0 ${closing ? "ai-fade-out" : "ai-fade-in"}`}
+        className={`absolute inset-0 bg-[var(--mk-ink)]/30 ${closing ? "ai-fade-out" : "ai-fade-in"}`}
         onClick={handleClose}
       />
 
@@ -268,31 +268,21 @@ export default function SpaceSummaryModal({
       <div
         ref={panelRef}
         tabIndex={-1}
-        className={`ai-glass-panel absolute inset-x-2 bottom-2 top-3 flex flex-col overflow-hidden rounded-[28px] outline-none md:inset-x-auto md:right-6 md:top-6 md:bottom-6 md:w-[min(620px,calc(100vw-3rem))] ${
+        className={`mk-hard absolute inset-x-2 bottom-2 top-3 flex flex-col overflow-hidden rounded-[6px] bg-white outline-none md:inset-x-auto md:right-6 md:top-6 md:bottom-6 md:w-[min(620px,calc(100vw-3rem))] ${
           closing ? "ai-panel-out" : "ai-panel-in"
         }`}
       >
-        {/* Liquid layer */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="ai-blob ai-blob-a" />
-          <div className="ai-blob ai-blob-b" />
-          <div className="ai-blob ai-blob-c" />
-          <div className="ai-caustics" />
-          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/50 to-transparent" />
-          <div className="ai-sheen" />
-        </div>
-
         {/* Header */}
         <div className="relative z-10 flex items-start justify-between gap-3 px-5 pt-5 sm:px-7 sm:pt-6">
           <div className="flex items-center gap-2.5">
-            <span className="ai-orb relative flex h-9 w-9 items-center justify-center rounded-2xl text-white">
+            <span className="grid h-9 w-9 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-indigo-soft)] text-[var(--mk-indigo)]">
               <Sparkles className="h-4 w-4" />
             </span>
             <div className="leading-tight">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+              <div className="text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]">
                 Summary
               </div>
-              <div className="text-xs text-slate-600">
+              <div className="text-xs text-[var(--mk-ink-2)]">
                 {data
                   ? `${data.cardCount} cards · ${data.phases.length} phases · ${timeAgo(
                       data.generatedAt,
@@ -335,11 +325,11 @@ export default function SpaceSummaryModal({
           {loading && !data && <SummarySkeleton cards={cards.length} phases={phases.length} />}
 
           {error && !loading && (
-            <div className="ai-glass-card mt-2 p-5 text-sm text-slate-700">
-              <div className="mb-3 font-medium text-rose-600">{error}</div>
+            <div className="rounded-[5px] border border-[var(--mk-ink)] bg-white mt-2 p-5 text-sm text-[var(--mk-ink)]">
+              <div className="mb-3 font-medium text-[var(--mk-amber)]">{error}</div>
               <button
                 onClick={() => load(true)}
-                className="rounded-full bg-slate-900/80 px-4 py-1.5 text-xs font-medium text-white hover:bg-slate-900"
+                className="mk-btn rounded-[4px] bg-[var(--mk-ink)] px-4 py-1.5 text-xs font-semibold text-white"
               >
                 Try again
               </button>
@@ -352,12 +342,12 @@ export default function SpaceSummaryModal({
               <section className="ai-rise" style={{ animationDelay: "40ms" }}>
                 <h2
                   id="ai-summary-title"
-                  className="text-2xl font-bold leading-tight text-violet-900 sm:text-[28px]"
+                  className="mk-display text-[1.9rem] sm:text-[2.3rem]"
                 >
                   {data.topic}
                 </h2>
                 {data.tagline && (
-                  <p className="mt-1.5 text-[15px] leading-relaxed text-slate-700">
+                  <p className="mt-1.5 text-[15px] leading-relaxed text-[var(--mk-ink)]">
                     {data.tagline}
                   </p>
                 )}
@@ -373,15 +363,15 @@ export default function SpaceSummaryModal({
               </section>
 
               {/* Collective summary */}
-              <section className="ai-glass-card ai-rise p-4 sm:p-5" style={{ animationDelay: "120ms" }}>
-                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-                  <Waves className="h-3.5 w-3.5 text-violet-600" />
+              <section className="rounded-[5px] border border-[var(--mk-ink)] bg-white ai-rise p-4 sm:p-5" style={{ animationDelay: "120ms" }}>
+                <div className="mb-2 flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]">
+                  <Waves className="h-3.5 w-3.5 text-[var(--mk-indigo)]" />
                   The whole space
                 </div>
-                <p className="text-[14.5px] leading-relaxed text-slate-800">{data.overview}</p>
+                <p className="text-[14.5px] leading-relaxed text-[var(--mk-ink)]">{data.overview}</p>
                 {data.momentum && (
-                  <div className="mt-3 flex items-start gap-2 rounded-2xl bg-white/55 px-3 py-2 text-[13px] text-slate-700 ring-1 ring-white/70">
-                    <Compass className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-violet-600" />
+                  <div className="mt-3 flex items-start gap-2 border-l-2 border-[var(--mk-indigo)] bg-[var(--mk-indigo-soft)] px-3 py-2 text-[13px] text-[var(--mk-ink)]">
+                    <Compass className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[var(--mk-indigo)]" />
                     <span>{data.momentum}</span>
                   </div>
                 )}
@@ -391,13 +381,13 @@ export default function SpaceSummaryModal({
               {data.phases.length > 0 && (
                 <section>
                   <div
-                    className="ai-rise mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600"
+                    className="ai-rise mb-3 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]"
                     style={{ animationDelay: "180ms" }}
                   >
                     Phase by phase
                   </div>
                   <ol className="relative space-y-3 pl-6">
-                    <span className="absolute bottom-3 left-[9px] top-3 w-px bg-gradient-to-b from-violet-300/80 to-violet-300/20" />
+                    <span className="absolute bottom-3 left-[9px] top-3 w-px bg-[var(--mk-ink)]" />
                     {data.phases.map((p, i) => {
                       const count = cards.filter((c) => c.phase === p.phase).length;
                       return (
@@ -406,25 +396,25 @@ export default function SpaceSummaryModal({
                           className="ai-rise relative"
                           style={{ animationDelay: `${220 + i * 70}ms` }}
                         >
-                          <span className="absolute -left-6 top-4 h-[18px] w-[18px] rounded-full bg-gradient-to-br from-violet-400 to-violet-600 ring-4 ring-white/60 shadow-[0_0_14px_rgba(139,92,246,.35)]" />
-                          <div className="ai-glass-card group p-4">
+                          <span className="absolute -left-6 top-4 h-[18px] w-[18px] rounded-[3px] border border-[var(--mk-ink)] bg-[var(--mk-indigo)]" />
+                          <div className="rounded-[5px] border border-[var(--mk-ink)] bg-white group p-4">
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex min-w-0 items-baseline gap-2">
-                                <h3 className="truncate text-[15px] font-semibold text-slate-900">
+                                <h3 className="truncate text-[15px] font-semibold text-[var(--mk-ink)]">
                                   {p.phase}
                                 </h3>
-                                <span className="flex-shrink-0 text-xs text-slate-600">
+                                <span className="flex-shrink-0 text-xs text-[var(--mk-ink-2)]">
                                   {count} {count === 1 ? "card" : "cards"}
                                 </span>
                               </div>
                               <button
                                 onClick={() => jumpPhase(p.phase)}
-                                className="flex flex-shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-violet-700 opacity-80 transition hover:bg-white/60 hover:opacity-100"
+                                className="flex flex-shrink-0 items-center gap-1 rounded-[4px] px-2 py-1 text-xs font-semibold text-[var(--mk-indigo)] transition hover:bg-[var(--mk-indigo-soft)] hover:opacity-100"
                               >
                                 View <ArrowUpRight className="h-3.5 w-3.5" />
                               </button>
                             </div>
-                            <p className="mt-1.5 text-[13.5px] leading-relaxed text-slate-800">
+                            <p className="mt-1.5 text-[13.5px] leading-relaxed text-[var(--mk-ink)]">
                               {p.summary}
                             </p>
                             {p.keyPoints.length > 0 && (
@@ -432,9 +422,9 @@ export default function SpaceSummaryModal({
                                 {p.keyPoints.map((k, j) => (
                                   <li
                                     key={j}
-                                    className="flex items-start gap-2 text-[13px] text-slate-700"
+                                    className="flex items-start gap-2 text-[13px] text-[var(--mk-ink)]"
                                   >
-                                    <span className="mt-[7px] h-1 w-1 flex-shrink-0 rounded-full bg-slate-400" />
+                                    <span className="mt-[7px] h-1 w-1 flex-shrink-0 bg-[var(--mk-ink-2)]" />
                                     <span>{k}</span>
                                   </li>
                                 ))}
@@ -463,7 +453,7 @@ export default function SpaceSummaryModal({
                 </section>
               )}
 
-              <p className="pt-1 text-center text-[11px] text-slate-600">
+              <p className="pt-1 text-center text-[11px] text-[var(--mk-ink-2)]">
                 Auto-generated from the cards you can see. It can be wrong; check the cards.
               </p>
             </div>
@@ -477,7 +467,7 @@ export default function SpaceSummaryModal({
 function SummarySkeleton({ cards, phases }: { cards: number; phases: number }) {
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2 text-sm text-slate-700">
+      <div className="flex items-center gap-2 text-sm text-[var(--mk-ink)]">
         <span className="ai-dots">
           <i />
           <i />
@@ -486,16 +476,16 @@ function SummarySkeleton({ cards, phases }: { cards: number; phases: number }) {
         Reading {cards} cards across {phases} phases…
       </div>
       <div className="space-y-2">
-        <div className="ai-shimmer h-7 w-2/3 rounded-xl" />
-        <div className="ai-shimmer h-4 w-5/6 rounded-lg" />
+        <div className="ai-shimmer h-7 w-2/3 rounded-[3px]" />
+        <div className="ai-shimmer h-4 w-5/6 rounded-[3px]" />
       </div>
-      <div className="ai-glass-card space-y-2 p-5">
+      <div className="rounded-[5px] border border-[var(--mk-ink)] bg-white space-y-2 p-5">
         <div className="ai-shimmer h-3 w-full rounded" />
         <div className="ai-shimmer h-3 w-11/12 rounded" />
         <div className="ai-shimmer h-3 w-4/5 rounded" />
       </div>
       {Array.from({ length: Math.min(Math.max(phases, 2), 4) }).map((_, i) => (
-        <div key={i} className="ai-glass-card ml-6 space-y-2 p-4">
+        <div key={i} className="rounded-[5px] border border-[var(--mk-ink)] bg-white ml-6 space-y-2 p-4">
           <div className="ai-shimmer h-4 w-1/3 rounded" />
           <div className="ai-shimmer h-3 w-full rounded" />
           <div className="ai-shimmer h-3 w-3/4 rounded" />

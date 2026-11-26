@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Search } from "lucide-react";
 import Image from "next/image";
 import ChatInterface from "./chat-interface";
+import { Window, field, tag } from "@/components/app/ui";
 
 interface NewMessagePopupProps {
   isOpen: boolean;
@@ -132,21 +133,25 @@ export default function NewMessagePopup({
   return (
     <div className="fixed inset-0 z-[60] overflow-hidden">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-[var(--mk-ink)]/40"
         onClick={onClose}
       ></div>
 
-      <div className="absolute right-4 top-20 w-[calc(100%-2rem)] max-w-md  h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+      <Window
+        title="inbox://new"
+        className="absolute right-4 top-20 flex h-[600px] w-[calc(100%-2rem)] max-w-md flex-col"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50 flex-shrink-0">
-          <div className="flex items-center space-x-3">
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-[var(--mk-rule)] px-4 py-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={selectedUser ? goBackToInbox : onClose}
-              className="p-1 text-gray-600 hover:text-gray-900 hover:bg-white/50 rounded-full transition-colors"
+              aria-label={selectedUser ? "Back to inbox" : "Close"}
+              className="grid h-8 w-8 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="h-4 w-4" />
             </button>
-            <h3 className="font-semibold text-gray-900">
+            <h3 className="font-bold tracking-[-0.03em] text-[var(--mk-ink)]">
               {selectedUser ? selectedUser.name : "New Message"}
             </h3>
           </div>
@@ -155,35 +160,35 @@ export default function NewMessagePopup({
         {selectedUser ? (
           <ChatInterface selectedUser={selectedUser} />
         ) : (
-          <div className="flex flex-col flex-1 min-h-0">
+          <div className="flex min-h-0 flex-1 flex-col">
             {/* Search */}
-            <div className="p-4 border-b border-gray-100 flex-shrink-0">
+            <div className="flex-shrink-0 border-b border-[var(--mk-rule)] p-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--mk-ink-2)]" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={handleSearchChange}
                   placeholder="Search by name or username..."
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border-0 rounded-xl text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
+                  className={`${field} pl-9 text-[14px]`}
                 />
               </div>
             </div>
 
             {/* User List - Fixed scrolling container */}
-            <div className="flex-1 overflow-y-auto min-h-0">
-              <div className="p-2">
-                <h4 className="text-sm font-medium text-gray-500 px-2 mb-3">
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <div>
+                <h4 className={`${tag} border-b border-[var(--mk-rule)] bg-[var(--mk-paper)] px-4 py-2`}>
                   Suggested
                 </h4>
-                <div className="space-y-1">
+                <div>
                   {filteredUsers.map((user, index) => (
                     <div
                       key={index}
                       onClick={() => handleUserSelect(user)}
-                      className="flex items-center space-x-3 p-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 rounded-xl cursor-pointer transition-all duration-200 group"
+                      className="group flex cursor-pointer items-center gap-3 border-b border-[var(--mk-rule)] px-4 py-3 transition-colors hover:bg-[var(--mk-indigo-soft)]"
                     >
-                      <div className="relative">
+                      <div className="relative shrink-0">
                         {user.image ? (
                           <Image
                             src={
@@ -193,34 +198,34 @@ export default function NewMessagePopup({
                             alt={user.name}
                             width={44}
                             height={44}
-                            className="rounded-full ring-2 ring-gray-100 group-hover:ring-purple-200 transition-all duration-200"
+                            className="h-10 w-10 rounded-[4px] border border-[var(--mk-ink)] object-cover"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
-                            <span className="text-white font-bold text-xs">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-indigo)]">
+                            <span className="text-xs font-bold text-white">
                               {user.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
                         )}
-                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        <div className="absolute -bottom-1 -right-1 h-3 w-3 border border-[var(--mk-ink)] bg-[var(--mk-green)]"></div>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900 text-sm">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[14px] font-semibold tracking-tight text-[var(--mk-ink)]">
                           {user.name}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-[12.5px] tracking-tight text-[var(--mk-ink-2)]">
                           @{user.username}
                         </p>
                       </div>
-                      <div className="w-2 h-2 bg-purple-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                      <div className="h-2 w-2 bg-[var(--mk-indigo)] opacity-0 transition-opacity group-hover:opacity-100"></div>
                     </div>
                   ))}
                 </div>
 
                 {filteredUsers.length === 0 && searchTerm && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500 text-sm">No users found</p>
-                    <p className="text-gray-400 text-xs mt-1">
+                  <div className="py-8 text-center">
+                    <p className="text-[14px] font-semibold tracking-tight text-[var(--mk-ink)]">No users found</p>
+                    <p className="mt-1 text-[12.5px] tracking-tight text-[var(--mk-ink-2)]">
                       Try searching with a different term
                     </p>
                   </div>
@@ -229,7 +234,7 @@ export default function NewMessagePopup({
             </div>
           </div>
         )}
-      </div>
+      </Window>
     </div>
   );
 }

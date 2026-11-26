@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, OrgApi, Membership, OrgSummary } from "@/utils/api";
+import { PixelLabel, Window, tag } from "@/components/app/ui";
 
 export default function SelectOrgPage() {
   const [list, setList] = useState<Membership[]>([]);
@@ -30,32 +31,40 @@ export default function SelectOrgPage() {
     router.push(`/explore`);
   };
 
-  if (loading) return <div className="p-6">Loading workspaces…</div>;
+  if (loading)
+    return (
+      <div className="mk-grid min-h-screen bg-[var(--mk-paper)] p-6 tracking-tight text-[var(--mk-ink-2)]">
+        Loading workspaces…
+      </div>
+    );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
-      <div className="bg-white p-6 rounded-lg shadow w-full max-w-md">
-        <h1 className="text-xl font-semibold mb-4 text-gray-900">
-          Choose a workspace
-        </h1>
-        <div className="space-y-2 text-gray-700">
-          {list.map((m) => (
-            <button
-              key={m.organization.id}
-              onClick={() => go(m.organization)}
-              className="w-full text-left px-4 py-3 border rounded hover:bg-gray-50"
-            >
-              <div className="font-medium">{m.organization.name}</div>
-              <div className="text-sm text-gray-500">
-                {m.organization.slug} • {m.role}
-              </div>
-            </button>
-          ))}
+    <div className="mk-grid flex min-h-screen items-center justify-center bg-[var(--mk-paper)] p-6 text-[var(--mk-ink)]">
+      <Window title="workspaces://select" className="w-full max-w-md">
+        <div className="p-6">
+          <PixelLabel className="mb-2">WORKSPACES</PixelLabel>
+          <h1 className="mk-display mb-4 text-[1.6rem] text-[var(--mk-ink)]">
+            Choose a workspace
+          </h1>
+          <div className="space-y-2">
+            {list.map((m) => (
+              <button
+                key={m.organization.id}
+                onClick={() => go(m.organization)}
+                className="mk-lift w-full rounded-[4px] border border-[var(--mk-ink)] bg-white px-4 py-3 text-left transition-colors hover:bg-[var(--mk-indigo-soft)]"
+              >
+                <div className="font-semibold tracking-tight text-[var(--mk-ink)]">{m.organization.name}</div>
+                <div className={`mt-0.5 ${tag}`}>
+                  {m.organization.slug} • {m.role}
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="mt-4 border-t border-[var(--mk-rule)] pt-4 text-sm tracking-tight text-[var(--mk-ink-2)]">
+            Don’t see your workspace? Ask an admin for an invite link.
+          </div>
         </div>
-        <div className="mt-4 text-sm text-gray-500">
-          Don’t see your workspace? Ask an admin for an invite link.
-        </div>
-      </div>
+      </Window>
     </div>
   );
 }

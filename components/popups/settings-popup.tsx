@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Window, btn, tag } from "@/components/app/ui";
 
 interface SettingsPopupProps {
   isOpen: boolean;
@@ -69,77 +70,81 @@ export default function SettingsPopup({ isOpen, onClose }: SettingsPopupProps) {
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-[var(--mk-ink)]/40"
         onClick={onClose}
       ></div>
 
-      <div className="absolute right-4 top-20 w-80 max-h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+      <Window
+        title="settings://account"
+        className="absolute right-4 top-20 flex max-h-[600px] w-80 flex-col"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50">
-          <div className="flex items-center space-x-2">
-            <Settings className="w-5 h-5 text-gray-600" />
-            <h3 className="font-semibold text-gray-900">Currently in</h3>
+        <div className="flex items-center justify-between border-b border-[var(--mk-rule)] px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Settings className="h-4 w-4 text-[var(--mk-ink)]" />
+            <h3 className="font-bold tracking-[-0.03em] text-[var(--mk-ink)]">Currently in</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-colors"
+            aria-label="Close settings"
+            className="grid h-8 w-8 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* User Info */}
         {user && (
-          <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50">
-            <div className="flex items-center space-x-3">
+          <div className="border-b border-[var(--mk-ink)] bg-[var(--mk-paper)] p-4">
+            <div className="flex items-center gap-3">
               {user.image ? (
                 <Image
                   src={user.image || "/placeholder.svg?height=56&width=56"}
                   alt={user.name}
                   width={56}
                   height={56}
-                  className="rounded-full ring-3 ring-white shadow-md"
+                  className="h-14 w-14 rounded-[4px] border border-[var(--mk-ink)] object-cover"
                 />
               ) : (
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
-                  <span className="text-white font-bold text-2xl">
+                <div className="flex h-14 w-14 items-center justify-center rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-indigo)]">
+                  <span className="text-[22px] font-bold text-white">
                     {user.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900">{user.name}</p>
-                <p className="text-sm text-gray-600">{user.email}</p>
-                <p className="text-xs text-gray-500">@{user.username}</p>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-bold tracking-[-0.02em] text-[var(--mk-ink)]">{user.name}</p>
+                <p className="truncate text-[13px] tracking-tight text-[var(--mk-ink-2)]">{user.email}</p>
+                <p className={tag}>@{user.username}</p>
               </div>
             </div>
           </div>
         )}
 
         {/* Settings Options */}
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="flex-1 overflow-y-auto">
           {settingsOptions.map((section, sectionIndex) => (
-            <div key={sectionIndex} className="mb-4">
-              <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider px-2 mb-2">
+            <div key={sectionIndex}>
+              <h4 className={`${tag} border-b border-[var(--mk-rule)] bg-[var(--mk-paper)] px-4 py-2`}>
                 {section.category}
               </h4>
-              <div className="space-y-1">
+              <div>
                 {section.items.map((option, index) => (
                   <button
                     key={index}
-                    className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-gray-50 rounded-lg transition-colors group"
+                    className="group flex w-full items-center justify-between border-b border-[var(--mk-rule)] px-4 py-2.5 text-left transition-colors hover:bg-[var(--mk-indigo-soft)]"
                     onClick={() => {
                       console.log(`Navigate to ${option.href}`);
                       onClose();
                     }}
                   >
-                    <div className="flex items-center space-x-3">
-                      <option.icon className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
-                      <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                    <div className="flex items-center gap-3">
+                      <option.icon className="h-4 w-4 text-[var(--mk-ink-2)] group-hover:text-[var(--mk-ink)]" />
+                      <span className="text-[14px] tracking-tight text-[var(--mk-ink)]">
                         {option.label}
                       </span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                    <ChevronRight className="h-4 w-4 text-[var(--mk-ink-2)]" />
                   </button>
                 ))}
               </div>
@@ -147,44 +152,44 @@ export default function SettingsPopup({ isOpen, onClose }: SettingsPopupProps) {
           ))}
 
           {/* Additional Options */}
-          <div className="mb-4">
-            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider px-2 mb-2">
+          <div>
+            <h4 className={`${tag} border-b border-[var(--mk-rule)] bg-[var(--mk-paper)] px-4 py-2`}>
               More
             </h4>
-            <div className="space-y-1">
-              <button className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-gray-50 rounded-lg transition-colors group">
-                <div className="flex items-center space-x-3">
-                  <Settings className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
-                  <span className="text-sm text-gray-700 group-hover:text-gray-900">
+            <div>
+              <button className="group flex w-full items-center justify-between border-b border-[var(--mk-rule)] px-4 py-2.5 text-left transition-colors hover:bg-[var(--mk-indigo-soft)]">
+                <div className="flex items-center gap-3">
+                  <Settings className="h-4 w-4 text-[var(--mk-ink-2)] group-hover:text-[var(--mk-ink)]" />
+                  <span className="text-[14px] tracking-tight text-[var(--mk-ink)]">
                     Install Chrome app
                   </span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                <ChevronRight className="h-4 w-4 text-[var(--mk-ink-2)]" />
               </button>
-              <button className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-gray-50 rounded-lg transition-colors group">
-                <div className="flex items-center space-x-3">
-                  <Settings className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
-                  <span className="text-sm text-gray-700 group-hover:text-gray-900">
+              <button className="group flex w-full items-center justify-between border-b border-[var(--mk-rule)] px-4 py-2.5 text-left transition-colors hover:bg-[var(--mk-indigo-soft)]">
+                <div className="flex items-center gap-3">
+                  <Settings className="h-4 w-4 text-[var(--mk-ink-2)] group-hover:text-[var(--mk-ink)]" />
+                  <span className="text-[14px] tracking-tight text-[var(--mk-ink)]">
                     Be a beta tester
                   </span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                <ChevronRight className="h-4 w-4 text-[var(--mk-ink-2)]" />
               </button>
             </div>
           </div>
         </div>
 
         {/* Logout */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50">
+        <div className="border-t border-[var(--mk-ink)] p-4">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+            className={`${btn.plain} w-full px-4 py-2.5 text-[14px]`}
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="h-4 w-4" />
             <span>Log Out</span>
           </button>
         </div>
-      </div>
+      </Window>
     </div>
   );
 }

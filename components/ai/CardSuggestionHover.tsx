@@ -350,30 +350,30 @@ export default function CardSuggestionHover({
       }}
     >
       <div
-        className="relative flex flex-col overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-[0_24px_60px_-20px_rgba(76,29,149,0.45),0_8px_20px_-8px_rgba(15,23,42,0.18)] ring-1 ring-violet-100"
+        className="relative flex flex-col overflow-hidden mk-hard rounded-[6px] bg-white"
         style={{ maxHeight: pos?.maxH }}
       >
         {/* Header, like the card's author row */}
         <div className="flex shrink-0 items-center gap-3 p-4 pb-2">
           {/* Plain tile, like the Explore section and category icons */}
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-violet-100">
-            <Sparkles className="h-4 w-4 text-violet-700" />
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-indigo-soft)]">
+            <Sparkles className="h-4 w-4 text-[var(--mk-indigo)]" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="truncate text-sm font-semibold text-gray-900">
+              <span className="truncate text-sm font-semibold text-[var(--mk-ink)]">
                 Suggested next card
               </span>
-              <span className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700">
+              <span className="shrink-0 rounded-[3px] border border-[var(--mk-indigo)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-indigo)]">
                 AI
               </span>
             </div>
-            <div className="truncate text-xs text-gray-500">{card.phase}</div>
+            <div className="truncate text-xs text-[var(--mk-ink-2)]">{card.phase}</div>
           </div>
           <button
             type="button"
             onClick={hide}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-500 hover:bg-violet-50 hover:text-violet-700"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-[4px] border border-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
             aria-label="Hide suggestion"
           >
             <X className="h-4 w-4" />
@@ -383,11 +383,11 @@ export default function CardSuggestionHover({
         <div className="min-h-0 flex-1 overflow-y-auto">
           {!s && (loading || (!data && !error)) && (
             <div className="space-y-2.5 px-4 pb-4 pt-2" aria-live="polite">
-              <div className="ai-shimmer h-3 w-full rounded-md" />
-              <div className="ai-shimmer h-3 w-11/12 rounded-md" />
-              <div className="ai-shimmer h-3 w-3/4 rounded-md" />
-              <div className="ai-shimmer mt-3 h-5 w-2/3 rounded-md" />
-              <div className="flex items-center gap-2 pt-1 text-xs text-gray-600">
+              <div className="ai-shimmer h-3 w-full rounded-[3px]" />
+              <div className="ai-shimmer h-3 w-11/12 rounded-[3px]" />
+              <div className="ai-shimmer h-3 w-3/4 rounded-[3px]" />
+              <div className="ai-shimmer mt-3 h-5 w-2/3 rounded-[3px]" />
+              <div className="flex items-center gap-2 pt-1 text-xs text-[var(--mk-ink-2)]">
                 <span className="ai-dots">
                   <i />
                   <i />
@@ -400,11 +400,11 @@ export default function CardSuggestionHover({
 
           {!s && error && !loading && (
             <div className="px-4 pb-4 pt-2 text-sm">
-              <div className="mb-2 font-medium text-rose-600">{error}</div>
+              <div className="mb-2 font-medium text-[var(--mk-amber)]">{error}</div>
               <button
                 type="button"
                 onClick={() => ensure(true)}
-                className="rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white hover:bg-gray-700"
+                className="mk-btn rounded-[4px] bg-[var(--mk-ink)] px-3 py-1.5 text-xs font-semibold text-white"
               >
                 Try again
               </button>
@@ -412,7 +412,7 @@ export default function CardSuggestionHover({
           )}
 
           {!s && data && !loading && !error && (
-            <p className="px-4 pb-4 pt-2 text-sm text-gray-600">
+            <p className="px-4 pb-4 pt-2 text-sm text-[var(--mk-ink-2)]">
               No suggestion for this phase yet.
             </p>
           )}
@@ -424,7 +424,7 @@ export default function CardSuggestionHover({
                   {roles.map((m) => (
                     <span
                       key={m.id}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-2 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-200"
+                      className="inline-flex items-center gap-1.5 rounded-[3px] border border-[var(--mk-cyan)] bg-[var(--mk-cyan-soft)] px-1.5 py-0.5 text-xs font-semibold text-[var(--mk-cyan-deep)]"
                       title={m.description ? `${m.name}: ${m.description}` : m.name}
                     >
                       <Tag className="h-3.5 w-3.5" />
@@ -435,21 +435,21 @@ export default function CardSuggestionHover({
               )}
 
               {s.text && (
-                <p className="mb-3 whitespace-pre-line break-words px-4 text-sm leading-relaxed text-gray-800">
+                <p className="mb-3 whitespace-pre-line break-words px-4 text-sm leading-relaxed text-[var(--mk-ink)]">
                   {refs(s.text)}
                 </p>
               )}
 
               <div className="px-4 pb-1 pt-2">
-                <h3 className="mb-2 text-lg font-bold leading-tight text-gray-900">{refs(s.title)}</h3>
+                <h3 className="mb-2 text-[1.15rem] font-bold leading-tight tracking-[-0.03em] text-[var(--mk-ink)]">{refs(s.title)}</h3>
                 {s.description && (
-                  <p className="mb-3 text-sm leading-relaxed text-gray-600">{refs(s.description)}</p>
+                  <p className="mb-3 text-sm leading-relaxed text-[var(--mk-ink-2)]">{refs(s.description)}</p>
                 )}
               </div>
 
               {s.rationale && (
-                <div className="mx-4 mb-1 flex gap-2 rounded-xl bg-violet-50 px-3 py-2 text-xs leading-relaxed text-violet-900">
-                  <Compass className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-600" />
+                <div className="mx-4 mb-1 flex gap-2 border-l-2 border-[var(--mk-indigo)] bg-[var(--mk-indigo-soft)] px-3 py-2 text-xs leading-relaxed text-[var(--mk-ink)]">
+                  <Compass className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--mk-indigo)]" />
                   <span>{refs(s.rationale)}</span>
                 </div>
               )}
@@ -458,7 +458,7 @@ export default function CardSuggestionHover({
         </div>
 
         {/* Action row, where a card has like / repost / save */}
-        <div className="shrink-0 border-t border-gray-100 px-4 pb-3 pt-3">
+        <div className="shrink-0 border-t border-[var(--mk-ink)] px-4 pb-3 pt-3">
           {s && (
             <div className="mb-2 flex items-center gap-2">
               <button
@@ -467,7 +467,7 @@ export default function CardSuggestionHover({
                   onDraft(anchorId, s);
                   hide();
                 }}
-                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-violet-100 px-3 py-2 text-sm font-semibold text-violet-700 shadow-sm ring-1 ring-violet-200 transition hover:bg-violet-200/70 hover:text-violet-800"
+                className="mk-btn inline-flex flex-1 items-center justify-center gap-1.5 rounded-[4px] bg-[var(--mk-indigo-soft)] px-3 py-2 text-sm font-semibold text-[var(--mk-indigo-deep)]"
               >
                 <PenLine className="h-4 w-4" />
                 Draft this card
@@ -476,7 +476,7 @@ export default function CardSuggestionHover({
                 <button
                   type="button"
                   onClick={() => setPick((p) => p + 1)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
+                  className="mk-btn inline-flex items-center gap-1.5 rounded-[4px] bg-white px-3 py-2 text-sm font-semibold text-[var(--mk-ink)]"
                   title="Show another suggestion"
                 >
                   <Shuffle className="h-4 w-4" />
@@ -485,7 +485,7 @@ export default function CardSuggestionHover({
               )}
             </div>
           )}
-          <div className="text-[11px] text-gray-500">
+          <div className="text-[11px] text-[var(--mk-ink-2)]">
             Suggested from this space&apos;s cards. It can be wrong.
           </div>
         </div>
