@@ -101,7 +101,7 @@ export default function ProfilePage() {
     toast.error("Session expired. Please sign in again.");
     localStorage.removeItem("token");
     localStorage.removeItem("profileUser");
-    setTimeout(() => router.replace("/"), 1000);
+    setTimeout(() => router.replace("/login"), 1000);
   };
 
   const tabs = [
@@ -518,7 +518,7 @@ export default function ProfilePage() {
                 <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></span>
               </button>
               <Link
-                href="/"
+                href="/login"
                 className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
                 onClick={() => {
                   localStorage.removeItem("token");

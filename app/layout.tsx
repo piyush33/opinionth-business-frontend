@@ -5,11 +5,13 @@ import "./globals.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Providers from "./providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Social Feed App",
-  description: "A modern social media feed application",
+  metadataBase: new URL("https://collabrr.io"),
+  title: "Collabrr",
+  description:
+    "Collabrr is where distributed teams think through complex decisions together, asynchronously, with the reasoning kept.",
 };
 
 export default function RootLayout({
@@ -19,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} ${inter.variable}`}>
         <GoogleOAuthProvider clientId="1095864296367-ivrslv4mrt072bgprr1994dj278cas3q.apps.googleusercontent.com">
           <Providers>{children}</Providers>
         </GoogleOAuthProvider>

@@ -642,7 +642,7 @@ export default function EventPage() {
           localStorage.removeItem("profileUser");
 
           setIsLoading(false);
-          setTimeout(() => router.replace("/"), 1000);
+          setTimeout(() => router.replace("/login"), 1000);
           return;
         }
 
@@ -1547,7 +1547,7 @@ export default function EventPage() {
                 <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></span>
               </button>
               <Link
-                href="/"
+                href="/login"
                 className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
                 onClick={() => {
                   localStorage.removeItem("token");
