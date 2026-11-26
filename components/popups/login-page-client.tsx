@@ -4,6 +4,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GoogleLogin } from "@react-oauth/google";
+import Link from "next/link";
+import Image from "next/image";
+import { DitherBand, LogoBitmap } from "@/components/marketing/Bitmap";
 import axios from "axios";
 import { api, OrgApi, InviteApi, Membership, OrgSummary } from "@/utils/api";
 import SignUpModal from "@/components/signup-modal";
@@ -185,92 +188,128 @@ export default function LoginPageClient({
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">
-      {/* Brand */}
-      <div className="text-center mb-8 lg:mb-16">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-purple-600 mb-4">
-          Collabrr
-        </h1>
-        <p className="text-lg md:text-xl lg:text-2xl text-gray-900 max-w-2xl mx-auto leading-relaxed">
-          helps you brainstorm
-          <br />
-          collaborate and share perspectives
-          <br />
-          on events and objects asynchronously
-        </p>
-      </div>
-
-      {/* Login Card */}
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-3 text-gray-900">
-            <input
-              type="text"
-              placeholder="Username or Email address"
-              value={usernameOrEmail}
-              onChange={(e) => setUsernameOrEmail(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
-              disabled={isLoading}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
-              disabled={isLoading}
-            />
-            <button
-              onClick={handleLogin}
-              disabled={isLoading}
-              className="w-full py-3 bg-purple-600 text-white text-lg font-medium rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50"
-            >
-              {isLoading ? "Logging in..." : "Log in"}
-            </button>
-          </div>
-
-          <div className="text-center mt-3">
-            <a
-              href="#"
-              className="text-sm text-blue-600 hover:underline"
-              onClick={(e) => e.preventDefault()}
-            >
-              Forgotten password?
-            </a>
-          </div>
-
-          <div className="flex items-center my-5">
-            <div className="flex-1 border-t border-gray-300" />
-            <span className="px-3 text-gray-500 text-sm">or</span>
-            <div className="flex-1 border-t border-gray-300" />
-          </div>
-
-          <div className="google-login-button w-full flex justify-center mb-5">
-            <GoogleLogin
-              onSuccess={handleGoogleLoginSuccess}
-              onError={() => setError("Google login failed. Please try again.")}
-            />
-          </div>
-
-          <div className="border-t border-gray-300 mb-5" />
-
-          <button
-            onClick={() => setIsModalOpen(true)}
-            disabled={isLoading}
-            className="w-full py-3 bg-green-600 text-white text-base font-medium rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
-          >
-            Create new account
-          </button>
+    <div className="mk grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
+      {/* Brand panel: the bitmap screen */}
+      <aside className="mk-scan relative hidden flex-col justify-between overflow-hidden bg-[var(--mk-ink)] p-10 text-white lg:flex">
+        <Link href="/" className="inline-flex items-center gap-2" aria-label="Collabrr home">
+          <Image src="/brand/collabrr-logo.png" alt="" width={39} height={28} priority />
+          <span className="text-[1.28rem] font-bold tracking-[-0.04em]">Collabrr</span>
+        </Link>
+        <div>
+          <LogoBitmap className="mb-10 w-[240px]" />
+          <p className="mk-bit text-[#8fe3f3]">&gt; session.start</p>
+          <h1 className="mk-display mt-4 max-w-md text-[3rem]">
+            Pick up where the argument stands
+            <span className="mk-cursor" aria-hidden />
+          </h1>
+          <p className="mt-5 max-w-md text-[16px] leading-relaxed tracking-tight text-white/70">
+            Your team&apos;s questions, claims, evidence and decisions, linked and waiting for you, whatever your time zone.
+          </p>
         </div>
-      </div>
+        <div className="-mx-10 -mb-10">
+          <DitherBand color="var(--mk-cyan)" rows={6} className="opacity-60" flip />
+        </div>
+      </aside>
+
+      {/* Sign-in */}
+      <main className="mk-grid flex min-h-screen flex-col items-center justify-center px-4 py-12">
+        <Link href="/" className="mb-8 inline-flex items-center gap-2 lg:hidden" aria-label="Collabrr home">
+          <Image src="/brand/collabrr-logo.png" alt="" width={39} height={28} priority />
+          <span className="text-[1.28rem] font-bold tracking-[-0.04em] text-[var(--mk-ink)]">Collabrr</span>
+        </Link>
+
+        <div className="mk-hard w-full max-w-md overflow-hidden rounded-[6px] bg-white">
+          <div className="flex items-center gap-2 border-b border-[var(--mk-ink)] px-3 py-1.5">
+            <span className="flex gap-1" aria-hidden>
+              <span className="h-2 w-2 bg-[var(--mk-ink)]" />
+              <span className="h-2 w-2 bg-[var(--mk-ink)]/40" />
+              <span className="h-2 w-2 bg-[var(--mk-ink)]/20" />
+            </span>
+            <span className="mk-pixel text-[10px] text-[var(--mk-ink)]">session://sign-in</span>
+          </div>
+
+          <div className="p-6 sm:p-7">
+            <h2 className="mk-display text-[2rem]">Log in</h2>
+            <p className="mt-1.5 text-[14.5px] tracking-tight text-[var(--mk-ink-2)]">Welcome back to your workspace.</p>
+
+            {error && (
+              <div role="alert" className="mt-5 border border-[var(--mk-amber)] bg-[var(--mk-amber-soft)] px-3 py-2.5 text-[14px] tracking-tight text-[var(--mk-amber)]">
+                {error}
+              </div>
+            )}
+
+            <div className="mt-6 grid gap-4">
+              <div>
+                <label htmlFor="login-user" className="mk-pixel mb-1.5 block text-[10px] text-[var(--mk-ink)]">
+                  Username or email
+                </label>
+                <input
+                  id="login-user"
+                  type="text"
+                  autoComplete="username"
+                  value={usernameOrEmail}
+                  onChange={(e) => setUsernameOrEmail(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="w-full rounded-[4px] border border-[var(--mk-ink)] bg-white px-3 py-2.5 text-[15px] tracking-tight text-[var(--mk-ink)] placeholder:text-[#9a9db3] transition-shadow focus:outline-none focus:shadow-[3px_3px_0_var(--mk-indigo)]"
+                  disabled={isLoading}
+                />
+              </div>
+              <div>
+                <label htmlFor="login-password" className="mk-pixel mb-1.5 block text-[10px] text-[var(--mk-ink)]">
+                  Password
+                </label>
+                <input
+                  id="login-password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="w-full rounded-[4px] border border-[var(--mk-ink)] bg-white px-3 py-2.5 text-[15px] tracking-tight text-[var(--mk-ink)] placeholder:text-[#9a9db3] transition-shadow focus:outline-none focus:shadow-[3px_3px_0_var(--mk-indigo)]"
+                  disabled={isLoading}
+                />
+              </div>
+              <button
+                onClick={handleLogin}
+                disabled={isLoading}
+                className="mk-btn mt-1 w-full rounded-[4px] bg-[var(--mk-indigo)] py-3 text-[15px] font-semibold tracking-tight text-white disabled:opacity-60"
+              >
+                {isLoading ? "Logging in…" : "Log in"}
+              </button>
+            </div>
+
+            <div className="my-6 flex items-center gap-3">
+              <div className="h-px flex-1 bg-[var(--mk-rule)]" />
+              <span className="mk-pixel text-[10px] text-[var(--mk-ink-2)]">or</span>
+              <div className="h-px flex-1 bg-[var(--mk-rule)]" />
+            </div>
+
+            <div className="google-login-button flex w-full justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleLoginSuccess}
+                onError={() => setError("Google login failed. Please try again.")}
+              />
+            </div>
+
+            <div className="mt-6 border-t border-dashed border-[var(--mk-ink)]/30 pt-6">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                disabled={isLoading}
+                className="mk-btn w-full rounded-[4px] bg-white py-3 text-[15px] font-semibold tracking-tight text-[var(--mk-ink)] disabled:opacity-60"
+              >
+                Create a new account
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-6 text-[13.5px] tracking-tight text-[var(--mk-ink-2)]">
+          New to Collabrr?{" "}
+          <Link href="/#design-partners" className="font-semibold text-[var(--mk-ink)] underline underline-offset-4">
+            Become a design partner
+          </Link>
+        </p>
+      </main>
 
       {/* Sign up */}
       {isModalOpen && (
