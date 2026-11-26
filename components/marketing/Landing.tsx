@@ -95,11 +95,12 @@ const COMPARE = [
 ];
 
 const FAQ = [
-  { q: "Isn't this what Notion does?", a: "Notion is excellent for finished knowledge. Collabrr is for the discussion before it: the options, objections and evidence. Write the final spec in Notion and link it from the decision card, so the reasoning is one click away." },
-  { q: "Does Collabrr replace meetings?", a: "No. It removes the need to use meetings for work that can be developed asynchronously. When a meeting is needed, it's about one specific disagreement, and it starts with the accumulated context instead of from scratch." },
-  { q: "Won't structure slow people down?", a: "Structure that costs effort in the moment is why earlier tools were loved by researchers and ignored by teams. In Collabrr, choosing a card's role takes a click, and AI suggests the next card in the right voice, so the structure is a by-product of discussing, not a tax on it." },
+  { q: "How is a space different from a document or a chat thread?", a: "A thread orders messages by time and a document holds the finished version. A space holds the discussion itself, as cards. Each card does one job (a question, claim, piece of evidence, risk or decision) and links to the cards it responds to, so anyone can follow a line of reasoning from the first question to the decision. The final spec can be linked from the decision card." },
+  { q: "What goes on a card?", a: "A title, a short description and the body, with an optional image or web link. Each card carries a phase, from Seed and Discovery through Hypothesis, Specs and Decision to Execution and Retro, and one or more roles, such as question, claim, counter-claim, evidence, risk or mitigation. Type @ and a card's number to reference it, including cards in other spaces." },
+  { q: "What does the AI do in a space?", a: "It summarises the space: it names the emergent topic, says where the discussion stands and what is still open in each phase. On any card it can suggest the next one, such as a counter-claim, missing evidence or a mitigation, which you edit before posting. From Explore it can suggest a new space when cards across categories point to a question nobody has opened yet. Nothing is posted without a person." },
+  { q: "How does someone catch up on a discussion that's been running for days?", a: "Open the summary for where it stands, then read the cards it points to. Cards are grouped by phase and linked to what they answer, so a newcomer can enter through any card and follow the thread in either direction, instead of scrolling back through days of messages." },
+  { q: "When does a discussion still need a meeting?", a: "When one specific disagreement remains after the evidence is in. The space shows exactly which cards are in dispute, so the meeting starts from that context and covers only that point. The outcome goes back into the space as a decision card." },
   { q: "Who can see what?", a: "Spaces and cards follow your workspace's visibility: organisation-wide, team-only, locked spaces and private cards. AI summaries and suggestions are built only from the cards the person viewing them is allowed to see." },
-  { q: "Will people know where to start?", a: "Every card is a valid entry point. Start with a question, add what you know, and link to what you're responding to. Spaces gain shape as the cards accumulate, and the AI names the topic once there's enough to name." },
 ];
 
 const MEDIUM = "https://medium.com/@blue___gene";
@@ -169,7 +170,7 @@ export default function Landing() {
             <div>
               <Label>A reasoning layer for distributed teams</Label>
               <h1 className="mk-display mt-6 text-[3rem] sm:text-[4.2rem] lg:text-[4.6rem]">
-                A home for the discussions that outgrow Slack
+                A home for the discussions that outgrow chat
                 <span className="mk-cursor" aria-hidden />
               </h1>
               <p className={`${lede} mt-7 max-w-[34rem]`}>
@@ -192,14 +193,16 @@ export default function Landing() {
                 </Link>
               </div>
               <p className="mt-6 text-[13.5px] tracking-tight text-[var(--mk-ink-2)]">
-                For teams of 20–200 across locations and schedules. Works alongside Slack, Notion and Linear.
+                For teams of 20–200 across locations and schedules. Fits alongside the tools you already use.
               </p>
             </div>
             <div className="relative pb-6 pl-0 sm:pl-10">
-              <LogoBitmap className="absolute -top-14 right-2 hidden w-[50%] sm:block" title="Collabrr logo, as a bitmap" />
-              <div className="relative sm:mt-36">
-                <HeroSpace />
-              </div>
+              {/* The mascot perched on the window's corner, like a sticker */}
+              <LogoBitmap
+                className="absolute -right-5 -top-14 z-10 hidden w-[118px] sm:block"
+                title="Collabrr logo, as a bitmap"
+              />
+              <HeroSpace />
             </div>
           </div>
         </section>
@@ -309,15 +312,15 @@ export default function Landing() {
             <Label>How it works</Label>
             <h2 className={`${h2} mt-4`}>The line of reasoning is the primary object.</h2>
             <p className={`${lede} mt-6 max-w-2xl`}>
-              Slack is built around the message, Notion around the page, Miro around the shape. Collabrr is built around the line of
-              reasoning: documentation in conversational format, where the thinking is the documentation.
+              Chat is built around the message, docs around the page, whiteboards around the shape. Collabrr is built around the line
+              of reasoning: documentation in conversational format.
             </p>
           </div>
           <div className="mt-14 grid gap-12 lg:grid-cols-[1fr_1fr]">
             <ol className="grid content-start border-t border-[var(--mk-ink)]">
               {PRIMITIVES.map((p, i) => (
                 <li key={p.k} className="grid grid-cols-[3.5rem_1fr] gap-2 border-b border-[var(--mk-ink)] py-6">
-                  <span className="mk-display text-[2.2rem] tabular-nums text-[var(--mk-indigo)]">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="mk-display text-[2.2rem] tabular-nums text-[var(--mk-indigo)]">{i + 1}</span>
                   <div>
                     <div className="mk-pixel text-[10px] text-[var(--mk-cyan)]">{p.k}</div>
                     <h3 className="mt-1 text-[1.25rem] font-bold leading-tight tracking-[-0.035em]">{p.t}</h3>
@@ -332,8 +335,8 @@ export default function Landing() {
           </div>
           <div className="mt-16 grid border border-[var(--mk-ink)] sm:grid-cols-3">
             {[
-              ["Slack", "Now", "presence and pulse"],
-              ["Notion", "Know", "policy, spec and record"],
+              ["Chat", "Now", "presence and pulse"],
+              ["Docs", "Know", "policy, spec and record"],
               ["Collabrr", "How", "the path from first question to decision"],
             ].map(([tool, w, d], i) => (
               <div
@@ -533,7 +536,7 @@ export default function Landing() {
                 <div className="mk-pixel text-[10px]">A good fit if your team</div>
                 <ul className="mt-3 grid gap-2 text-[14.5px] tracking-tight text-[var(--mk-ink-2)]">
                   {[
-                    "Has 20–200 people with product, design and engineering functions",
+                    "Has 20–200 people with product, design, engineering and business functions",
                     "Works across locations, schedules or at least three time zones",
                     "Uses Slack or Teams, Notion or Google Docs, and Linear or Jira",
                     "Regularly faces decisions that outgrow a Slack thread",
@@ -664,7 +667,7 @@ export default function Landing() {
           <div>
             <Logo size={24} inverted />
             <p className="mt-3 max-w-sm text-[14px] tracking-tight text-white/65">
-              Infrastructure for collaborative thinking. The reasoning layer between chat and meetings.
+              Infrastructure for collaborative thinking. The reasoning layer between quick chat and finished docs.
             </p>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[14px] font-medium tracking-tight">
               <Link href="/login" className="hover:text-[#8fe3f3]">Log in</Link>

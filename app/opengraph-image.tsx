@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { LOGO_ROWS } from "@/components/marketing/Bitmap";
 
-export const alt = "Collabrr: a home for the discussions that outgrow Slack";
+export const alt = "Collabrr: a home for the discussions that outgrow chat";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -74,10 +74,10 @@ export default async function OpengraphImage() {
               <div style={{ fontSize: 26, fontWeight: 800, color: INK, letterSpacing: -0.8 }}>Collabrr</div>
             </div>
             <div style={{ marginTop: 34, fontSize: 76, fontWeight: 800, lineHeight: 0.98, color: INK, letterSpacing: -3.4 }}>
-              A home for the discussions that outgrow Slack
+              A home for the discussions that outgrow chat
             </div>
             <div style={{ marginTop: 28, fontSize: 28, fontWeight: 500, lineHeight: 1.3, color: "#4a4e62", letterSpacing: -0.4 }}>
-              The reasoning layer between chat and meetings, built first for distributed product teams.
+              The reasoning layer between quick chat and finished docs, built first for distributed product teams.
             </div>
           </div>
           <div style={{ display: "flex", flex: 1, justifyContent: "flex-end" }}>

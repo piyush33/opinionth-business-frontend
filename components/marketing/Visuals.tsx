@@ -1,13 +1,9 @@
 // Product illustrations for the marketing site, drawn in HTML so they stay
-// sharp and match the app's own cards (phase chip, role chips, @id links).
+// sharp and match the app's own cards (phase · role kicker, italic
+// description, ruled footer, @id links).
 // Styled as crisp windows: 1px ink outlines, hard shadows, pixel title bars.
 import { ArrowDown } from "lucide-react";
 import { PixelIcon } from "./Bitmap";
-
-const phaseChip =
-  "inline-flex items-center rounded-[3px] border border-indigo-300 bg-indigo-50 px-1.5 py-px text-[11px] font-medium text-indigo-700";
-const roleChip =
-  "inline-flex items-center rounded-[3px] border border-sky-300 bg-sky-50 px-1.5 py-px text-[11px] font-medium text-sky-800";
 
 function Ref({ id }: { id: number }) {
   return <span className="font-semibold text-[var(--mk-indigo)]">@{id}</span>;
@@ -44,6 +40,8 @@ export function Window({
   );
 }
 
+/** A card as it looks in the app: kicker (phase · roles), title, italic
+ *  description, and a ruled footer with author and card number. */
 export function MiniCard({
   author,
   initial,
@@ -52,6 +50,7 @@ export function MiniCard({
   roles,
   children,
   title,
+  no,
   className = "",
 }: {
   author: string;
@@ -61,24 +60,28 @@ export function MiniCard({
   roles: string[];
   children?: React.ReactNode;
   title: string;
+  no?: number;
   className?: string;
 }) {
   return (
-    <div className={`rounded-[5px] border border-[var(--mk-ink)] bg-white p-3 ${className}`}>
-      <div className="mb-2 flex items-center gap-2">
-        <span className={`grid h-5 w-5 place-items-center text-[10px] font-bold text-white ${tint}`}>{initial}</span>
-        <span className="text-[12px] font-semibold tracking-tight text-[var(--mk-ink)]">@{author}</span>
-      </div>
-      <div className="mb-2 flex flex-wrap gap-1">
-        <span className={phaseChip}>{phase}</span>
+    <div className={`rounded-[5px] border border-[var(--mk-ink)] bg-white px-3.5 pb-3 pt-3.5 shadow-[2px_2px_0_var(--mk-ink)] ${className}`}>
+      <p className="text-[9.5px] font-semibold uppercase tracking-[0.09em]">
+        <span className="text-[var(--mk-indigo)]">{phase}</span>
         {roles.map((r) => (
-          <span key={r} className={roleChip}>
-            {r}
+          <span key={r}>
+            <span className="text-[var(--mk-ink-2)]"> · </span>
+            <span className="text-[var(--mk-cyan)]">{r}</span>
           </span>
         ))}
+      </p>
+      <p className="mt-1.5 text-[13.5px] font-bold leading-snug tracking-[-0.03em] text-[var(--mk-ink)]">{title}</p>
+      {children && <p className="mt-1.5 text-[12px] italic leading-snug text-[var(--mk-ink-2)]">{children}</p>}
+      <div className="mt-3 flex items-center gap-1.5 border-t border-[var(--mk-rule)] pt-2 text-[11px] tracking-tight text-[var(--mk-ink-2)]">
+        <span className={`grid h-4 w-4 place-items-center rounded-[2px] text-[8.5px] font-bold text-white ${tint}`}>{initial}</span>
+        <span className="font-semibold text-[var(--mk-ink)]">@{author}</span>
+        {no !== undefined && <span>· No. {no}</span>}
+        <span className="ml-auto text-[var(--mk-ink)]" aria-hidden>↗</span>
       </div>
-      {children && <p className="mb-1.5 text-[12.5px] leading-snug text-[var(--mk-ink-2)]">{children}</p>}
-      <p className="text-[13.5px] font-semibold leading-snug tracking-tight text-[var(--mk-ink)]">{title}</p>
     </div>
   );
 }
@@ -110,6 +113,21 @@ export function HeroSpace() {
           </div>
         </div>
 
+        {/* The scale of it: a discussion that has run for days, across phases */}
+        <dl className="mb-3 grid grid-cols-4 border-l border-t border-[var(--mk-ink)]">
+          {[
+            ["64", "cards"],
+            ["5", "phases"],
+            ["3", "time zones"],
+            ["11", "days open"],
+          ].map(([n, l]) => (
+            <div key={l} className="border-b border-r border-[var(--mk-ink)] px-2.5 py-1.5">
+              <dd className="text-[15px] font-bold tabular-nums leading-none tracking-[-0.03em] text-[var(--mk-ink)]">{n}</dd>
+              <dt className="mt-1 text-[9px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]">{l}</dt>
+            </div>
+          ))}
+        </dl>
+
         <div className="mb-3 flex items-start gap-2 border border-dashed border-[var(--mk-cyan)] bg-[var(--mk-cyan-soft)] px-2.5 py-2 text-[12px] leading-snug text-[#08596c]">
           <PixelIcon name="spark" color="#08596c" className="mt-0.5 h-3 w-3 shrink-0" />
           <span>
@@ -117,18 +135,18 @@ export function HeroSpace() {
           </span>
         </div>
 
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          <div className="grid content-start gap-2.5">
-            <MiniCard author="lena" initial="L" tint="bg-[var(--mk-indigo)]" phase="Hypothesis" roles={["Claim"]} title="Event-driven billing lets us add usage pricing without touching invoicing.">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid content-start gap-3">
+            <MiniCard author="lena" initial="L" tint="bg-[var(--mk-indigo)]" phase="Hypothesis" roles={["Claim"]} no={142} title="Event-driven billing lets us add usage pricing without touching invoicing.">
               We believe events decouple metering from invoices; we&apos;ll know if a new plan ships in under a sprint.
             </MiniCard>
-            <MiniCard author="marcus" initial="M" tint="bg-[var(--mk-cyan)]" phase="Hypothesis" roles={["Counter-claim"]} title="Ordering isn't guaranteed by our payment provider.">
+            <MiniCard author="marcus" initial="M" tint="bg-[var(--mk-cyan)]" phase="Hypothesis" roles={["Counter-claim"]} no={151} title="Ordering isn't guaranteed by our payment provider.">
               <Ref id={142} /> assumes events arrive in order. Provider retries arrive out of order today.
             </MiniCard>
           </div>
-          <div className="grid content-start gap-2.5">
-            <MiniCard author="wei" initial="W" tint="bg-[#d8628a]" phase="Discovery" roles={["Evidence"]} title="3 of the last 5 billing incidents were sync timeouts." />
-            <MiniCard author="lena" initial="L" tint="bg-[var(--mk-indigo)]" phase="Specs" roles={["Risk"]} title="The migration window overlaps quarter-end close." />
+          <div className="grid content-start gap-3">
+            <MiniCard author="wei" initial="W" tint="bg-[#d8628a]" phase="Discovery" roles={["Evidence"]} no={148} title="3 of the last 5 billing incidents were sync timeouts." />
+            <MiniCard author="lena" initial="L" tint="bg-[var(--mk-indigo)]" phase="Specs" roles={["Risk"]} no={157} title="The migration window overlaps quarter-end close." />
             <div className="rounded-[5px] border border-dashed border-[var(--mk-indigo)] bg-[var(--mk-indigo-soft)] p-3">
               <div className="mk-pixel mb-1.5 flex items-center gap-1.5 text-[10px] text-[var(--mk-indigo-deep)]">
                 <PixelIcon name="spark" color="var(--mk-indigo-deep)" className="h-3 w-3" /> Suggested · Mitigation
@@ -137,6 +155,16 @@ export function HeroSpace() {
                 Cut over after close: run both pipelines in shadow mode for two weeks, addressing <Ref id={157} />.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Only a slice is on screen: the rest of the space sits beneath */}
+        <div className="relative mb-2 mt-4">
+          <div aria-hidden className="absolute inset-x-3 -bottom-[7px] h-3 rounded-b-[5px] border border-t-0 border-[var(--mk-ink)] bg-white" />
+          <div aria-hidden className="absolute inset-x-1.5 -bottom-[4px] h-3 rounded-b-[5px] border border-t-0 border-[var(--mk-ink)] bg-white" />
+          <div className="relative flex items-center gap-2 rounded-[5px] border border-[var(--mk-ink)] bg-white px-3 py-2 text-[12px] tracking-tight">
+            <span className="font-semibold text-[var(--mk-ink)]">+ 60 more cards</span>
+            <span className="text-[var(--mk-ink-2)]">across Seed, Discovery, Hypothesis, Specs and Decision</span>
           </div>
         </div>
       </div>

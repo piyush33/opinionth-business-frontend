@@ -16,11 +16,11 @@ const pixel = Silkscreen({
 export const metadata: Metadata = {
   title: "Collabrr · Where complex discussions live",
   description:
-    "When a thread outgrows Slack and the meeting would span three time zones, Collabrr gives the discussion a home: questions, claims, evidence, risks and decisions as linked cards your team develops asynchronously, with the reasoning kept.",
+    "When a thread outgrows chat and the meeting would span three time zones, Collabrr gives the discussion a home: questions, claims, evidence, risks and decisions as linked cards your team develops asynchronously, with the reasoning kept.",
   openGraph: {
     title: "Collabrr · Where complex discussions live",
     description:
-      "The reasoning layer between chat and meetings, built first for distributed product teams.",
+      "The reasoning layer between quick chat and finished docs, built first for distributed product teams.",
     url: "https://collabrr.io",
     siteName: "Collabrr",
     type: "website",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Collabrr · Where complex discussions live",
     description:
-      "The reasoning layer between chat and meetings, built first for distributed product teams.",
+      "The reasoning layer between quick chat and finished docs, built first for distributed product teams.",
   },
 };
 
