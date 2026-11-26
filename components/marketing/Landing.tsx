@@ -14,6 +14,7 @@ import {
   Check,
   Globe2,
   ChevronDown,
+  ArrowUpRight,
 } from "lucide-react";
 import MarketingNav, { Logo } from "./MarketingNav";
 import DesignPartnerForm from "./DesignPartnerForm";
@@ -109,6 +110,54 @@ const FAQ = [
   { q: "Won't structure slow people down?", a: "Structure that costs effort in the moment is why earlier tools were loved by researchers and ignored by teams. In Collabrr, choosing a card's role takes a click, and AI suggests the next card in the right voice, so the structure is a by-product of discussing, not a tax on it." },
   { q: "Who can see what?", a: "Spaces and cards follow your workspace's visibility: organisation-wide, team-only, locked spaces and private cards. AI summaries and suggestions are built only from the cards the person viewing them is allowed to see." },
   { q: "Will people know where to start?", a: "Every card is a valid entry point. Start with a question, add what you know, and link to what you're responding to. Spaces gain shape as the cards accumulate, and the AI names the topic once there's enough to name." },
+];
+
+const MEDIUM = "https://medium.com/@blue___gene";
+
+// From the founder's Medium (newest first).
+const ESSAYS = [
+  {
+    theme: "The vision",
+    title: "Meetings Are Compressed Reasoning",
+    dek: "Why complex discussions need a third layer between chat and meetings.",
+    meta: "Nov 2026 · 9 min read",
+    href: "https://medium.com/@blue___gene/meetings-are-compressed-reasoning-why-complex-discussions-need-a-third-layer-205629bf4644",
+  },
+  {
+    theme: "AI",
+    title: "Humans at Both Ends",
+    dek: "An AI-native platform for collaborative thinking, and the ergonomics we learned building it.",
+    meta: "Nov 2026 · 10 min read",
+    href: "https://medium.com/@blue___gene/humans-at-both-ends-ebdac1d50dae",
+  },
+  {
+    theme: "Distributed teams",
+    title: "When the Slack Thread Gets Too Big, Teams Hop on a Call. Distributed Teams Can't.",
+    dek: "A workspace built around a different primary object: the line of reasoning.",
+    meta: "Nov 2026 · 5 min read",
+    href: "https://medium.com/@blue___gene/when-the-slack-thread-gets-too-big-and-complex-teams-hop-on-a-call-distributed-teams-cant-fdfc615cd5d3",
+  },
+  {
+    theme: "Design",
+    title: "Designing for Collective Intelligence",
+    dek: "How platforms can incentivise collaborative thinking and generate high-quality decision traces.",
+    meta: "Mar 2026 · 6 min read",
+    href: "https://medium.com/@blue___gene/designing-for-collective-intelligence-how-platforms-can-incentivize-collaborative-thinking-and-81993cb5a739",
+  },
+  {
+    theme: "Decision traces",
+    title: "Why Decision Traces Built From Structured Conversation Beat AI Reconstruction",
+    dek: "The case for capturing reasoning at the source.",
+    meta: "Mar 2026 · 5 min read",
+    href: "https://medium.com/@blue___gene/why-decision-traces-built-from-structured-conversation-beat-ai-reconstruction-18b62abc8280",
+  },
+  {
+    theme: "First principles",
+    title: "The Canvas Is a Lie",
+    dek: "Why conversation does the real work in collaborative thinking.",
+    meta: "Feb 2026 · 8 min read",
+    href: "https://medium.com/@blue___gene/the-canvas-is-a-lie-why-conversation-does-the-real-work-in-collaborative-thinking-49b53f17c786",
+  },
 ];
 
 const STAGES = [
@@ -494,6 +543,49 @@ export default function Landing() {
           </div>
         </Section>
 
+        {/* Essays */}
+        <Section id="essays" className="border-t border-[var(--mk-rule)]">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div className="max-w-2xl">
+              <p className={eyebrow}>From the founder</p>
+              <h2 className={`${h2} mt-3`}>The thinking behind Collabrr.</h2>
+              <p className={`${lede} mt-5`}>
+                Essays on how teams reason together, why meetings and chat fall short for hard decisions, and how AI should join the
+                conversation.
+              </p>
+            </div>
+            <a
+              href={MEDIUM}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--mk-rule)] bg-white px-5 py-2.5 text-[14px] font-semibold hover:border-[var(--mk-indigo)]"
+            >
+              All essays on Medium <ArrowUpRight className="h-4 w-4" />
+            </a>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {ESSAYS.map((e) => (
+              <a
+                key={e.href}
+                href={e.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col rounded-2xl border border-[var(--mk-rule)] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--mk-indigo)] hover:shadow-[0_18px_40px_-28px_rgba(63,64,201,0.6)]"
+              >
+                <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--mk-cyan)]">{e.theme}</span>
+                <h3 className="mk-display mt-2 text-[1.18rem] font-bold leading-snug group-hover:text-[var(--mk-indigo-deep)]">
+                  {e.title}
+                </h3>
+                <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-[var(--mk-ink-2)]">{e.dek}</p>
+                <span className="mt-4 flex items-center justify-between text-[12.5px] text-[var(--mk-ink-2)]">
+                  {e.meta}
+                  <ArrowUpRight className="h-4 w-4 text-[var(--mk-ink-2)] transition group-hover:text-[var(--mk-indigo)]" />
+                </span>
+              </a>
+            ))}
+          </div>
+        </Section>
+
         {/* FAQ */}
         <Section className="border-t border-[var(--mk-rule)] bg-white">
           <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
@@ -558,6 +650,7 @@ export default function Landing() {
               <a href="#design-partners" className="hover:text-[var(--mk-indigo)]">Design partners</a>
               <a href="#how" className="hover:text-[var(--mk-indigo)]">How it works</a>
               <a href="#ai" className="hover:text-[var(--mk-indigo)]">AI</a>
+              <a href={MEDIUM} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--mk-indigo)]">Essays on Medium</a>
             </div>
           </div>
           <div className="text-[12.5px] leading-relaxed text-[var(--mk-ink-2)]">

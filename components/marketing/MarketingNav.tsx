@@ -11,6 +11,7 @@ const LINKS = [
   { href: "#ai", label: "AI" },
   { href: "#use-cases", label: "Use cases" },
   { href: "#compare", label: "Compare" },
+  { href: "#essays", label: "Essays" },
 ];
 
 export function Logo({ size = 30 }: { size?: number }) {
