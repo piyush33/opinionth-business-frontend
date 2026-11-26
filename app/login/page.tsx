@@ -2,6 +2,10 @@
 import LoginPageClient from "@/components/popups/login-page-client";
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { Silkscreen } from "next/font/google";
+
+// Pixel face for the bitmap-theme labels (see components/marketing).
+const pixel = Silkscreen({ subsets: ["latin"], weight: ["400"], variable: "--font-pixel" });
 
 export const metadata: Metadata = {
   title: "Log in · Collabrr",
@@ -21,8 +25,10 @@ export default async function Page({
   const t = typeof sp.t === "string" ? sp.t : undefined;
 
   return (
-    <Suspense fallback={null}>
-      <LoginPageClient orgSlugParam={org ?? null} inviteToken={t ?? null} />
-    </Suspense>
+    <div className={pixel.variable}>
+      <Suspense fallback={null}>
+        <LoginPageClient orgSlugParam={org ?? null} inviteToken={t ?? null} />
+      </Suspense>
+    </div>
   );
 }
