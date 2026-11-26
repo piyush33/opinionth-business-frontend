@@ -21,8 +21,13 @@ export const metadata: Metadata = {
       "The reasoning layer between chat and meetings, built first for distributed product teams.",
     url: "https://collabrr.io",
     siteName: "Collabrr",
-    images: [{ url: "/brand/collabrr-logo.png", width: 654, height: 471 }],
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Collabrr · Where complex discussions live",
+    description:
+      "The reasoning layer between chat and meetings, built first for distributed product teams.",
   },
 };
 
