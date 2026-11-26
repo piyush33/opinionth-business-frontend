@@ -2,13 +2,15 @@
 // Invite links (/?t=…) and org links (/?org=…) still go straight to sign-in.
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Bricolage_Grotesque } from "next/font/google";
+import { Silkscreen } from "next/font/google";
 import Landing from "@/components/marketing/Landing";
 
-const display = Bricolage_Grotesque({
+// Inter (from the root layout) is the typeface; this pixel face is only
+// for small labels, the site's nod to 1960s-70s bitmap screens.
+const pixel = Silkscreen({
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-  variable: "--font-display",
+  weight: ["400"],
+  variable: "--font-pixel",
 });
 
 export const metadata: Metadata = {
@@ -47,7 +49,7 @@ export default async function Page({
   }
 
   return (
-    <div className={display.variable}>
+    <div className={pixel.variable}>
       <Landing />
     </div>
   );
