@@ -41,6 +41,9 @@ import {
   hydrateForUI,
 } from "@/utils/customCategories";
 import { FolderOpen } from "lucide-react";
+import AppNav from "@/components/app/AppNav";
+import { PixelLabel, btn } from "@/components/app/ui";
+import { LogoBitmap } from "@/components/marketing/Bitmap";
 import SpaceIdeasPanel, {
   SpaceIdeasButton,
   type SpaceIdea,
@@ -524,10 +527,10 @@ export default function ExplorePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="mk-grid flex min-h-screen items-center justify-center bg-[var(--mk-paper)]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <LogoBitmap className="mx-auto w-16" />
+          <p className="mt-4 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]">Loading…</p>
         </div>
       </div>
     );
@@ -603,235 +606,63 @@ export default function ExplorePage() {
     : PHASE_OPTIONS;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Desktop Navbar - Hidden on Mobile */}
-      <nav className="hidden md:block fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-full mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center space-x-4">
-              <Link href="/explore" className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">C</span>
-                </div>
-                <span className="font-bold text-xl text-gray-900">
-                  Collabrr
-                </span>
-              </Link>
-            </div>
-
-            {/* Navigation Links */}
-            <div className="flex items-center space-x-1">
-              {[
-                { name: "Home", href: "/home", key: "home" },
-                { name: "Explore", href: "/explore", key: "explore" },
-                { name: "Create", href: "/create", key: "create" },
-              ].map((item) => (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                    item.key === "explore"
-                      ? "bg-gray-900 text-white shadow-lg"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-
-            {/* Enhanced Search Bar */}
-            <div className="flex-1 max-w-md mx-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search whiteboards, users, topics..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white focus:border-purple-300 transition-all duration-200"
-                />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm("")}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Action Icons */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsNotificationsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200 relative"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
-                )}
-              </button>
-
-              <button
-                onClick={() => setIsInboxPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200 relative"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></span>
-              </button>
-
-              <Link
-                href="/profile"
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
-              >
-                <User className="w-5 h-5" />
-              </Link>
-
-              <button
-                onClick={() => setIsSettingsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
-              >
-                <ChevronDown className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Header - Hidden on Desktop */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-4 py-3 space-y-3">
-          {/* Top Row - Logo and Menu */}
-          <div className="flex items-center justify-between">
-            <Link href="/explore" className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-blue-600 rounded-md flex items-center justify-center">
-                <span className="text-white font-bold text-xs">C</span>
-              </div>
-              <span className="font-bold text-lg text-gray-900">Explore</span>
-            </Link>
-
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <Menu className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setIsMobileSidebarOpen(true)}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex-1 ${selectedCategoryData.bgColor} ${selectedCategoryData.color}`}
-            >
-              <selectedCategoryData.icon className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">{selectedCategoryData.name}</span>
-              <ChevronRight className="w-4 h-4 flex-shrink-0" />
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search whiteboards, users, topics..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[var(--mk-paper)]">
+      <AppNav
+        active="explore"
+        search={{ value: searchTerm, onChange: setSearchTerm, placeholder: "Search whiteboards, people, topics…" }}
+        unreadCount={unreadCount}
+        onNotifications={() => setIsNotificationsPopupOpen(true)}
+        onInbox={() => setIsInboxPopupOpen(true)}
+        onSettings={() => setIsSettingsPopupOpen(true)}
+        mobileExtra={
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="flex w-full items-center gap-2 rounded-[4px] border border-[var(--mk-ink)] bg-white px-3 py-2 text-left text-[14px] font-semibold tracking-tight"
+          >
+            <selectedCategoryData.icon className="h-4 w-4 shrink-0 text-[var(--mk-indigo)]" />
+            <span className="flex-1 truncate">{selectedCategoryData.name}</span>
+            <span className="tabular-nums text-[var(--mk-ink-2)]">{selectedCategoryData.count ?? 0}</span>
+            <ChevronRight className="h-4 w-4 shrink-0" />
+          </button>
+        }
+      />
 
       {isMobileSidebarOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsMobileSidebarOpen(false)}
-          ></div>
-          <div className="absolute inset-0 bg-white">
-            {/* Mobile Sidebar Header */}
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Categories
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Organize your whiteboards
-                </p>
-              </div>
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-[var(--mk-ink)]/40" onClick={() => setIsMobileSidebarOpen(false)} />
+          <div className="absolute inset-0 flex flex-col bg-white">
+            <div className="flex items-center justify-between border-b border-[var(--mk-ink)] px-5 py-4">
+              <PixelLabel>Categories</PixelLabel>
               <button
                 onClick={() => setIsMobileSidebarOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="grid h-9 w-9 place-items-center rounded-[4px] border border-[var(--mk-ink)]"
+                aria-label="Close categories"
               >
-                <X className="w-5 h-5 text-gray-600" />
+                <X className="h-4 w-4" />
               </button>
             </div>
-
-            {/* Mobile Category List */}
-            <div className="p-4 space-y-2 overflow-y-auto h-[calc(100vh-80px)]">
+            <div className="flex-1 overflow-y-auto">
               {categories.map((category) => {
                 const IconComponent = category.icon;
                 const isSelected = selectedCategory === category.id;
-
                 return (
+                  <div key={category.id}>
                   <button
-                    key={category.id}
                     onClick={() => handleMobileCategorySelect(category.id)}
-                    className={`w-full flex items-center space-x-3 p-4 rounded-xl text-left transition-all duration-200 ${
-                      isSelected
-                        ? `${category.bgColor} ${category.color} shadow-sm`
-                        : "hover:bg-gray-50 text-gray-700"
+                    className={`flex w-full items-center gap-3 px-5 py-4 text-left ${
+                      isSelected ? "bg-[var(--mk-ink)] text-white" : "hover:bg-[var(--mk-indigo-soft)]"
                     }`}
                   >
-                    <div
-                      className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                        isSelected ? "bg-white/20" : category.bgColor
-                      }`}
-                    >
-                      <IconComponent
-                        className={`w-5 h-5 ${
-                          isSelected ? "text-current" : category.color
-                        }`}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-base truncate">
-                          {category.name}
-                        </span>
-                        <span
-                          className={`text-sm px-2 py-1 rounded-full ${
-                            isSelected
-                              ? "bg-white/20 text-current"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {category.count || 0}
-                        </span>
-                      </div>
-                      <p
-                        className={`text-sm mt-1 ${
-                          isSelected
-                            ? "text-current opacity-80"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {category.description}
-                      </p>
-                    </div>
+                    <IconComponent className={`h-4 w-4 shrink-0 ${isSelected ? "text-[#8fe3f3]" : "text-[var(--mk-indigo)]"}`} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15px] font-semibold tracking-tight">{category.name}</span>
+                      <span className={`block truncate text-[12.5px] tracking-tight ${isSelected ? "text-white/70" : "text-[var(--mk-ink-2)]"}`}>{category.description}</span>
+                    </span>
+                    <span className={`tabular-nums text-[13px] ${isSelected ? "text-white/80" : "text-[var(--mk-ink-2)]"}`}>
+                      {category.count || 0}
+                    </span>
                   </button>
+                  </div>
                 );
               })}
             </div>
@@ -842,142 +673,89 @@ export default function ExplorePage() {
       {/* Main Layout with Sidebar */}
       <div className="flex pt-16 md:pt-16">
         <aside
-          className={`hidden md:block fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transition-all duration-300 ${
-            isCategorySidebarOpen ? "w-80" : "w-16"
-          } overflow-y-auto`}
+          className={`fixed left-0 top-16 hidden h-[calc(100vh-4rem)] overflow-y-auto border-r border-[var(--mk-ink)] bg-white transition-[width] duration-200 md:block ${
+            isCategorySidebarOpen ? "w-72" : "w-16"
+          }`}
         >
-          <div className="p-4">
-            {/* Sidebar Header */}
-            <div className="flex items-center justify-between mb-6">
-              {isCategorySidebarOpen && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Categories
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    Organize your whiteboards
-                  </p>
-                </div>
-              )}
-              <button
-                onClick={() => setIsCategorySidebarOpen(!isCategorySidebarOpen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ChevronRight
-                  className={`w-4 h-4 text-gray-600 transition-transform ${
-                    isCategorySidebarOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Category List */}
-            <div className="space-y-1">
-              {categories.map((category) => {
-                const IconComponent = category.icon;
-                const isSelected = selectedCategory === category.id;
-
-                return (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-all duration-200 group ${
-                      isSelected
-                        ? `${category.bgColor} ${category.color} shadow-sm`
-                        : "hover:bg-gray-50 text-gray-700"
-                    }`}
-                    title={!isCategorySidebarOpen ? category.name : ""}
-                  >
-                    <div
-                      className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${
-                        isSelected ? "bg-white/20" : category.bgColor
-                      }`}
-                    >
-                      <IconComponent
-                        className={`w-4 h-4 ${
-                          isSelected ? "text-current" : category.color
-                        }`}
-                      />
-                    </div>
-
-                    {isCategorySidebarOpen && (
-                      <>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-sm truncate">
-                              {category.name}
-                            </span>
-                            <span
-                              className={`text-xs px-2 py-1 rounded-full ${
-                                isSelected
-                                  ? "bg-white/20 text-current"
-                                  : "bg-gray-100 text-gray-500"
-                              }`}
-                            >
-                              {category.count || 0}
-                            </span>
-                          </div>
-                          <p
-                            className={`text-xs mt-1 truncate ${
-                              isSelected
-                                ? "text-current opacity-80"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {category.description}
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+          <div className={`flex items-center pb-4 pt-6 ${isCategorySidebarOpen ? "justify-between px-5" : "justify-center px-2"}`}>
+            {isCategorySidebarOpen && <PixelLabel>Categories</PixelLabel>}
+            <button
+              onClick={() => setIsCategorySidebarOpen(!isCategorySidebarOpen)}
+              className="grid h-8 w-8 place-items-center rounded-[4px] border border-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
+              aria-label={isCategorySidebarOpen ? "Collapse categories" : "Expand categories"}
+            >
+              <ChevronRight className={`h-4 w-4 transition-transform ${isCategorySidebarOpen ? "rotate-180" : ""}`} />
+            </button>
           </div>
+          <div className="border-t border-[var(--mk-ink)]">
+            {categories.map((category) => {
+              const IconComponent = category.icon;
+              const isSelected = selectedCategory === category.id;
+              return (
+                <div key={category.id}>
+                <button
+                  onClick={() => setSelectedCategory(category.id)}
+                  title={category.description}
+                  className={`flex w-full items-center gap-3 py-3.5 text-left transition-colors ${
+                    isCategorySidebarOpen ? "px-5" : "justify-center px-2"
+                  } ${isSelected ? "bg-[var(--mk-ink)] text-white" : "hover:bg-[var(--mk-indigo-soft)]"}`}
+                >
+                  <IconComponent className={`h-4 w-4 shrink-0 ${isSelected ? "text-[#8fe3f3]" : "text-[var(--mk-indigo)]"}`} />
+                  {isCategorySidebarOpen && (
+                    <>
+                      <span className="flex-1 truncate text-[15px] font-semibold tracking-tight">{category.name}</span>
+                      <span className={`tabular-nums text-[13px] ${isSelected ? "text-white/80" : "text-[var(--mk-ink-2)]"}`}>
+                        {category.count || 0}
+                      </span>
+                    </>
+                  )}
+                </button>
+                </div>
+              );
+            })}
+          </div>
+          {isCategorySidebarOpen && (
+            <div className="p-5">
+              <LogoBitmap className="w-20" />
+            </div>
+          )}
         </aside>
 
         <main
-          className={`flex-1 min-w-0 transition-all duration-300 mt-25 md:mt-0 ${
-            isCategorySidebarOpen ? "md:ml-80" : "md:ml-16"
+          className={`mt-[7.25rem] min-w-0 flex-1 transition-[margin] duration-200 md:mt-0 ${
+            isCategorySidebarOpen ? "md:ml-72" : "md:ml-16"
           }`}
         >
-          <div className="p-4 md:p-6 ">
-            <div className="mb-6 md:mb-8">
-              <div className="flex items-center space-x-3 md:space-x-4 mb-3 md:mb-4">
-                <div
-                  className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${selectedCategoryData.bgColor}`}
-                >
-                  <selectedCategoryData.icon
-                    className={`w-5 h-5 md:w-6 md:h-6 ${selectedCategoryData.color}`}
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
-                    {selectedCategoryData.name}
-                  </h1>
-                  <p className="text-gray-600 mt-1 text-sm md:text-base line-clamp-2">
-                    {selectedCategoryData.description}
-                  </p>
-                </div>
-                {selectedCategoryData.id !== "all" && (
-                  <SpaceIdeasButton
-                    open={ideasOpen}
-                    onToggle={() => setIdeasOpen((o) => !o)}
-                    categoryName={selectedCategoryData.name}
-                  />
-                )}
+          <div className="mk-grid border-b border-[var(--mk-ink)] px-4 pb-8 pt-8 md:px-10 md:pb-9 md:pt-9">
+            <PixelLabel>
+              {selectedCategoryData.id === "all"
+                ? "All categories"
+                : `Category ${Math.max(0, categories.findIndex((c) => c.id === selectedCategoryData.id))}`}
+            </PixelLabel>
+            <div className="mt-4 flex flex-wrap items-end gap-5">
+              <div className="min-w-0 flex-1">
+                <h1 className="mk-display truncate text-[2.6rem] md:text-[3.6rem]">
+                  {selectedCategoryData.name}
+                  <span className="mk-cursor" aria-hidden />
+                </h1>
+                <p className="mt-3 max-w-xl text-[15.5px] leading-relaxed tracking-tight text-[var(--mk-ink-2)] md:text-[16.5px]">
+                  {selectedCategoryData.description}
+                </p>
+                <p className="mt-3 text-[12.5px] tabular-nums tracking-tight text-[#868a9c]">
+                  {feed.total ?? filteredFeed.length} whiteboards · updated {new Date().toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
+                </p>
               </div>
-
-              <div className="flex items-center space-x-3 md:space-x-4 text-xs md:text-sm text-gray-500">
-                <span>{feed.total ?? filteredFeed.length} whiteboards</span>
-                <span>•</span>
-                <span className="hidden sm:inline">
-                  Updated {new Date().toLocaleDateString()}
-                </span>
-                <span className="sm:hidden">Updated today</span>
-              </div>
+              {selectedCategoryData.id !== "all" && (
+                <SpaceIdeasButton
+                  open={ideasOpen}
+                  onToggle={() => setIdeasOpen((o) => !o)}
+                  categoryName={selectedCategoryData.name}
+                />
+              )}
             </div>
+          </div>
 
+          <div className="px-4 py-8 md:px-10">
             {/* Suggested new space: in the page, above the cards */}
             {ideasOpen && selectedCategoryData.id !== "all" && (
               <SpaceIdeasPanel
@@ -1007,57 +785,36 @@ export default function ExplorePage() {
             )}
 
             {/* Controls Bar */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4 mb-4 md:mb-6">
-              <div className="space-y-3 md:space-y-4">
-                <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-                  {/* Left Controls - Stack on mobile */}
-                  <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <SlidersHorizontal className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                      <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                        Sort by:
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={() => setShowFilters(!showFilters)}
-                      className={`flex items-center justify-center space-x-2 px-3 py-1.5 md:py-1 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                        showFilters
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      <Filter className="w-4 h-4 flex-shrink-0" />
-                      <span>Filters</span>
-                      {activeFilterCount > 0 && (
-                        <span className="ml-1 px-1.5 py-0.5 bg-purple-600 text-white text-xs rounded-full">
-                          {activeFilterCount}
-                        </span>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Right Controls - Stack on mobile */}
-                  <div className="flex items-center justify-between sm:justify-end space-x-4">
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <span className="whitespace-nowrap">
-                        {feed.total ?? filteredFeed.length} results
-                      </span>
-                    </div>
-                  </div>
-                </div>
+            <div className="mb-6">
+              <div className="flex flex-wrap items-center gap-3 border-b border-[var(--mk-ink)] pb-3 text-[14px] tracking-tight">
+                <span className="text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]">Sort</span>
+                <span className="font-semibold">Most recent</span>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`inline-flex items-center gap-2 rounded-[4px] border border-[var(--mk-ink)] px-3 py-1.5 text-[13.5px] font-semibold transition-colors ${
+                    showFilters ? "bg-[var(--mk-ink)] text-white" : "bg-white hover:bg-[var(--mk-indigo-soft)]"
+                  }`}
+                  aria-expanded={showFilters}
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className={`tabular-nums ${showFilters ? "text-[#8fe3f3]" : "text-[var(--mk-indigo)]"}`}>{activeFilterCount}</span>
+                  )}
+                </button>
+                <span className="ml-auto tabular-nums text-[var(--mk-ink-2)]">{feed.total ?? filteredFeed.length} results</span>
               </div>
 
               {showFilters && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="mk-hard-sm mt-4 rounded-[5px] bg-white p-5">
                   {/* 2 columns on sm+, Role/Type spans both on row 2 */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Phase Filter (left of first row) */}
                     <div>
-                      <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                        <Workflow className="w-4 h-4 text-purple-600" />
+                      <label className="flex items-center space-x-2 text-sm font-medium text-[var(--mk-ink)] mb-2">
+                        <Workflow className="w-4 h-4 text-[var(--mk-indigo)]" />
                         <span>Phase</span>
-                        <span className="text-xs text-gray-500 font-normal">
+                        <span className="text-xs text-[var(--mk-ink-2)] font-normal">
                           (Work cycle stage)
                         </span>
                       </label>
@@ -1065,7 +822,7 @@ export default function ExplorePage() {
                         <select
                           value={selectedPhase}
                           onChange={(e) => setSelectedPhase(e.target.value)}
-                          className="w-full bg-gray-50 text-gray-500 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none pr-10"
+                          className="w-full bg-white text-[var(--mk-ink-2)] border border-[var(--mk-ink)] rounded-[4px] px-3 py-2.5 text-sm focus:outline-none  focus:shadow-[3px_3px_0_var(--mk-indigo)] focus:ring-0 appearance-none pr-10"
                         >
                           <option value="all">
                             {isRoadmap ? "All Roadmap Phases" : "All Phases"}
@@ -1082,11 +839,11 @@ export default function ExplorePage() {
                           ))}
                         </select>
 
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--mk-ink-2)] pointer-events-none" />
                       </div>
                       {selectedPhase !== "all" && (
                         <div className="mt-2 flex items-center justify-between text-xs">
-                          <span className="text-purple-600 font-medium">
+                          <span className="text-[var(--mk-indigo)] font-medium">
                             {isRoadmap
                               ? selectedPhase // "Backlog" / "Planned" / ...
                               : PHASE_OPTIONS.find(
@@ -1095,7 +852,7 @@ export default function ExplorePage() {
                           </span>
                           <button
                             onClick={() => setSelectedPhase("all")}
-                            className="text-gray-500 hover:text-gray-700"
+                            className="text-[var(--mk-ink-2)] hover:text-[var(--mk-ink)]"
                           >
                             Clear
                           </button>
@@ -1105,7 +862,7 @@ export default function ExplorePage() {
 
                     {/* Date Filter (right of first row) */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-[var(--mk-ink)] mb-2">
                         Date Range
                       </label>
                       <select
@@ -1118,7 +875,7 @@ export default function ExplorePage() {
                             setCustomEnd("");
                           }
                         }}
-                        className="w-full bg-gray-50 text-gray-500 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full bg-white text-[var(--mk-ink-2)] border border-[var(--mk-ink)] rounded-[4px] px-3 py-2 text-sm focus:outline-none  focus:shadow-[3px_3px_0_var(--mk-indigo)] focus:ring-0"
                       >
                         <option value="all">All Time</option>
                         <option value="today">Today</option>
@@ -1130,7 +887,7 @@ export default function ExplorePage() {
                       {dateFilter === "custom" && (
                         <div className="mt-2 grid grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-xs text-gray-500 mb-1">
+                            <label className="block text-xs text-[var(--mk-ink-2)] mb-1">
                               From
                             </label>
                             <input
@@ -1138,11 +895,11 @@ export default function ExplorePage() {
                               value={customStart}
                               max={customEnd || undefined}
                               onChange={(e) => setCustomStart(e.target.value)}
-                              className="w-full bg-gray-50 text-gray-500 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              className="w-full bg-white text-[var(--mk-ink-2)] border border-[var(--mk-ink)] rounded-[4px] px-3 py-2 text-sm focus:outline-none  focus:shadow-[3px_3px_0_var(--mk-indigo)] focus:ring-0"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs text-gray-500 mb-1">
+                            <label className="block text-xs text-[var(--mk-ink-2)] mb-1">
                               To
                             </label>
                             <input
@@ -1151,7 +908,7 @@ export default function ExplorePage() {
                               min={customStart || undefined}
                               max={new Date().toISOString().slice(0, 10)} // prevent future dates
                               onChange={(e) => setCustomEnd(e.target.value)}
-                              className="w-full bg-gray-50 text-gray-500 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              className="w-full bg-white text-[var(--mk-ink-2)] border border-[var(--mk-ink)] rounded-[4px] px-3 py-2 text-sm focus:outline-none  focus:shadow-[3px_3px_0_var(--mk-indigo)] focus:ring-0"
                             />
                           </div>
                           {(customStart || customEnd) && (
@@ -1161,7 +918,7 @@ export default function ExplorePage() {
                                   setCustomStart("");
                                   setCustomEnd("");
                                 }}
-                                className="text-xs text-gray-500 hover:text-gray-700"
+                                className="text-xs text-[var(--mk-ink-2)] hover:text-[var(--mk-ink)]"
                               >
                                 Clear custom range
                               </button>
@@ -1173,14 +930,14 @@ export default function ExplorePage() {
 
                     {/* Role / Type Filter (second row, spans both columns) */}
                     <div className="sm:col-span-2">
-                      <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                        <Tag className="w-4 h-4 text-blue-600" />
+                      <label className="flex items-center space-x-2 text-sm font-medium text-[var(--mk-ink)] mb-2">
+                        <Tag className="w-4 h-4 text-[var(--mk-cyan)]" />
                         <span>Role / Type</span>
-                        <span className="text-xs text-gray-500 font-normal">
+                        <span className="text-xs text-[var(--mk-ink-2)] font-normal">
                           (What the card contributes)
                         </span>
                         {selectedRoleTypes.length > 0 && (
-                          <span className="ml-auto text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                          <span className="ml-auto text-xs px-2 py-0.5 bg-[var(--mk-cyan-soft)] text-[var(--mk-cyan-deep)] rounded-[4px]">
                             {selectedRoleTypes.length} selected
                           </span>
                         )}
@@ -1194,10 +951,10 @@ export default function ExplorePage() {
                             <button
                               key={roleType.id}
                               onClick={() => toggleRoleType(roleType.id)}
-                              className={`relative flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                              className={`relative flex items-center justify-between px-3 py-2 rounded-[4px] text-xs font-medium transition-all duration-200 ${
                                 isSelected
-                                  ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
-                                  : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
+                                  ? "bg-[var(--mk-cyan-soft)] text-[var(--mk-cyan-deep)] border border-[var(--mk-cyan)]"
+                                  : "bg-white text-[var(--mk-ink-2)] border border-[var(--mk-ink)] hover:bg-white border border-[var(--mk-rule)]"
                               }`}
                             >
                               <span className="truncate">{roleType.name}</span>
@@ -1212,7 +969,7 @@ export default function ExplorePage() {
                         <div className="mt-2 flex items-center justify-end">
                           <button
                             onClick={() => setSelectedRoleTypes([])}
-                            className="text-xs text-gray-500 hover:text-gray-700"
+                            className="text-xs text-[var(--mk-ink-2)] hover:text-[var(--mk-ink)]"
                           >
                             Clear all role types
                           </button>
@@ -1225,7 +982,7 @@ export default function ExplorePage() {
                   <div className="flex justify-between items-center mt-4">
                     <div className="flex flex-wrap gap-2">
                       {selectedPhase !== "all" && (
-                        <span className="inline-flex items-center space-x-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs">
+                        <span className="inline-flex items-center space-x-1 px-2 py-1 bg-[var(--mk-indigo-soft)] text-[var(--mk-indigo-deep)] rounded-[4px] text-xs">
                           <Workflow className="w-3 h-3" />
                           <span>
                             {isRoadmap
@@ -1236,7 +993,7 @@ export default function ExplorePage() {
                           </span>
                           <button
                             onClick={() => setSelectedPhase("all")}
-                            className="ml-1 hover:bg-purple-200 rounded-full p-0.5"
+                            className="ml-1 hover:bg-[var(--mk-indigo-soft)] rounded-[4px] p-0.5"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -1250,13 +1007,13 @@ export default function ExplorePage() {
                         return (
                           <span
                             key={rtId}
-                            className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs"
+                            className="inline-flex items-center space-x-1 px-2 py-1 bg-[var(--mk-cyan-soft)] text-[var(--mk-cyan-deep)] rounded-[4px] text-xs"
                           >
                             <Tag className="w-3 h-3" />
                             <span>{roleType?.name}</span>
                             <button
                               onClick={() => toggleRoleType(rtId)}
-                              className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+                              className="ml-1 hover:bg-[var(--mk-cyan-soft)] rounded-[4px] p-0.5"
                             >
                               <X className="w-3 h-3" />
                             </button>
@@ -1265,7 +1022,7 @@ export default function ExplorePage() {
                       })}
                       {dateFilter === "custom" &&
                         (customStart || customEnd) && (
-                          <span className="inline-flex items-center space-x-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs">
+                          <span className="inline-flex items-center space-x-1 px-2 py-1 bg-white border border-[var(--mk-rule)] text-[var(--mk-ink)] rounded-[4px] text-xs">
                             <Calendar className="w-3 h-3" />
                             <span>
                               {customStart
@@ -1282,7 +1039,7 @@ export default function ExplorePage() {
                                 setCustomStart("");
                                 setCustomEnd("");
                               }}
-                              className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                              className="ml-1 hover:bg-[var(--mk-indigo-soft)] rounded-[4px] p-0.5"
                             >
                               <X className="w-3 h-3" />
                             </button>
@@ -1291,7 +1048,7 @@ export default function ExplorePage() {
                     </div>
                     <button
                       onClick={clearAllFilters}
-                      className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors whitespace-nowrap"
+                      className="px-4 py-2 text-sm text-[var(--mk-ink-2)] hover:text-[var(--mk-ink)] transition-colors whitespace-nowrap"
                     >
                       Clear All Filters
                     </button>
@@ -1302,21 +1059,20 @@ export default function ExplorePage() {
 
             {/* Content Grid */}
             {isLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-                {[...Array(12)].map((_, index) => (
-                  <div key={index} className="animate-pulse">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                      <div className="h-32 md:h-48 bg-gray-200"></div>
-                      <div className="p-2 md:p-4">
-                        <div className="h-3 md:h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-2 md:h-3 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                    </div>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {[...Array(8)].map((_, index) => (
+                  <div key={index} className="animate-pulse rounded-[5px] border border-[var(--mk-rule)] bg-white p-5">
+                    <div className="h-2.5 w-1/3 bg-[var(--mk-indigo-soft)]" />
+                    <div className="mt-4 h-4 w-5/6 bg-[var(--mk-rule)]" />
+                    <div className="mt-2 h-4 w-2/3 bg-[var(--mk-rule)]" />
+                    <div className="mt-4 h-3 w-full bg-[#eceef3]" />
+                    <div className="mt-2 h-3 w-11/12 bg-[#eceef3]" />
+                    <div className="mt-6 h-3 w-1/2 bg-[#eceef3]" />
                   </div>
                 ))}
               </div>
             ) : filteredFeed.length > 0 ? (
-              <div className="w-full overflow-visible px-2 md:px-0">
+              <div className="w-full overflow-visible">
                 <MasonryGrid>
                   {filteredFeed.map((item) => (
                     <Card
@@ -1337,6 +1093,7 @@ export default function ExplorePage() {
                           ? PHASE_ID_TO_ROADMAP[item.phase ?? ""]
                           : undefined
                       }
+                      cardData={item}
                       feed="explore"
                     />
                   ))}
@@ -1344,151 +1101,38 @@ export default function ExplorePage() {
                 {/* Loads the next page as this nears the viewport */}
                 <div ref={sentinelRef} aria-hidden className="h-px" />
                 {feed.loadingMore && (
-                  <div className="flex justify-center py-6">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
-                  </div>
+                  <div className="flex justify-center py-6 text-[13px] tracking-tight text-[var(--mk-ink-2)]">Loading more…</div>
                 )}
                 {feed.error && !feed.loadingMore && (
-                  <div className="flex justify-center py-6 text-sm text-rose-600">
+                  <div className="flex justify-center py-6 text-[14px] tracking-tight text-[var(--mk-amber)]">
                     {feed.error}.{" "}
-                    <button
-                      type="button"
-                      onClick={feed.loadMore}
-                      className="ml-2 underline"
-                    >
+                    <button type="button" onClick={feed.loadMore} className="ml-2 font-semibold underline underline-offset-4">
                       Retry
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="text-center py-12 md:py-16 px-4">
-                <div
-                  className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center mx-auto mb-4 ${selectedCategoryData.bgColor}`}
-                >
-                  <selectedCategoryData.icon
-                    className={`w-10 h-10 md:w-12 md:h-12 ${selectedCategoryData.color}`}
-                  />
-                </div>
-                <div className="text-gray-900 text-lg font-medium mb-2">
-                  No whiteboards found
-                </div>
-                <div className="text-gray-500 text-sm mb-4 max-w-md mx-auto">
+              <div className="mx-auto max-w-lg py-16 text-center">
+                <LogoBitmap className="mx-auto w-24 opacity-90" />
+                <h2 className="mk-display mt-6 text-[1.8rem]">No whiteboards found</h2>
+                <p className="mt-3 text-[15px] tracking-tight text-[var(--mk-ink-2)]">
                   {searchTerm
-                    ? `No whiteboards match "${searchTerm}" in ${selectedCategoryData.name}`
-                    : `No whiteboards in ${selectedCategoryData.name} yet`}
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
-                    onClick={clearAllFilters}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                  >
-                    Clear Filters
+                    ? `No whiteboards match "${searchTerm}" in ${selectedCategoryData.name}.`
+                    : `No whiteboards in ${selectedCategoryData.name} yet.`}
+                </p>
+                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                  <button onClick={clearAllFilters} className={`${btn.plain} px-4 py-2 text-[14px]`}>
+                    Clear filters
                   </button>
-                  <Link
-                    href="/create"
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    Create Whiteboard
+                  <Link href="/create" className={`${btn.primary} px-4 py-2 text-[14px]`}>
+                    Create a whiteboard
                   </Link>
                 </div>
               </div>
             )}
           </div>
         </main>
-
-        {/* Mobile Menu Overlay */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 z-50">
-            <div
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-              onClick={() => setIsMobileMenuOpen(false)}
-            ></div>
-            <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-xl">
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-gray-900">Menu</span>
-                  <button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 hover:bg-gray-100 rounded-full"
-                  >
-                    <X className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
-              </div>
-              <div className="p-4 space-y-4">
-                <Link
-                  href="/home"
-                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Home className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-900">Home</span>
-                </Link>
-                <Link
-                  href="/explore"
-                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Compass className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-900">Explore</span>
-                </Link>
-                <Link
-                  href="/create"
-                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Plus className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-900">Create</span>
-                </Link>
-                <Link
-                  href="/profile"
-                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <User className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-900">Profile</span>
-                </Link>
-                <button
-                  onClick={() => {
-                    setIsNotificationsPopupOpen(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
-                >
-                  <Bell className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-900">Notifications</span>
-                  {unreadCount > 0 && (
-                    <span className="ml-auto w-2 h-2 bg-red-500 rounded-full"></span>
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    setIsInboxPopupOpen(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
-                >
-                  <MessageCircle className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-900">Messages</span>
-                  <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></span>
-                </button>
-                <Link
-                  href="/login"
-                  className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                  onClick={() => {
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("user");
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  <User className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-900">Logout</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Popups */}
         <InboxPopup

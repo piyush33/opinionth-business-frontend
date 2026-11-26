@@ -2,23 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   LinkIcon,
   Type,
   ImageIcon,
   Lock,
   Plus,
-  Bell,
-  MessageCircle,
-  User,
-  ChevronDown,
+  ChevronRight,
   ArrowLeft,
-  Search,
   X,
-  Menu,
-  Home,
-  Compass,
   Tag,
   Check,
   Building2,
@@ -35,6 +27,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import Card from "@/components/card";
+import AppNav from "@/components/app/AppNav";
+import { PixelLabel, Window, btn, field, tag } from "@/components/app/ui";
 import InboxPopup from "@/components/popups/inbox-popup";
 import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
@@ -332,7 +326,6 @@ export default function CreatePage() {
   const [isSettingsPopupOpen, setIsSettingsPopupOpen] = useState(false);
   const [isNotificationsPopupOpen, setIsNotificationsPopupOpen] =
     useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Loading states
   const [isCreating, setIsCreating] = useState(false);
@@ -776,848 +769,505 @@ export default function CreatePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-[var(--mk-paper)]">
+        <PixelLabel>LOADING</PixelLabel>
       </div>
     );
   }
 
+  const isRoleSelected = (id: string) =>
+    !!selectedRoleTypes.find((rt) => rt.id === id);
+
+  const spaceName: string =
+    (selectedCard?.title as string | undefined)?.trim() || "";
+
   return (
     <>
-      {/* Desktop Navbar - Hidden on Mobile */}
-      <nav className="hidden md:block fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <Link href="/explore" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">C</span>
-                </div>
-                <span className="font-bold text-xl text-gray-900">
-                  Collabrr
-                </span>
-              </Link>
-            </div>
+      <AppNav
+        active="create"
+        unreadCount={unreadCount}
+        onNotifications={() => setIsNotificationsPopupOpen(true)}
+        onInbox={() => setIsInboxPopupOpen(true)}
+        onSettings={() => setIsSettingsPopupOpen(true)}
+      />
 
-            {/* Navigation Links */}
-            <div className="flex items-center space-x-1">
-              {[
-                { name: "Home", href: "/home", key: "home" },
-                { name: "Explore", href: "/explore", key: "explore" },
-                { name: "Create", href: "/create", key: "create" },
-              ].map((item) => (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  className="px-4 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
-                >
-                  {item.name}
-                </Link>
-              ))}
+      <main className="min-h-screen bg-[var(--mk-paper)] pt-16 text-[var(--mk-ink)]">
+        {/* Header */}
+        <div className="mk-grid border-b border-[var(--mk-rule)]">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-4 px-4 py-8">
+            <div>
+              <PixelLabel>NEW CARD</PixelLabel>
+              <h1 className="mk-display mt-2 text-[34px] md:text-[44px]">
+                Create a card
+              </h1>
+              <p className="mt-1 text-[15px] tracking-tight text-[var(--mk-ink-2)]">
+                {spaceName
+                  ? `Adding to ${spaceName}`
+                  : "Start a new space with its opening card."}
+              </p>
             </div>
+            <button
+              onClick={() => router.back()}
+              className={`${btn.plain} px-3 py-2 text-[14px]`}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+          </div>
+        </div>
 
-            {/* Search Bar */}
-            <div className="flex-1 max-w-md mx-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search posts..."
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border-0 rounded-full text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
-                />
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+          {/* Editor */}
+          <Window title={spaceName ? `card://new · ${spaceName}` : "card://new"}>
+            <div className="space-y-6 p-4 md:p-6">
+              {/* Title + description */}
+              <div className="space-y-3">
+                <label className="block">
+                  <span className={tag}>Title</span>
+                  <input
+                    type="text"
+                    placeholder="Add your event a title..."
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className={`${field} mt-1.5 text-[20px] font-bold tracking-[-0.03em] md:text-[22px]`}
+                  />
+                </label>
+                <label className="block">
+                  <span className={tag}>Description</span>
+                  <textarea
+                    placeholder="And add an awesome description!"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    className={`${field} mt-1.5 resize-none`}
+                  />
+                </label>
               </div>
-            </div>
 
-            {/* Action Icons */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsNotificationsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200 relative"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
-                )}
-              </button>
-
-              <button
-                onClick={() => setIsInboxPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200 relative"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></span>
-              </button>
-
-              <Link
-                href="/profile"
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
-              >
-                <User className="w-5 h-5" />
-              </Link>
-
-              <button
-                onClick={() => setIsSettingsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
-              >
-                <ChevronDown className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Header - Hidden on Desktop */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between px-4 h-14">
-          <button
-            onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
-
-          <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-blue-600 rounded-md flex items-center justify-center">
-              <span className="text-white font-bold text-xs">C</span>
-            </div>
-            <span className="font-bold text-lg text-gray-900">Create</span>
-          </div>
-
-          <button
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <Menu className="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsMobileMenuOpen(false)}
-          ></div>
-          <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-xl">
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-900">Menu</span>
+              {/* Category */}
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <span className={tag}>Category</span>
+                  {selectedCard && <span className={tag}>Auto-selected</span>}
+                </div>
                 <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
+                  onClick={() => !selectedCard && setIsCategoryModalOpen(true)}
+                  disabled={!!selectedCard}
+                  className="flex w-full items-center gap-3 rounded-[4px] border border-[var(--mk-ink)] bg-white px-3 py-2.5 text-left text-[15px] tracking-tight transition-colors hover:bg-[var(--mk-indigo-soft)] disabled:cursor-not-allowed disabled:bg-[var(--mk-paper)] disabled:hover:bg-[var(--mk-paper)]"
                 >
-                  <X className="w-5 h-5 text-gray-600" />
+                  {selectedCategory ? (
+                    <>
+                      {(() => {
+                        const Icon = selectedCategory.icon;
+                        return (
+                          <Icon className="h-4 w-4 text-[var(--mk-indigo)]" />
+                        );
+                      })()}
+                      <span className="flex-1 font-semibold">
+                        {selectedCategory.name}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Tag className="h-4 w-4 text-[var(--mk-ink-2)]" />
+                      <span className="flex-1 text-[#8a8ea0]">
+                        Select a category
+                      </span>
+                    </>
+                  )}
+                  {!selectedCard && (
+                    <ChevronRight className="h-4 w-4 text-[var(--mk-ink-2)]" />
+                  )}
                 </button>
               </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <Link
-                href="/home"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-              >
-                <Home className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Home</span>
-              </Link>
-              <Link
-                href="/explore"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-              >
-                <Compass className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Explore</span>
-              </Link>
-              <Link
-                href="/profile"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-              >
-                <User className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Profile</span>
-              </Link>
-              <button
-                onClick={() => {
-                  setIsNotificationsPopupOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
-              >
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Notifications</span>
-                {unreadCount > 0 && (
-                  <span className="ml-auto w-2 h-2 bg-red-500 rounded-full"></span>
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  setIsInboxPopupOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
-              >
-                <MessageCircle className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Messages</span>
-              </button>
-              <Link
-                href="/login"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  localStorage.removeItem("user");
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                <User className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Logout</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Desktop Main Content - Hidden on Mobile */}
-      <div className="hidden md:block bg-gray-800 text-white min-h-screen font-sans mt-16">
-        {/* Title Section */}
-        <div className="flex flex-col items-center mb-5 pt-5">
-          <input
-            type="text"
-            placeholder="Add your event a title..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-3/5 p-2.5 my-2.5 border-none rounded-md bg-transparent text-white text-4xl text-center font-bold pt-7 placeholder-white focus:outline-none focus:border-b-2 focus:border-white focus:bg-gray-600"
-          />
-          <input
-            type="text"
-            placeholder="And add an awesome description!"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-3/5 p-2.5 my-2.5 border-none rounded-md bg-transparent text-white text-base text-center placeholder-white focus:outline-none focus:border-b-2 focus:border-white focus:bg-gray-600"
-          />
-        </div>
-
-        <div className="flex justify-center mb-5">
-          <div className="w-3/5 space-y-3">
-            {/* Category Selection */}
-            <button
-              onClick={() => !selectedCard && setIsCategoryModalOpen(true)}
-              disabled={!!selectedCard}
-              className={`w-full p-4 rounded-lg border-2 border-dashed transition-all duration-200 ${
-                selectedCard
-                  ? "border-gray-600 bg-gray-700 cursor-not-allowed opacity-60"
-                  : selectedCategory
-                  ? "border-purple-500 bg-gray-700"
-                  : "border-gray-500 bg-gray-700 hover:border-purple-400 hover:bg-gray-600"
-              }`}
-            >
-              <div className="flex items-center justify-center space-x-3">
-                {selectedCategory ? (
-                  <>
-                    {(() => {
-                      const Icon = selectedCategory.icon;
-                      return <Icon className="w-5 h-5 text-white" />;
-                    })()}
-                    <span className="text-white font-medium">
-                      {selectedCategory.name}
-                    </span>
-                    {selectedCard && (
-                      <span className="text-xs text-gray-400">
-                        (Auto-selected)
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <Tag className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-400">Select a category</span>
-                  </>
-                )}
-              </div>
-            </button>
-
-            {/* Phase + Role/Type in one row */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Phase (Required-on-submit) */}
-              <button
-                onClick={() => setIsPhaseModalOpen(true)}
-                className={`w-full p-4 rounded-lg border-2 border-dashed transition-all duration-200 ${
-                  selectedPhase
-                    ? "border-blue-500 bg-gray-700"
-                    : showPhaseError
-                    ? "border-red-500 bg-gray-700"
-                    : "border-gray-500 bg-gray-700 hover:border-blue-400 hover:bg-gray-600"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="w-5 h-5 text-white" />
-                    <span className="text-white font-medium">
-                      {selectedPhase ? selectedPhase.name : "Select Phase"}
+              {/* Phase + Role types */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className={tag}>Phase</span>
+                    <span
+                      className={`${tag} ${
+                        !selectedPhase && showPhaseError
+                          ? "!text-[var(--mk-amber)]"
+                          : ""
+                      }`}
+                    >
+                      Required
                     </span>
                   </div>
-                  {!selectedPhase && showPhaseError && (
-                    <span className="text-xs text-red-400 font-semibold">
-                      REQUIRED
+                  <button
+                    onClick={() => setIsPhaseModalOpen(true)}
+                    className={`flex w-full items-center gap-3 rounded-[4px] border bg-white px-3 py-2.5 text-left text-[15px] tracking-tight transition-colors hover:bg-[var(--mk-indigo-soft)] ${
+                      !selectedPhase && showPhaseError
+                        ? "border-[var(--mk-amber)] shadow-[3px_3px_0_var(--mk-amber)]"
+                        : "border-[var(--mk-ink)]"
+                    }`}
+                  >
+                    <Calendar className="h-4 w-4 text-[var(--mk-indigo)]" />
+                    <span
+                      className={`flex-1 ${
+                        selectedPhase ? "font-semibold" : "text-[#8a8ea0]"
+                      }`}
+                    >
+                      {selectedPhase ? selectedPhase.name : "Select Phase"}
                     </span>
+                    <ChevronRight className="h-4 w-4 text-[var(--mk-ink-2)]" />
+                  </button>
+                  {!selectedPhase && showPhaseError && (
+                    <p className="mt-1.5 text-[13px] font-semibold tracking-tight text-[var(--mk-amber)]">
+                      Pick a phase before creating.
+                    </p>
                   )}
                 </div>
-              </button>
 
-              {/* Role Type (Multi-select) */}
-              <button
-                onClick={() => setIsRoleTypeModalOpen(true)}
-                className={`w-full p-4 rounded-lg border-2 border-dashed transition-all duration-200 ${
-                  selectedRoleTypes.length > 0
-                    ? "border-green-500 bg-gray-700"
-                    : "border-gray-500 bg-gray-700 hover:border-green-400 hover:bg-gray-600"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Tag className="w-5 h-5 text-white" />
-                    <span className="text-white font-medium">
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className={tag}>Role types</span>
+                    <span className={tag}>Optional</span>
+                  </div>
+                  <button
+                    onClick={() => setIsRoleTypeModalOpen(true)}
+                    className="flex w-full items-center gap-3 rounded-[4px] border border-[var(--mk-ink)] bg-white px-3 py-2.5 text-left text-[15px] tracking-tight transition-colors hover:bg-[var(--mk-indigo-soft)]"
+                  >
+                    <Tag className="h-4 w-4 text-[var(--mk-indigo)]" />
+                    <span
+                      className={`flex-1 ${
+                        selectedRoleTypes.length > 0
+                          ? "font-semibold"
+                          : "text-[#8a8ea0]"
+                      }`}
+                    >
                       {selectedRoleTypes.length > 0
                         ? `${selectedRoleTypes.length} Role Type${
                             selectedRoleTypes.length > 1 ? "s" : ""
                           } Selected`
                         : "Select Role Types"}
                     </span>
-                  </div>
-                  <span className="text-xs text-gray-400">OPTIONAL</span>
+                    <ChevronRight className="h-4 w-4 text-[var(--mk-ink-2)]" />
+                  </button>
                 </div>
-                {selectedRoleTypes.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {selectedRoleTypes.map((rt) => (
-                      <span
-                        key={rt.id}
-                        className="px-3 py-1 bg-green-600 text-white text-xs rounded-full"
-                      >
-                        {rt.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Input Section */}
-        <div className="flex justify-center mb-5">
-          <div className="flex items-center bg-gray-500 rounded-2xl p-5 w-3/5">
-            <LinkIcon className="mx-2.5 cursor-pointer h-6 w-6" />
-            <input
-              type="text"
-              placeholder="Paste any web address"
-              value={webLink}
-              onChange={(e) => setWebLink(e.target.value)}
-              className="flex-1 p-2.5 border-none rounded-md bg-gray-500 text-white text-base placeholder-black focus:outline-none"
-            />
-            <button
-              onClick={() => setIsTextModalOpen(true)}
-              className="mx-2.5 cursor-pointer h-6 w-6"
-            >
-              <Type />
-            </button>
-            <label className="mx-2.5 cursor-pointer h-6 w-6">
-              <ImageIcon />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  e.target.files?.[0] && handleImageUpload(e.target.files[0])
-                }
-                className="hidden"
-              />
-            </label>
-            <button
-              onClick={() => {
-                // if the card is in an existing locked layer, you could prefill initialSelected here
-                setLockModalOpen(true);
-              }}
-              className={`mx-2.5 cursor-pointer h-6 w-6 ${
-                isLockSelected ? "opacity-100" : "opacity-50"
-              }`}
-            >
-              <Lock />
-            </button>
-          </div>
-        </div>
-
-        {/* Content Section */}
-        {hasContent && (
-          <div className="flex flex-col items-center w-full">
-            <div className="bg-gray-800 rounded-md pt-5 pb-24 w-full flex justify-center items-center">
-              <div className="max-w-sm">
-                <Card
-                  user={user.username}
-                  title={title || linkData.title || ""}
-                  description={description || linkData.description || ""}
-                  text={modalText}
-                  image={imageUrl || linkData.image}
-                  picture={user.image}
-                  onClick={() => {}}
-                  onCardTagClick={handleCardTagClick}
-                  onUserTagClick={handleUserTagClick}
-                />
               </div>
-            </div>
-          </div>
-        )}
-      </div>
 
-      {/* Mobile Main Content - Hidden on Desktop */}
-      <div className="md:hidden bg-gray-800 text-white min-h-screen font-sans pt-14">
-        <div className="px-4 py-6 space-y-6">
-          {/* Mobile Title Section */}
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Add your event a title..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-4 border-none rounded-lg bg-gray-700 text-white text-xl font-bold placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-            <textarea
-              placeholder="And add an awesome description!"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="w-full p-4 border-none rounded-lg bg-gray-700 text-white text-base placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
-            />
-          </div>
-
-          <div className="space-y-3">
-            {/* Category */}
-            <div className="bg-gray-700 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-300 mb-3">
-                Category
-              </h3>
-              <button
-                onClick={() => !selectedCard && setIsCategoryModalOpen(true)}
-                disabled={!!selectedCard}
-                className={`w-full p-3 rounded-lg border-2 border-dashed transition-all duration-200 ${
-                  selectedCard
-                    ? "border-gray-600 bg-gray-800 cursor-not-allowed opacity-60"
-                    : selectedCategory
-                    ? "border-purple-500 bg-gray-600"
-                    : "border-gray-500 bg-gray-600 hover:border-purple-400 hover:bg-gray-500"
-                }`}
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  {selectedCategory ? (
-                    <>
-                      {(() => {
-                        const Icon = selectedCategory.icon;
-                        return <Icon className="w-5 h-5 text-white" />;
-                      })()}
-
-                      <span className="text-white font-medium">
-                        {selectedCategory.name}
-                      </span>
-                      {selectedCard && (
-                        <span className="text-xs text-gray-400">(Auto)</span>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <Tag className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-400 text-sm">
-                        Select category
-                      </span>
-                    </>
-                  )}
-                </div>
-              </button>
-            </div>
-
-            {/* Phase (Required) */}
-            <div className="bg-gray-700 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-gray-300">Phase</h3>
-                <span className="text-xs text-red-400 font-semibold">
-                  REQUIRED
-                </span>
-              </div>
-              <button
-                onClick={() => setIsPhaseModalOpen(true)}
-                className={`w-full p-3 rounded-lg border-2 border-dashed transition-all duration-200 ${
-                  selectedPhase
-                    ? "border-blue-500 bg-gray-600"
-                    : "border-red-500 bg-gray-600 hover:border-red-400 hover:bg-gray-500"
-                }`}
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <Calendar className="w-4 h-4 text-white" />
-                  <span className="text-white font-medium">
-                    {selectedPhase ? selectedPhase.name : "Select Phase"}
-                  </span>
-                </div>
-              </button>
-            </div>
-
-            {/* Role Types (Multi-select) */}
-            <div className="bg-gray-700 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-gray-300">
-                  Role Types
-                </h3>
-                <span className="text-xs text-gray-400">OPTIONAL</span>
-              </div>
-              <button
-                onClick={() => setIsRoleTypeModalOpen(true)}
-                className={`w-full p-3 rounded-lg border-2 border-dashed transition-all duration-200 ${
-                  selectedRoleTypes.length > 0
-                    ? "border-green-500 bg-gray-600"
-                    : "border-gray-500 bg-gray-600 hover:border-green-400 hover:bg-gray-500"
-                }`}
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <Tag className="w-4 h-4 text-white" />
-                  <span className="text-white text-sm">
-                    {selectedRoleTypes.length > 0
-                      ? `${selectedRoleTypes.length} Selected`
-                      : "Select Role Types"}
-                  </span>
-                </div>
-              </button>
               {selectedRoleTypes.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
+                <div className="-mt-3 flex flex-wrap gap-1.5">
                   {selectedRoleTypes.map((rt) => (
                     <span
                       key={rt.id}
-                      className="px-2 py-1 bg-green-600 text-white text-xs rounded-full"
+                      className="rounded-[3px] border border-[var(--mk-ink)] bg-[var(--mk-green-soft)] px-2 py-0.5 text-[12px] font-semibold tracking-tight text-[var(--mk-green)]"
                     >
                       {rt.name}
                     </span>
                   ))}
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Mobile Link Input */}
-          <div className="bg-gray-700 rounded-lg p-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <LinkIcon className="h-5 w-5 text-gray-300" />
-              <input
-                type="text"
-                placeholder="Paste any web address"
-                value={webLink}
-                onChange={(e) => setWebLink(e.target.value)}
-                className="flex-1 p-3 border-none rounded-lg bg-gray-600 text-white text-sm placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
+              {/* Attachments */}
+              <div className="border-t border-[var(--mk-rule)] pt-5">
+                <span className={tag}>Attachments</span>
+                <label className="relative mt-1.5 block">
+                  <span className="sr-only">Web address</span>
+                  <LinkIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--mk-ink-2)]" />
+                  <input
+                    type="text"
+                    placeholder="Paste any web address"
+                    value={webLink}
+                    onChange={(e) => setWebLink(e.target.value)}
+                    className={`${field} pl-9`}
+                  />
+                </label>
 
-            {/* Mobile Action Buttons */}
-            <div className="grid grid-cols-4 gap-3">
-              <button
-                onClick={() => setIsTextModalOpen(true)}
-                className="flex flex-col items-center justify-center p-3 bg-gray-600 rounded-lg hover:bg-gray-500 transition-colors"
-              >
-                <Type className="h-5 w-5 text-white mb-1" />
-                <span className="text-xs text-gray-300">Text</span>
-              </button>
-
-              <label className="flex flex-col items-center justify-center p-3 bg-gray-600 rounded-lg hover:bg-gray-500 transition-colors cursor-pointer">
-                <ImageIcon className="h-5 w-5 text-white mb-1" />
-                <span className="text-xs text-gray-300">Image</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) =>
-                    e.target.files?.[0] && handleImageUpload(e.target.files[0])
-                  }
-                  className="hidden"
-                />
-              </label>
-
-              <button
-                onClick={() => setLockModalOpen(true)}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all ${
-                  isLockSelected
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                }`}
-              >
-                <Lock className="h-5 w-5 mb-1" />
-                <span className="text-xs">Lock</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile Content Preview */}
-          {hasContent && (
-            <div className="bg-gray-700 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-300 mb-3">
-                Preview
-              </h3>
-              <div className="max-w-full">
-                <Card
-                  user={user.username}
-                  title={title || linkData.title || ""}
-                  description={description || linkData.description || ""}
-                  text={modalText}
-                  image={imageUrl || linkData.image}
-                  picture={user.image}
-                  onClick={() => {}}
-                  onCardTagClick={handleCardTagClick}
-                  onUserTagClick={handleUserTagClick}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Mobile Upload Status */}
-          {isUploadingImage && (
-            <div className="bg-gray-700 rounded-lg p-4">
-              <div className="flex items-center space-x-3">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>
-                <span className="text-sm text-gray-300">
-                  Uploading image...
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Bottom spacing for floating button */}
-          <div className="h-20"></div>
-        </div>
-      </div>
-
-      {/* Text Modal - Responsive */}
-      {isTextModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsTextModalOpen(false)}
-          ></div>
-          <div className="absolute inset-4 md:inset-8 lg:inset-16 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
-              <h3 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center space-x-2">
-                <Type className="w-5 h-5 text-purple-600" />
-                <span>Add Text Content</span>
-              </h3>
-              <button
-                onClick={() => setIsTextModalOpen(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="flex-1 p-4 md:p-6 text-black">
-              <textarea
-                value={modalText}
-                onChange={(e) => setModalText(e.target.value)}
-                placeholder="Share your thoughts, ideas, or story..."
-                className="w-full h-full resize-none border-0 focus:outline-none text-base md:text-lg leading-relaxed  text-black placeholder-gray-400"
-              />
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 md:p-6 border-t border-gray-200 bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-500">
-                  {modalText.length} characters
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => setIsTextModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => setIsTextModalOpen(false)}
-                    className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsCategoryModalOpen(false)}
-          ></div>
-          <div className="absolute inset-4 md:inset-8 lg:inset-16 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[80vh]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
-              <h3 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center space-x-2">
-                <Tag className="w-5 h-5 text-purple-600" />
-                <span>Select Category</span>
-              </h3>
-              <button
-                onClick={() => setIsCategoryModalOpen(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="flex-1 p-4 md:p-6 overflow-y-auto">
-              <div className="space-y-4">
-                {customCategories.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">
-                      Your Custom Categories
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {customCategories.map((category) => (
-                        <button
-                          key={category.id}
-                          onClick={() => handleCategorySelect(category)}
-                          className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all duration-200 ${
-                            selectedCategory?.id === category.id
-                              ? "border-purple-500 bg-purple-50"
-                              : "border-gray-200 hover:border-purple-300 hover:bg-gray-50"
-                          }`}
-                        >
-                          {(() => {
-                            const Icon = category.icon;
-                            return <Icon className="w-4 h-4 text-gray-700" />;
-                          })()}
-                          <span className="flex-1 text-left font-medium text-gray-900">
-                            {category.name}
-                          </span>
-                          {selectedCategory?.id === category.id && (
-                            <Check className="w-4 h-4 text-purple-600" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Default Categories */}
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
-                    Default Categories
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {DEFAULT_CATEGORIES.map((category) => (
-                      <button
-                        key={category.id}
-                        onClick={() => handleCategorySelect(category)}
-                        className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all duration-200 ${
-                          selectedCategory?.id === category.id
-                            ? "border-purple-500 bg-purple-50"
-                            : "border-gray-200 hover:border-purple-300 hover:bg-gray-50"
-                        }`}
-                      >
-                        {(() => {
-                          const Icon = category.icon;
-                          return <Icon className="w-4 h-4 text-gray-700" />;
-                        })()}
-
-                        <span className="flex-1 text-left font-medium text-gray-900">
-                          {category.name}
-                        </span>
-                        {selectedCategory?.id === category.id && (
-                          <Check className="w-4 h-4 text-purple-600" />
+                {!isEmptyObject(linkData) &&
+                  (linkData.title || linkData.description) && (
+                    <div className="mt-2 flex items-start gap-3 rounded-[4px] border border-[var(--mk-rule)] bg-[var(--mk-paper)] px-3 py-2">
+                      {linkData.image && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={linkData.image}
+                          alt=""
+                          className="h-10 w-10 shrink-0 rounded-[3px] border border-[var(--mk-ink)] object-cover"
+                        />
+                      )}
+                      <div className="min-w-0">
+                        {linkData.title && (
+                          <p className="truncate text-[14px] font-semibold tracking-tight">
+                            {linkData.title}
+                          </p>
                         )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Custom Category Creation */}
-                <div className="border-t border-gray-200 pt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
-                    Create Custom Category
-                  </h4>
-                  {!isCreatingCustomCategory ? (
-                    <button
-                      onClick={() => setIsCreatingCustomCategory(true)}
-                      className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-purple-400 hover:text-purple-600 transition-colors"
-                    >
-                      <Plus className="w-4 h-4 inline mr-2" />
-                      Create new category
-                    </button>
-                  ) : (
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        placeholder="Enter category name..."
-                        value={customCategoryName}
-                        onChange={(e) => setCustomCategoryName(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        autoFocus
-                      />
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={handleCreateCustomCategory}
-                          disabled={!customCategoryName.trim()}
-                          className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          Create
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsCreatingCustomCategory(false);
-                            setCustomCategoryName("");
-                          }}
-                          className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-                        >
-                          Cancel
-                        </button>
+                        {linkData.description && (
+                          <p className="line-clamp-2 text-[13px] tracking-tight text-[var(--mk-ink-2)]">
+                            {linkData.description}
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setIsTextModalOpen(true)}
+                    className={`${
+                      modalText ? btn.quiet : btn.plain
+                    } px-3 py-2 text-[14px]`}
+                  >
+                    <Type className="h-4 w-4" />
+                    {modalText ? "Edit text" : "Text"}
+                  </button>
+                  <label
+                    className={`${
+                      imageUrl ? btn.quiet : btn.plain
+                    } cursor-pointer px-3 py-2 text-[14px]`}
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    {isUploadingImage
+                      ? "Uploading image..."
+                      : imageUrl
+                      ? "Replace image"
+                      : "Image"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        e.target.files?.[0] &&
+                        handleImageUpload(e.target.files[0])
+                      }
+                      className="hidden"
+                    />
+                  </label>
+                  <button
+                    onClick={() => {
+                      // if the card is in an existing locked layer, you could prefill initialSelected here
+                      setLockModalOpen(true);
+                    }}
+                    aria-pressed={isLockSelected}
+                    className={`${btn.base} px-3 py-2 text-[14px] ${
+                      isLockSelected
+                        ? "bg-[var(--mk-ink)] text-white"
+                        : "bg-white text-[var(--mk-ink)]"
+                    }`}
+                  >
+                    <Lock className="h-4 w-4" />
+                    {isLockSelected ? "Locked" : "Lock"}
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {isPhaseModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsPhaseModalOpen(false)}
-          ></div>
-          <div className="absolute inset-4 md:inset-8 lg:inset-16 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[80vh]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-cyan-50">
-              <h3 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center space-x-2">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                <span>Select Phase</span>
-              </h3>
+            {/* Footer */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--mk-ink)] bg-[var(--mk-paper)] px-4 py-3 md:px-6">
+              <span className={tag}>
+                {isPrivacySelected || selectedCard?.privacy
+                  ? "Private"
+                  : isLockSelected
+                  ? "Visible to layer"
+                  : "Visible to org"}
+              </span>
               <button
-                onClick={() => setIsPhaseModalOpen(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-colors"
+                onClick={handleCreate}
+                disabled={isCreating}
+                className={`${btn.primary} px-5 py-2.5 text-[15px]`}
               >
-                <X className="w-5 h-5" />
+                <Plus className="h-4 w-4" />
+                {isCreating ? "Creating..." : "Create"}
               </button>
             </div>
+          </Window>
 
-            {/* Modal Body */}
-            <div className="flex-1 p-4 md:p-6 overflow-y-auto">
-              <p className="text-sm text-gray-600 mb-4">
-                Use this to cut the Explore feed into "where things are" in the
-                work cycle. Single selection required.
-              </p>
+          {/* Preview */}
+          <aside className="lg:sticky lg:top-24 lg:self-start">
+            <PixelLabel color="var(--mk-cyan-deep)">PREVIEW</PixelLabel>
+            <div className="mt-3">
+              {hasContent ? (
+                <div className="max-w-sm">
+                  <Card
+                    user={user.username}
+                    title={title || linkData.title || ""}
+                    description={description || linkData.description || ""}
+                    text={modalText}
+                    image={imageUrl || linkData.image}
+                    picture={user.image}
+                    onClick={() => {}}
+                    onCardTagClick={handleCardTagClick}
+                    onUserTagClick={handleUserTagClick}
+                  />
+                </div>
+              ) : (
+                <div className="grid min-h-[200px] max-w-sm place-items-center rounded-[6px] border border-dashed border-[var(--mk-ink-2)] bg-white/60 p-6 text-center text-[14px] tracking-tight text-[var(--mk-ink-2)]">
+                  Your card appears here as you add a title, text, image or link.
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      </main>
 
-              <div className="space-y-2">
-                {UI_PHASES_FOR_MODAL.map((opt, index) => (
+      {/* Text Modal */}
+      {isTextModalOpen && (
+        <ModalShell
+          title="card://new · text"
+          onClose={() => setIsTextModalOpen(false)}
+          className="h-[85vh] max-w-3xl"
+          footer={
+            <>
+              <span className={tag}>{modalText.length} characters</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsTextModalOpen(false)}
+                  className={`${btn.plain} px-4 py-2 text-[14px]`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => setIsTextModalOpen(false)}
+                  className={`${btn.primary} px-5 py-2 text-[14px]`}
+                >
+                  Save
+                </button>
+              </div>
+            </>
+          }
+        >
+          <div className="flex h-full flex-col p-4 md:p-6">
+            <PixelLabel>ADD TEXT</PixelLabel>
+            <textarea
+              value={modalText}
+              onChange={(e) => setModalText(e.target.value)}
+              placeholder="Share your thoughts, ideas, or story..."
+              className="mt-3 w-full flex-1 resize-none border-0 bg-transparent text-[16px] leading-relaxed tracking-tight text-[var(--mk-ink)] placeholder:text-[#8a8ea0] focus:outline-none md:text-[17px]"
+            />
+          </div>
+        </ModalShell>
+      )}
+
+      {/* Category Modal */}
+      {isCategoryModalOpen && (
+        <ModalShell
+          title="select://category"
+          onClose={() => setIsCategoryModalOpen(false)}
+        >
+          <div className="space-y-6 p-4 md:p-6">
+            {customCategories.length > 0 && (
+              <div>
+                <p className={`${tag} mb-2`}>Your Custom Categories</p>
+                <div className="overflow-hidden rounded-[4px] border border-[var(--mk-ink)]">
+                  {customCategories.map((category) => {
+                    const selected = selectedCategory?.id === category.id;
+                    const Icon = category.icon;
+                    return (
+                      <button
+                        key={category.id}
+                        onClick={() => handleCategorySelect(category)}
+                        aria-pressed={selected}
+                        className={optionRow(selected)}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span className="flex-1 font-semibold">
+                          {category.name}
+                        </span>
+                        {selected && <Check className="h-4 w-4" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <p className={`${tag} mb-2`}>Default Categories</p>
+              <div className="overflow-hidden rounded-[4px] border border-[var(--mk-ink)]">
+                {DEFAULT_CATEGORIES.map((category) => {
+                  const selected = selectedCategory?.id === category.id;
+                  const Icon = category.icon;
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => handleCategorySelect(category)}
+                      aria-pressed={selected}
+                      className={optionRow(selected)}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold">
+                          {category.name}
+                        </span>
+                        <span
+                          className={`block text-[13px] ${
+                            selected
+                              ? "text-white/75"
+                              : "text-[var(--mk-ink-2)]"
+                          }`}
+                        >
+                          {category.description}
+                        </span>
+                      </span>
+                      {selected && <Check className="h-4 w-4" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="border-t border-[var(--mk-rule)] pt-5">
+              <p className={`${tag} mb-2`}>Create Custom Category</p>
+              {!isCreatingCustomCategory ? (
+                <button
+                  onClick={() => setIsCreatingCustomCategory(true)}
+                  className="flex w-full items-center justify-center gap-2 rounded-[4px] border border-dashed border-[var(--mk-ink)] bg-white px-3 py-3 text-[14px] font-semibold tracking-tight transition-colors hover:bg-[var(--mk-indigo-soft)]"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create new category
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Enter category name..."
+                    value={customCategoryName}
+                    onChange={(e) => setCustomCategoryName(e.target.value)}
+                    className={field}
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCreateCustomCategory}
+                      disabled={!customCategoryName.trim()}
+                      className={`${btn.primary} flex-1 px-4 py-2 text-[14px] disabled:cursor-not-allowed`}
+                    >
+                      Create
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsCreatingCustomCategory(false);
+                        setCustomCategoryName("");
+                      }}
+                      className={`${btn.plain} px-4 py-2 text-[14px]`}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </ModalShell>
+      )}
+
+      {/* Phase Modal */}
+      {isPhaseModalOpen && (
+        <ModalShell
+          title={isRoadmap ? "select://roadmap-bucket" : "select://phase"}
+          onClose={() => setIsPhaseModalOpen(false)}
+        >
+          <div className="p-4 md:p-6">
+            <p className="mb-4 text-[14px] tracking-tight text-[var(--mk-ink-2)]">
+              Use this to cut the Explore feed into "where things are" in the
+              work cycle. Single selection required.
+            </p>
+
+            <div className="overflow-hidden rounded-[4px] border border-[var(--mk-ink)]">
+              {UI_PHASES_FOR_MODAL.map((opt, index) => {
+                const selected = selectedPhase?.id === opt.id;
+                return (
                   <button
                     key={opt.id}
                     onClick={() => {
@@ -1635,128 +1285,112 @@ export default function CreatePage() {
                       setShowPhaseError(false);
                       setIsPhaseModalOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-200 ${
-                      selectedPhase?.id === opt.id
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
-                    }`}
+                    aria-pressed={selected}
+                    className={optionRow(selected)}
                   >
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm font-semibold text-gray-500">
-                        {index + 1}.
-                      </span>
-                      <div className="text-left">
-                        <div className="font-medium text-gray-900 flex items-center gap-2">
-                          <span>{opt.name}</span>
-                          {!isRoadmap && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                              {PHASES.find((p) => p.id === opt.id)?.name || ""}
-                            </span>
-                          )}
-                        </div>
-                        {!isRoadmap && opt.description && (
-                          <div className="text-xs text-gray-500">
-                            {opt.description}
-                          </div>
+                    <span
+                      className={`w-6 shrink-0 text-[13px] font-semibold tabular-nums ${
+                        selected ? "text-white/75" : "text-[var(--mk-ink-2)]"
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold">{opt.name}</span>
+                        {!isRoadmap && (
+                          <span
+                            className={`rounded-[3px] border px-1.5 py-px text-[10.5px] font-semibold uppercase tracking-[0.09em] ${
+                              selected
+                                ? "border-white/50 text-white/80"
+                                : "border-[var(--mk-rule)] text-[var(--mk-ink-2)]"
+                            }`}
+                          >
+                            {PHASES.find((p) => p.id === opt.id)?.name || ""}
+                          </span>
                         )}
-                      </div>
-                    </div>
-                    {selectedPhase?.id === opt.id && (
-                      <Check className="w-5 h-5 text-blue-600" />
-                    )}
+                      </span>
+                      {!isRoadmap && opt.description && (
+                        <span
+                          className={`block text-[13px] ${
+                            selected
+                              ? "text-white/75"
+                              : "text-[var(--mk-ink-2)]"
+                          }`}
+                        >
+                          {opt.description}
+                        </span>
+                      )}
+                    </span>
+                    {selected && <Check className="h-4 w-4 shrink-0" />}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
-        </div>
+        </ModalShell>
       )}
 
+      {/* Role Type Modal */}
       {isRoleTypeModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsRoleTypeModalOpen(false)}
-          ></div>
-          <div className="absolute inset-4 md:inset-8 lg:inset-16 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[80vh]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
-              <h3 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center space-x-2">
-                <Tag className="w-5 h-5 text-green-600" />
-                <span>Select Role Types</span>
-              </h3>
+        <ModalShell
+          title="select://role-types"
+          onClose={() => setIsRoleTypeModalOpen(false)}
+          footer={
+            <>
+              <span className={tag}>{selectedRoleTypes.length} selected</span>
               <button
                 onClick={() => setIsRoleTypeModalOpen(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-colors"
+                className={`${btn.primary} px-5 py-2 text-[14px]`}
               >
-                <X className="w-5 h-5" />
+                Done
               </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="flex-1 p-4 md:p-6 overflow-y-auto">
-              <p className="text-sm text-gray-600 mb-4">
-                Use this to express what a card contributes. Multiple selections
-                allowed (optional).
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {ROLE_TYPES.map((roleType) => (
+            </>
+          }
+        >
+          <div className="p-4 md:p-6">
+            <p className="mb-4 text-[14px] tracking-tight text-[var(--mk-ink-2)]">
+              Use this to express what a card contributes. Multiple selections
+              allowed (optional).
+            </p>
+            <div className="grid overflow-hidden rounded-[4px] border border-[var(--mk-ink)] md:grid-cols-2">
+              {ROLE_TYPES.map((roleType) => {
+                const selected = isRoleSelected(roleType.id);
+                return (
                   <button
                     key={roleType.id}
                     onClick={() => handleRoleTypeToggle(roleType)}
-                    className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all duration-200 ${
-                      selectedRoleTypes.find((rt) => rt.id === roleType.id)
-                        ? "border-green-500 bg-green-50"
-                        : "border-gray-200 hover:border-green-300 hover:bg-gray-50"
-                    }`}
+                    aria-pressed={selected}
+                    className={`${optionRow(selected)} md:odd:border-r md:odd:border-r-[var(--mk-rule)]`}
                   >
-                    <div className="text-left flex-1">
-                      <div className="font-medium text-gray-900 text-sm">
+                    <span
+                      aria-hidden
+                      className={`grid h-4 w-4 shrink-0 place-items-center rounded-[2px] border ${
+                        selected
+                          ? "border-white bg-white text-[var(--mk-ink)]"
+                          : "border-[var(--mk-ink)] bg-white"
+                      }`}
+                    >
+                      {selected && <Check className="h-3 w-3" />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[14px] font-semibold">
                         {roleType.name}
-                      </div>
-                      <div className="text-xs text-gray-500">
+                      </span>
+                      <span
+                        className={`block text-[12.5px] ${
+                          selected ? "text-white/75" : "text-[var(--mk-ink-2)]"
+                        }`}
+                      >
                         {roleType.description}
-                      </div>
-                    </div>
-                    {selectedRoleTypes.find((rt) => rt.id === roleType.id) && (
-                      <Check className="w-4 h-4 text-green-600 ml-2" />
-                    )}
+                      </span>
+                    </span>
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 md:p-6 border-t border-gray-200 bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  {selectedRoleTypes.length} selected
-                </div>
-                <button
-                  onClick={() => setIsRoleTypeModalOpen(false)}
-                  className="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  Done
-                </button>
-              </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Floating Create Button - Responsive - Hide when text modal is open */}
-      {!isTextModalOpen && (
-        <button
-          onClick={handleCreate}
-          disabled={isCreating}
-          className="fixed bottom-6 right-6 md:bottom-8 md:left-1/2 md:transform md:-translate-x-1/2 md:right-auto w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex justify-center items-center cursor-pointer z-50 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-        >
-          {isCreating ? (
-            <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-white"></div>
-          ) : (
-            <Plus className="w-6 h-6 md:w-8 md:h-8 text-white" />
-          )}
-        </button>
+        </ModalShell>
       )}
 
       {/* Popups */}
@@ -1788,5 +1422,68 @@ export default function CreatePage() {
         />
       )}
     </>
+  );
+}
+
+/** Option row used by the category, phase and role pickers. */
+function optionRow(selected: boolean) {
+  return `flex w-full items-center gap-3 border-b border-[var(--mk-rule)] px-4 py-3 text-left text-[15px] tracking-tight transition-colors last:border-b-0 ${
+    selected
+      ? "bg-[var(--mk-ink)] text-white"
+      : "bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
+  }`;
+}
+
+/** Modal frame: ink overlay, window panel with title bar and close button. */
+function ModalShell({
+  title,
+  onClose,
+  children,
+  footer,
+  className = "max-h-[85vh] max-w-2xl",
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
+      <div
+        className="absolute inset-0 bg-[var(--mk-ink)]/40"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className={`mk-hard relative flex w-full flex-col overflow-hidden rounded-[6px] bg-white ${className}`}
+      >
+        <div className="flex items-center gap-2 border-b border-[var(--mk-ink)] py-1.5 pl-3 pr-1.5">
+          <span className="flex gap-1" aria-hidden>
+            <span className="h-2 w-2 bg-[var(--mk-ink)]" />
+            <span className="h-2 w-2 bg-[#868896]" />
+            <span className="h-2 w-2 bg-[#c2c4cc]" />
+          </span>
+          <span className="flex-1 truncate text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink)]">
+            {title}
+          </span>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="grid h-8 w-8 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+        {footer && (
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--mk-ink)] bg-[var(--mk-paper)] px-4 py-3 md:px-6">
+            {footer}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

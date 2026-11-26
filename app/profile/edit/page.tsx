@@ -16,18 +16,17 @@ import {
   Eye,
   Lock,
   Upload,
-  Menu,
-  X,
 } from "lucide-react";
 import Image from "next/image";
 import axios from "axios";
+import AppNav from "@/components/app/AppNav";
+import { PixelLabel, Window, btn, field, tag } from "@/components/app/ui";
 
 export default function EditProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("profile");
 
   // Form states
@@ -166,498 +165,454 @@ export default function EditProfilePage() {
     }
   };
 
+
+  const iconBtn =
+    "grid h-9 w-9 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]";
+  const sectionTab = (selected: boolean) =>
+    `flex items-center gap-2.5 rounded-[4px] px-3 py-2 text-left text-[14px] font-semibold tracking-tight transition-colors ${
+      selected
+        ? "bg-[var(--mk-ink)] text-white"
+        : "text-[var(--mk-ink-2)] hover:bg-[var(--mk-indigo-soft)]"
+    }`;
+  const switchTrack = (on: boolean) =>
+    `relative inline-flex h-6 w-11 shrink-0 items-center rounded-[4px] border border-[var(--mk-ink)] transition-colors ${
+      on ? "bg-[var(--mk-indigo)]" : "bg-[var(--mk-paper)]"
+    }`;
+  const switchKnob = (on: boolean) =>
+    `inline-block h-4 w-4 rounded-[2px] border border-[var(--mk-ink)] bg-white transition-transform ${
+      on ? "translate-x-[22px]" : "translate-x-[3px]"
+    }`;
+  const iconInField =
+    "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--mk-ink-2)]";
+
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--mk-paper)]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-[3px] border-2 border-[var(--mk-rule)] border-t-[var(--mk-indigo)]"></div>
+          <p className="tracking-tight text-[var(--mk-ink-2)]">Loading...</p>
         </div>
       </div>
     );
   }
 
+  const activeItem = sidebarItems.find((item) => item.id === activeSection);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-      {/* Desktop Header - Hidden on Mobile */}
-      <div className="hidden md:block bg-white/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Edit Profile
-              </h1>
-            </div>
+    <div className="min-h-screen bg-[var(--mk-paper)] text-[var(--mk-ink)]">
+      <AppNav active="profile" />
 
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={handleReset}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span>Reset</span>
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={isLoading}
-                className="flex items-center space-x-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Save className="w-4 h-4" />
-                <span>{isLoading ? "Saving..." : "Save Changes"}</span>
-              </button>
-            </div>
+      <main className="px-4 pb-28 pt-20 md:pb-10 md:pt-24">
+        <div className="mx-auto max-w-6xl">
+          {/* Page header */}
+          <div className="mb-5 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className={iconBtn}
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            <h1 className="mk-display text-[24px] md:text-[28px]">Edit Profile</h1>
           </div>
-        </div>
-      </div>
 
-      {/* Mobile Header - Hidden on Desktop */}
-      <header className="md:hidden bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-40">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <h1 className="text-lg font-semibold text-gray-900">
-                Edit Profile
-              </h1>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <Menu className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsMobileMenuOpen(false)}
-          ></div>
-          <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-xl">
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-900">Settings</span>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                  <X className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
-            </div>
-            <div className="p-4 space-y-2">
+          {/* Mobile section picker */}
+          <div className="-mx-4 mb-4 overflow-x-auto px-4 lg:hidden">
+            <div className="flex w-max gap-1 rounded-[5px] border border-[var(--mk-ink)] bg-white p-1">
               {sidebarItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <button
                     key={item.id}
-                    onClick={() => {
-                      setActiveSection(item.id);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                      activeSection === item.id
-                        ? "bg-purple-100 text-purple-700 border border-purple-200"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    }`}
+                    type="button"
+                    onClick={() => setActiveSection(item.id)}
+                    className={`${sectionTab(activeSection === item.id)} whitespace-nowrap`}
+                    aria-pressed={activeSection === item.id}
                   >
-                    <IconComponent className="w-5 h-5" />
-                    <span className="font-medium">{item.name}</span>
+                    <IconComponent className="h-4 w-4" />
+                    <span>{item.name}</span>
                   </button>
                 );
               })}
             </div>
           </div>
-        </div>
-      )}
 
-      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
-          {/* Desktop Sidebar - Hidden on Mobile */}
-          <div className="hidden lg:block w-64 flex-shrink-0">
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-4 sticky top-24">
-              <nav className="space-y-2">
-                {sidebarItems.map((item) => {
-                  const IconComponent = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveSection(item.id)}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                        activeSection === item.id
-                          ? "bg-purple-100 text-purple-700 border border-purple-200"
-                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                      }`}
-                    >
-                      <IconComponent className="w-5 h-5" />
-                      <span className="font-medium">{item.name}</span>
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1">
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6 lg:p-8">
-              {/* Mobile Section Indicator */}
-              <div className="lg:hidden mb-6">
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <span>Settings</span>
-                  <span>/</span>
-                  <span className="text-purple-600 font-medium">
-                    {
-                      sidebarItems.find((item) => item.id === activeSection)
-                        ?.name
-                    }
-                  </span>
-                </div>
+          <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
+            {/* Desktop sidebar */}
+            <aside className="hidden w-64 shrink-0 lg:block">
+              <div className="mk-hard-sm sticky top-24 rounded-[5px] border border-[var(--mk-ink)] bg-white p-2">
+                <p className={`${tag} px-3 pb-2 pt-1`}>Settings</p>
+                <nav className="flex flex-col gap-1" aria-label="Settings sections">
+                  {sidebarItems.map((item) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setActiveSection(item.id)}
+                        className={`${sectionTab(activeSection === item.id)} w-full`}
+                        aria-current={activeSection === item.id ? "page" : undefined}
+                      >
+                        <IconComponent className="h-4 w-4" />
+                        <span>{item.name}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
               </div>
+            </aside>
 
-              {activeSection === "profile" && (
-                <>
-                  <div className="mb-6 lg:mb-8">
-                    <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">
-                      Edit Profile
-                    </h2>
-                    <p className="text-gray-600 text-sm lg:text-base">
-                      Keep your personal details private. Information you add
-                      here is visible to anyone who can view your profile.
+            {/* Main content */}
+            <div className="min-w-0 flex-1">
+              <Window
+                title={activeSection === "profile" ? "profile://edit" : `profile://${activeSection}`}
+              >
+                {activeSection === "profile" && (
+                  <>
+                    <div className="p-4 sm:p-6 lg:p-8">
+                      <PixelLabel className="mb-3">EDIT PROFILE</PixelLabel>
+                      <p className="mb-6 max-w-2xl text-[14px] tracking-[-0.01em] text-[var(--mk-ink-2)] lg:mb-8">
+                        Keep your personal details private. Information you add
+                        here is visible to anyone who can view your profile.
+                      </p>
+
+                      {/* Profile picture */}
+                      <div className="mb-6 border-b border-[var(--mk-rule)] pb-6 lg:mb-8 lg:pb-8">
+                        <span className={tag}>Profile Picture</span>
+                        <div className="mt-3 flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-6">
+                          <label
+                            htmlFor="profile-photo-upload"
+                            className="group relative block h-20 w-20 cursor-pointer overflow-hidden rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-paper)] sm:h-24 sm:w-24"
+                          >
+                            <span className="sr-only">Change photo</span>
+                            <Image
+                              src={
+                                formData.image ||
+                                "/placeholder.svg?height=96&width=96"
+                              }
+                              alt="Profile"
+                              width={96}
+                              height={96}
+                              className="h-full w-full object-cover"
+                            />
+                            <span className="absolute inset-0 flex items-center justify-center bg-[var(--mk-ink)]/50 opacity-0 transition-opacity group-hover:opacity-100">
+                              <Camera className="h-5 w-5 text-white sm:h-6 sm:w-6" />
+                            </span>
+                          </label>
+                          <div className="space-y-2 text-center sm:text-left">
+                            <label className="inline-block cursor-pointer">
+                              <input
+                                id="profile-photo-upload"
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) =>
+                                  e.target.files?.[0] &&
+                                  handleImageUpload(e.target.files[0])
+                                }
+                                className="peer sr-only"
+                              />
+                              <span
+                                className={`${btn.plain} px-4 py-2 text-[14px] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--mk-indigo)]`}
+                              >
+                                <Upload className="h-4 w-4" />
+                                <span>
+                                  {isUploading ? "Uploading..." : "Change Photo"}
+                                </span>
+                              </span>
+                            </label>
+                            <p className={tag}>JPG, PNG or GIF. Max size 5MB.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Form fields */}
+                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+                        <label className="block">
+                          <span className={tag}>Full Name</span>
+                          <span className="relative mt-1.5 block">
+                            <User className={iconInField} />
+                            <input
+                              type="text"
+                              value={formData.name}
+                              onChange={(e) =>
+                                handleInputChange("name", e.target.value)
+                              }
+                              className={`${field} pl-9`}
+                              placeholder="Enter your full name"
+                            />
+                          </span>
+                        </label>
+
+                        <div>
+                          <label className="block">
+                            <span className={tag}>Username</span>
+                            <span className="relative mt-1.5 block">
+                              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[14px] text-[var(--mk-ink-2)]">
+                                @
+                              </span>
+                              <input
+                                type="text"
+                                value={formData.username}
+                                onChange={(e) =>
+                                  handleInputChange("username", e.target.value)
+                                }
+                                className={`${field} pl-8`}
+                                placeholder="username"
+                              />
+                            </span>
+                          </label>
+                          <p className="mt-1.5 break-all text-[12px] tracking-tight text-[var(--mk-ink-2)]">
+                            www.yoursite.com/@{formData.username}
+                          </p>
+                        </div>
+
+                        <label className="block lg:col-span-2">
+                          <span className={tag}>Tagline</span>
+                          <input
+                            type="text"
+                            value={formData.tagline}
+                            onChange={(e) =>
+                              handleInputChange("tagline", e.target.value)
+                            }
+                            className={`${field} mt-1.5`}
+                            placeholder="A short description about yourself"
+                          />
+                        </label>
+
+                        <div className="lg:col-span-2">
+                          <label className="block">
+                            <span className={tag}>Bio</span>
+                            <textarea
+                              value={formData.bio}
+                              onChange={(e) =>
+                                handleInputChange("bio", e.target.value)
+                              }
+                              rows={4}
+                              className={`${field} mt-1.5 resize-none`}
+                              placeholder="Tell us more about yourself..."
+                            />
+                          </label>
+                          <p
+                            className={`mt-1.5 text-[12px] tracking-tight ${
+                              formData.bio.length > 500
+                                ? "font-semibold text-[var(--mk-amber)]"
+                                : "text-[var(--mk-ink-2)]"
+                            }`}
+                          >
+                            {formData.bio.length}/500 characters
+                          </p>
+                        </div>
+
+                        <label className="block">
+                          <span className={tag}>Location</span>
+                          <span className="relative mt-1.5 block">
+                            <MapPin className={iconInField} />
+                            <input
+                              type="text"
+                              value={formData.location}
+                              onChange={(e) =>
+                                handleInputChange("location", e.target.value)
+                              }
+                              className={`${field} pl-9`}
+                              placeholder="City, Country"
+                            />
+                          </span>
+                        </label>
+
+                        <label className="block">
+                          <span className={tag}>Website</span>
+                          <span className="relative mt-1.5 block">
+                            <LinkIcon className={iconInField} />
+                            <input
+                              type="url"
+                              value={formData.website}
+                              onChange={(e) =>
+                                handleInputChange("website", e.target.value)
+                              }
+                              className={`${field} pl-9`}
+                              placeholder="https://yourwebsite.com"
+                            />
+                          </span>
+                        </label>
+                      </div>
+
+                      {/* Privacy settings */}
+                      <div className="mt-6 border-t border-[var(--mk-rule)] pt-6 lg:mt-8 lg:pt-8">
+                        <h3 className="mb-2 text-[18px] font-bold tracking-[-0.03em]">
+                          Privacy Settings
+                        </h3>
+                        <div>
+                          <div className="flex flex-col gap-2 border-b border-[var(--mk-rule)] py-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <label
+                                htmlFor="profile-visibility"
+                                className="text-[14px] font-semibold tracking-tight"
+                              >
+                                Profile Visibility
+                              </label>
+                              <p className="text-[13px] tracking-tight text-[var(--mk-ink-2)]">
+                                Who can see your profile
+                              </p>
+                            </div>
+                            <select
+                              id="profile-visibility"
+                              value={privacySettings.profileVisibility}
+                              onChange={(e) =>
+                                setPrivacySettings((prev) => ({
+                                  ...prev,
+                                  profileVisibility: e.target.value,
+                                }))
+                              }
+                              className={`${field} py-2 sm:w-auto`}
+                            >
+                              <option value="public">Public</option>
+                              <option value="followers">Followers Only</option>
+                              <option value="private">Private</option>
+                            </select>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-4 border-b border-[var(--mk-rule)] py-4">
+                            <div>
+                              <p className="text-[14px] font-semibold tracking-tight">
+                                Allow Messages
+                              </p>
+                              <p className="text-[13px] tracking-tight text-[var(--mk-ink-2)]">
+                                Let others send you messages
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={privacySettings.allowMessages}
+                              aria-label="Allow messages"
+                              onClick={() =>
+                                setPrivacySettings((prev) => ({
+                                  ...prev,
+                                  allowMessages: !prev.allowMessages,
+                                }))
+                              }
+                              className={switchTrack(privacySettings.allowMessages)}
+                            >
+                              <span className={switchKnob(privacySettings.allowMessages)} />
+                            </button>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-4 py-4">
+                            <div>
+                              <p className="text-[14px] font-semibold tracking-tight">
+                                Allow Follows
+                              </p>
+                              <p className="text-[13px] tracking-tight text-[var(--mk-ink-2)]">
+                                Let others follow you
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={privacySettings.allowFollows}
+                              aria-label="Allow follows"
+                              onClick={() =>
+                                setPrivacySettings((prev) => ({
+                                  ...prev,
+                                  allowFollows: !prev.allowFollows,
+                                }))
+                              }
+                              className={switchTrack(privacySettings.allowFollows)}
+                            >
+                              <span className={switchKnob(privacySettings.allowFollows)} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Desktop actions */}
+                    <div className="hidden items-center gap-3 border-t border-[var(--mk-ink)] bg-[var(--mk-paper)] px-6 py-4 md:flex lg:px-8">
+                      <button
+                        type="button"
+                        onClick={handleReset}
+                        className={`${btn.plain} px-4 py-2 text-[14px]`}
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        <span>Reset</span>
+                      </button>
+                      <div className="ml-auto flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => router.back()}
+                          className={`${btn.plain} px-4 py-2 text-[14px]`}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSave}
+                          disabled={isLoading}
+                          className={`${btn.primary} px-5 py-2 text-[14px] disabled:cursor-not-allowed`}
+                        >
+                          <Save className="h-4 w-4" />
+                          <span>{isLoading ? "Saving..." : "Save Changes"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Placeholder content for other sections */}
+                {activeSection !== "profile" && (
+                  <div className="px-4 py-16 text-center">
+                    <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-indigo-soft)]">
+                      {(() => {
+                        const IconComponent = activeItem?.icon || User;
+                        return (
+                          <IconComponent className="h-6 w-6 text-[var(--mk-indigo-deep)]" />
+                        );
+                      })()}
+                    </div>
+                    <PixelLabel color="var(--mk-ink)" className="mb-2 justify-center">
+                      {activeItem?.name?.toUpperCase()}
+                    </PixelLabel>
+                    <p className="text-[14px] tracking-tight text-[var(--mk-ink-2)]">
+                      This section is coming soon!
                     </p>
                   </div>
-
-                  {/* Profile Picture Section */}
-                  <div className="mb-6 lg:mb-8">
-                    <label className="block text-sm font-medium text-gray-700 mb-4">
-                      Profile Picture
-                    </label>
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
-                      <div className="relative group">
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden ring-4 ring-gray-100">
-                          <Image
-                            src={
-                              formData.image ||
-                              "/placeholder.svg?height=96&width=96"
-                            }
-                            alt="Profile"
-                            width={96}
-                            height={96}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                        </div>
-                      </div>
-                      <div className="space-y-2 text-center sm:text-left">
-                        <label className="cursor-pointer">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) =>
-                              e.target.files?.[0] &&
-                              handleImageUpload(e.target.files[0])
-                            }
-                            className="hidden"
-                          />
-                          <div className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
-                            <Upload className="w-4 h-4" />
-                            <span>
-                              {isUploading ? "Uploading..." : "Change Photo"}
-                            </span>
-                          </div>
-                        </label>
-                        <p className="text-xs text-gray-500">
-                          JPG, PNG or GIF. Max size 5MB.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Form Fields */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Full Name
-                      </label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <input
-                          type="text"
-                          value={formData.name}
-                          onChange={(e) =>
-                            handleInputChange("name", e.target.value)
-                          }
-                          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="Enter your full name"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Username
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
-                          @
-                        </span>
-                        <input
-                          type="text"
-                          value={formData.username}
-                          onChange={(e) =>
-                            handleInputChange("username", e.target.value)
-                          }
-                          className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="username"
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1 break-all">
-                        www.yoursite.com/@{formData.username}
-                      </p>
-                    </div>
-
-                    <div className="lg:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tagline
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.tagline}
-                        onChange={(e) =>
-                          handleInputChange("tagline", e.target.value)
-                        }
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="A short description about yourself"
-                      />
-                    </div>
-
-                    <div className="lg:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Bio
-                      </label>
-                      <textarea
-                        value={formData.bio}
-                        onChange={(e) =>
-                          handleInputChange("bio", e.target.value)
-                        }
-                        rows={4}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                        placeholder="Tell us more about yourself..."
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        {formData.bio.length}/500 characters
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Location
-                      </label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <input
-                          type="text"
-                          value={formData.location}
-                          onChange={(e) =>
-                            handleInputChange("location", e.target.value)
-                          }
-                          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="City, Country"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Website
-                      </label>
-                      <div className="relative">
-                        <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <input
-                          type="url"
-                          value={formData.website}
-                          onChange={(e) =>
-                            handleInputChange("website", e.target.value)
-                          }
-                          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="https://yourwebsite.com"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Privacy Settings */}
-                  <div className="mt-6 lg:mt-8 pt-6 lg:pt-8 border-t border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Privacy Settings
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">
-                            Profile Visibility
-                          </label>
-                          <p className="text-xs text-gray-500">
-                            Who can see your profile
-                          </p>
-                        </div>
-                        <select
-                          value={privacySettings.profileVisibility}
-                          onChange={(e) =>
-                            setPrivacySettings((prev) => ({
-                              ...prev,
-                              profileVisibility: e.target.value,
-                            }))
-                          }
-                          className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 w-full sm:w-auto"
-                        >
-                          <option value="public">Public</option>
-                          <option value="followers">Followers Only</option>
-                          <option value="private">Private</option>
-                        </select>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">
-                            Allow Messages
-                          </label>
-                          <p className="text-xs text-gray-500">
-                            Let others send you messages
-                          </p>
-                        </div>
-                        <button
-                          onClick={() =>
-                            setPrivacySettings((prev) => ({
-                              ...prev,
-                              allowMessages: !prev.allowMessages,
-                            }))
-                          }
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                            privacySettings.allowMessages
-                              ? "bg-purple-600"
-                              : "bg-gray-200"
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                              privacySettings.allowMessages
-                                ? "translate-x-6"
-                                : "translate-x-1"
-                            }`}
-                          />
-                        </button>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">
-                            Allow Follows
-                          </label>
-                          <p className="text-xs text-gray-500">
-                            Let others follow you
-                          </p>
-                        </div>
-                        <button
-                          onClick={() =>
-                            setPrivacySettings((prev) => ({
-                              ...prev,
-                              allowFollows: !prev.allowFollows,
-                            }))
-                          }
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                            privacySettings.allowFollows
-                              ? "bg-purple-600"
-                              : "bg-gray-200"
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                              privacySettings.allowFollows
-                                ? "translate-x-6"
-                                : "translate-x-1"
-                            }`}
-                          />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Placeholder content for other sections */}
-              {activeSection !== "profile" && (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                    {(() => {
-                      const item = sidebarItems.find(
-                        (item) => item.id === activeSection
-                      );
-                      const IconComponent = item?.icon || User;
-                      return (
-                        <IconComponent className="w-8 h-8 text-gray-400" />
-                      );
-                    })()}
-                  </div>
-                  <div className="text-gray-400 text-lg mb-2">
-                    {
-                      sidebarItems.find((item) => item.id === activeSection)
-                        ?.name
-                    }
-                  </div>
-                  <div className="text-gray-500 text-sm">
-                    This section is coming soon!
-                  </div>
-                </div>
-              )}
+                )}
+              </Window>
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Mobile Save/Reset Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-4">
-        <div className="flex space-x-3">
+      {/* Mobile save bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[var(--mk-ink)] bg-[var(--mk-paper)] p-3 md:hidden">
+        <div className="flex gap-2">
           <button
+            type="button"
             onClick={handleReset}
-            className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className={`${btn.plain} px-3 py-2.5 text-[14px]`}
+            aria-label="Reset changes"
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>Reset</span>
+            <RotateCcw className="h-4 w-4" />
           </button>
           <button
+            type="button"
+            onClick={() => router.back()}
+            className={`${btn.plain} flex-1 px-4 py-2.5 text-[14px]`}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
             onClick={handleSave}
             disabled={isLoading}
-            className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`${btn.primary} flex-1 px-4 py-2.5 text-[14px] disabled:cursor-not-allowed`}
           >
-            <Save className="w-4 h-4" />
+            <Save className="h-4 w-4" />
             <span>{isLoading ? "Saving..." : "Save"}</span>
           </button>
         </div>
       </div>
-
-      {/* Mobile bottom padding to account for fixed save bar */}
-      <div className="md:hidden h-20"></div>
     </div>
   );
 }

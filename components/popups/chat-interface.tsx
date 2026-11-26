@@ -5,6 +5,7 @@ import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import { Send } from "lucide-react";
 import axios from "axios";
+import { btn, field } from "@/components/app/ui";
 
 interface ChatInterfaceProps {
   selectedUser: {
@@ -138,11 +139,11 @@ export default function ChatInterface({ selectedUser }: ChatInterfaceProps) {
   };
 
   return (
-    <div className="flex flex-col flex-1 h-full">
+    <div className="flex h-full min-h-0 flex-1 flex-col">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 space-y-3 overflow-y-auto bg-[var(--mk-paper)] p-4">
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
@@ -150,9 +151,7 @@ export default function ChatInterface({ selectedUser }: ChatInterfaceProps) {
                   i % 2 === 0 ? "justify-end" : "justify-start"
                 }`}
               >
-                <div className="animate-pulse">
-                  <div className="h-10 bg-gray-200 rounded-2xl w-32"></div>
-                </div>
+                <div className="h-10 w-32 rounded-[5px] border border-[var(--mk-rule)] bg-white"></div>
               </div>
             ))}
           </div>
@@ -168,18 +167,18 @@ export default function ChatInterface({ selectedUser }: ChatInterfaceProps) {
                 }`}
               >
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl shadow-sm ${
+                  className={`max-w-xs rounded-[5px] border border-[var(--mk-ink)] px-3.5 py-2 lg:max-w-md ${
                     msg.sender.username === user?.username
-                      ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-br-md"
-                      : "bg-white border border-gray-200 text-gray-900 rounded-bl-md"
+                      ? "bg-[var(--mk-indigo)] text-white"
+                      : "bg-white text-[var(--mk-ink)]"
                   }`}
                 >
-                  <p className="text-sm leading-relaxed">{msg.content}</p>
+                  <p className="text-[14px] leading-relaxed tracking-tight">{msg.content}</p>
                   <span
-                    className={`text-xs mt-1 block ${
+                    className={`mt-1 block text-[11px] tracking-tight ${
                       msg.sender.username === user?.username
-                        ? "text-blue-100"
-                        : "text-gray-500"
+                        ? "text-white/75"
+                        : "text-[var(--mk-ink-2)]"
                     }`}
                   >
                     {calculateTimeAgo(msg.createdAt)}
@@ -192,9 +191,9 @@ export default function ChatInterface({ selectedUser }: ChatInterfaceProps) {
         )}
 
         {messages.length === 0 && !isLoading && (
-          <div className="text-center py-8">
-            <p className="text-gray-500 text-sm">No messages yet</p>
-            <p className="text-gray-400 text-xs mt-1">
+          <div className="py-8 text-center">
+            <p className="text-[14px] font-semibold tracking-tight text-[var(--mk-ink)]">No messages yet</p>
+            <p className="mt-1 text-[12.5px] tracking-tight text-[var(--mk-ink-2)]">
               Start the conversation!
             </p>
           </div>
@@ -202,22 +201,23 @@ export default function ChatInterface({ selectedUser }: ChatInterfaceProps) {
       </div>
 
       {/* Message Input */}
-      <div className="p-4 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50">
-        <div className="flex items-center space-x-3">
+      <div className="border-t border-[var(--mk-ink)] bg-white p-3">
+        <div className="flex items-center gap-2">
           <input
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type a message..."
-            className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+            className={`${field} flex-1 py-2 text-[14px]`}
           />
           <button
             onClick={sendMessage}
             disabled={!message.trim()}
-            className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:from-blue-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+            aria-label="Send message"
+            className={`${btn.primary} h-10 w-10 disabled:cursor-not-allowed`}
           >
-            <Send className="w-4 h-4" />
+            <Send className="h-4 w-4" />
           </button>
         </div>
       </div>

@@ -2,6 +2,8 @@
 
 import type React from "react"
 import Image from "next/image"
+import { Send } from "lucide-react"
+import { PixelLabel, btn, field, tag } from "@/components/app/ui"
 
 interface User {
     id: string
@@ -72,92 +74,63 @@ export function CommentSection({
     }
 
     return (
-        <div className="space-y-4 md:space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 md:text-gray-900 text-white">Comments ({comments.length})</h3>
+        <div className="text-[var(--mk-ink)]">
+            <div className="flex items-baseline justify-between gap-3 pb-3">
+                <PixelLabel>COMMENTS</PixelLabel>
+                <span className={tag}>{comments.length} total</span>
+            </div>
 
             {/* Add Comment */}
-            <div className="flex space-x-3">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {currentUser.image ? (
-                        <Image
-                            src={currentUser.image || "/placeholder.svg"}
-                            alt={currentUser.username}
-                            width={40}
-                            height={40}
-                            className="object-cover"
-                        />
-                    ) : (
-                        <span className="text-white font-semibold text-xs md:text-sm">
-                            {currentUser.username.charAt(0).toUpperCase()}
-                        </span>
-                    )}
-                </div>
-                <div className="flex-1 space-y-2">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Add a comment..."
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            onKeyPress={(e) => handleKeyPress(e, onAddComment)}
-                            className="w-full px-3 md:px-4 py-2 md:py-3 bg-gray-800 md:bg-gray-50 border border-gray-700 md:border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all duration-200 text-white md:text-gray-900 placeholder-gray-400 md:placeholder-gray-500 text-sm md:text-base"
-                        />
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-                            <button className="text-gray-400 hover:text-gray-300 md:hover:text-gray-600 transition-colors duration-200">
-                                😊
-                            </button>
-                            <button
-                                onClick={onAddComment}
-                                disabled={!newComment.trim()}
-                                className="text-purple-400 md:text-purple-600 hover:text-purple-300 md:hover:text-purple-700 disabled:text-gray-600 md:disabled:text-gray-400 transition-colors duration-200"
-                            >
-                                <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
+            <div className="flex items-start gap-3 border-y border-[var(--mk-ink)] py-3">
+                <Avatar image={currentUser.image} username={currentUser.username} size={36} />
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <input
+                        type="text"
+                        placeholder="Add a comment..."
+                        aria-label="Add a comment"
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        onKeyPress={(e) => handleKeyPress(e, onAddComment)}
+                        className={`${field} min-w-0 py-2 text-[14px]`}
+                    />
+                    <button
+                        onClick={onAddComment}
+                        disabled={!newComment.trim()}
+                        className={`${btn.primary} shrink-0 px-3 py-2 text-[14px]`}
+                        aria-label="Post comment"
+                    >
+                        <Send className="h-4 w-4" />
+                        <span className="hidden sm:inline">Post</span>
+                    </button>
                 </div>
             </div>
 
             {/* Comments List */}
-            <div className="space-y-4 md:space-y-6">
+            <ul>
                 {comments.map((comment) => (
-                    <div key={comment.id} className="space-y-3 md:space-y-4">
+                    <li key={comment.id} className="border-b border-[var(--mk-rule)] py-3">
                         {/* Main Comment */}
-                        <div className="flex space-x-3">
-                            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                {comment.image ? (
-                                    <Image
-                                        src={comment.image || "/placeholder.svg"}
-                                        alt={comment.username}
-                                        width={40}
-                                        height={40}
-                                        className="object-cover"
-                                    />
-                                ) : (
-                                    <span className="text-white font-semibold text-xs md:text-sm">
-                                        {comment.username.charAt(0).toUpperCase()}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="flex-1 space-y-2">
-                                <div className="bg-gray-800 md:bg-gray-50 rounded-xl px-3 md:px-4 py-2 md:py-3">
-                                    <div className="flex items-center space-x-2 mb-1">
-                                        <span className="font-semibold text-white md:text-gray-900 text-sm md:text-base">
-                                            {comment.username}
-                                        </span>
-                                    </div>
-                                    <p className="text-gray-200 md:text-gray-700 text-sm md:text-base">{comment.comment}</p>
+                        <div className="flex gap-3">
+                            <Avatar image={comment.image} username={comment.username} size={36} />
+                            <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-baseline gap-x-2">
+                                    <span className="text-[14px] font-bold tracking-[-0.01em]">{comment.username}</span>
+                                    <span className={tag}>{formatTimeAgo(comment.createdAt)}</span>
                                 </div>
-                                <div className="flex items-center space-x-4 px-2">
+                                <p className="mt-0.5 break-words text-[14px] leading-relaxed tracking-[-0.01em] text-[var(--mk-ink)]">
+                                    {comment.comment}
+                                </p>
+                                <div className="mt-1.5 flex items-center gap-1">
                                     <button
                                         onClick={() => setReplyingTo(comment.id)}
-                                        className="text-xs md:text-sm text-gray-400 md:text-gray-500 hover:text-purple-400 md:hover:text-purple-600 font-medium transition-colors duration-200"
+                                        className={`${tag} rounded-[4px] px-1.5 py-1 hover:bg-[var(--mk-indigo-soft)] hover:text-[var(--mk-indigo-deep)]`}
                                     >
                                         Reply
                                     </button>
-                                    <button className="text-xs md:text-sm text-gray-500 md:text-gray-400 hover:text-gray-400 md:hover:text-gray-600 transition-colors duration-200">
+                                    <button
+                                        className={`${tag} rounded-[4px] px-1.5 py-1 hover:bg-[var(--mk-indigo-soft)]`}
+                                        aria-label="More options"
+                                    >
                                         •••
                                     </button>
                                 </div>
@@ -166,42 +139,29 @@ export function CommentSection({
 
                         {/* Reply Input */}
                         {replyingTo === comment.id && (
-                            <div className="ml-11 md:ml-13 flex space-x-3">
-                                <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                    {currentUser.image ? (
-                                        <Image
-                                            src={currentUser.image || "/placeholder.svg"}
-                                            alt={currentUser.username}
-                                            width={32}
-                                            height={32}
-                                            className="object-cover"
-                                        />
-                                    ) : (
-                                        <span className="text-white text-xs font-semibold">
-                                            {currentUser.username.charAt(0).toUpperCase()}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex-1 space-y-3">
+                            <div className="ml-12 mt-3 flex gap-3">
+                                <Avatar image={currentUser.image} username={currentUser.username} size={28} />
+                                <div className="min-w-0 flex-1 space-y-2">
                                     <input
                                         type="text"
                                         placeholder="Reply..."
+                                        aria-label={`Reply to ${comment.username}`}
                                         value={replyText}
                                         onChange={(e) => setReplyText(e.target.value)}
                                         onKeyPress={(e) => handleKeyPress(e, () => onAddReply(comment.id))}
-                                        className="w-full px-3 md:px-4 py-2 bg-gray-800 md:bg-gray-50 border border-gray-700 md:border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all duration-200 text-white md:text-gray-900 placeholder-gray-400 md:placeholder-gray-500 text-sm"
+                                        className={`${field} py-2 text-[14px]`}
                                     />
-                                    <div className="flex space-x-2">
+                                    <div className="flex gap-2">
                                         <button
                                             onClick={() => setReplyingTo(null)}
-                                            className="px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm text-gray-400 md:text-gray-600 bg-gray-800 md:bg-gray-100 rounded-lg hover:bg-gray-700 md:hover:bg-gray-200 transition-colors duration-200"
+                                            className={`${btn.plain} px-3 py-1.5 text-[13px]`}
                                         >
                                             Cancel
                                         </button>
                                         <button
                                             onClick={() => onAddReply(comment.id)}
                                             disabled={!replyText.trim()}
-                                            className="px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-gray-600 md:disabled:bg-gray-400 transition-colors duration-200"
+                                            className={`${btn.primary} px-3 py-1.5 text-[13px]`}
                                         >
                                             Reply
                                         </button>
@@ -212,49 +172,59 @@ export function CommentSection({
 
                         {/* Replies */}
                         {comment.replies && comment.replies.length > 0 && (
-                            <div className="ml-11 md:ml-13 space-y-3 md:space-y-4">
+                            <ul className="ml-12 mt-3 border-l border-[var(--mk-rule)]">
                                 {comment.replies.map((reply) => (
-                                    <div key={reply.id} className="flex space-x-3">
-                                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                            {reply.image ? (
-                                                <Image
-                                                    src={reply.image || "/placeholder.svg"}
-                                                    alt={reply.username}
-                                                    width={32}
-                                                    height={32}
-                                                    className="object-cover"
-                                                />
-                                            ) : (
-                                                <span className="text-white text-xs font-semibold">
-                                                    {reply.username.charAt(0).toUpperCase()}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="flex-1 space-y-2">
-                                            <div className="bg-gray-800 md:bg-gray-50 rounded-xl px-3 md:px-4 py-2 md:py-3">
-                                                <div className="flex items-center space-x-2 mb-1">
-                                                    <span className="font-semibold text-xs md:text-sm text-white md:text-gray-900">
-                                                        {reply.username}
-                                                    </span>
-                                                </div>
-                                                <p className="text-gray-200 md:text-gray-700 text-xs md:text-sm">{reply.reply}</p>
+                                    <li key={reply.id} className="flex gap-3 border-b border-[var(--mk-rule)] py-2.5 pl-3 last:border-b-0">
+                                        <Avatar image={reply.image} username={reply.username} size={28} />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-baseline gap-x-2">
+                                                <span className="text-[13px] font-bold tracking-[-0.01em]">{reply.username}</span>
+                                                <span className={tag}>{formatTimeAgo(reply.createdAt)}</span>
                                             </div>
-                                            <div className="flex items-center space-x-4 px-2">
-                                                <button className="text-xs text-gray-400 md:text-gray-500 hover:text-purple-400 md:hover:text-purple-600 font-medium transition-colors duration-200">
+                                            <p className="mt-0.5 break-words text-[13px] leading-relaxed tracking-[-0.01em]">{reply.reply}</p>
+                                            <div className="mt-1 flex items-center gap-1">
+                                                <button className={`${tag} rounded-[4px] px-1.5 py-1 hover:bg-[var(--mk-indigo-soft)] hover:text-[var(--mk-indigo-deep)]`}>
                                                     Reply
                                                 </button>
-                                                <button className="text-xs text-gray-500 md:text-gray-400 hover:text-gray-400 md:hover:text-gray-600 transition-colors duration-200">
+                                                <button
+                                                    className={`${tag} rounded-[4px] px-1.5 py-1 hover:bg-[var(--mk-indigo-soft)]`}
+                                                    aria-label="More options"
+                                                >
                                                     •••
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
+                                    </li>
                                 ))}
-                            </div>
+                            </ul>
                         )}
-                    </div>
+                    </li>
                 ))}
-            </div>
+            </ul>
+        </div>
+    )
+}
+
+/** Square avatar: picture if present, otherwise the initial on indigo tint. */
+function Avatar({ image, username, size }: { image?: string; username: string; size: number }) {
+    return (
+        <div
+            className="grid shrink-0 place-items-center overflow-hidden rounded-[3px] border border-[var(--mk-ink)] bg-[var(--mk-indigo-soft)]"
+            style={{ width: size, height: size }}
+        >
+            {image ? (
+                <Image
+                    src={image || "/placeholder.svg"}
+                    alt={username}
+                    width={size}
+                    height={size}
+                    className="h-full w-full object-cover"
+                />
+            ) : (
+                <span className="text-[12px] font-bold text-[var(--mk-indigo-deep)]">
+                    {username.charAt(0).toUpperCase()}
+                </span>
+            )}
         </div>
     )
 }

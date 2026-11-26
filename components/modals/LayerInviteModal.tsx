@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { X, Mail, RotateCcw, Ban, Send } from "lucide-react";
 import { InviteApi } from "@/utils/api";
+import { Window, btn, field, tag } from "@/components/app/ui";
 
 type Invite = {
   id: number;
@@ -93,26 +94,31 @@ export default function LayerInviteModal({
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="absolute inset-x-4 top-16 bottom-16 md:left-1/2 md:-translate-x-1/2 md:w-[720px] bg-white rounded-xl shadow-xl flex flex-col overflow-hidden">
-        <div className="p-4 border-b flex items-center justify-between">
-          <div className="font-semibold text-gray-900">
+      <div className="absolute inset-0 bg-[var(--mk-ink)]/40" onClick={onClose} />
+      <Window
+        title="space://invite"
+        className="absolute inset-x-4 top-16 bottom-16 flex flex-col md:left-1/2 md:w-[720px] md:-translate-x-1/2"
+      >
+        <div className="flex items-center justify-between border-b border-[var(--mk-rule)] p-4">
+          <div className="text-[18px] font-bold tracking-[-0.03em] text-[var(--mk-ink)]">
             Invite people to this layer
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full text-gray-900"
+            aria-label="Close"
+            className="grid h-9 w-9 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
           >
-            <X className="w-5 h-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="p-4 space-y-3">
-          <label className="block text-sm text-gray-700 font-medium">
+        <div className="min-h-0 flex-1 overflow-auto">
+        <div className="space-y-3 p-4">
+          <label className={`${tag} block`}>
             Email addresses
           </label>
           <textarea
-            className="w-full border rounded-lg p-3 text-gray-700"
+            className={field}
             placeholder="alice@acme.com, bob@example.com"
             rows={3}
             value={emails}
@@ -120,69 +126,71 @@ export default function LayerInviteModal({
           />
 
           {err && (
-            <div className="p-2 bg-red-100 text-red-700 rounded">{err}</div>
+            <div className="rounded-[4px] border border-[var(--mk-amber)] bg-[var(--mk-amber-soft)] p-2 text-[14px] tracking-tight text-[var(--mk-ink)]">{err}</div>
           )}
 
           <div className="flex justify-end">
             <button
               onClick={submit}
               disabled={sending}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+              className={`${btn.primary} px-4 py-2 text-[14px]`}
             >
-              <Send className="w-4 h-4" />
+              <Send className="h-4 w-4" />
               {sending ? "Sending…" : "Send invites"}
             </button>
           </div>
         </div>
 
         <div className="px-4 pb-4">
-          <div className="text-sm font-medium text-gray-900 mb-2">
+          <div className={`${tag} mb-2`}>
             Pending & recent invites
           </div>
-          <div className="border rounded-lg overflow-hidden">
-            <div className="grid grid-cols-12 bg-gray-50 text-xs text-gray-600 px-3 py-2">
+          <div className="overflow-hidden rounded-[4px] border border-[var(--mk-ink)]">
+            <div className={`${tag} grid grid-cols-12 border-b border-[var(--mk-ink)] bg-[var(--mk-paper)] px-3 py-2`}>
               <div className="col-span-5">Email</div>
               <div className="col-span-2">Status</div>
               <div className="col-span-3">Expires</div>
               <div className="col-span-2">Actions</div>
             </div>
-            <div className="max-h-64 overflow-auto divide-y">
+            <div className="max-h-64 overflow-auto">
               {loading ? (
-                <div className="p-4 text-gray-500">Loading…</div>
+                <div className="p-4 text-[14px] tracking-tight text-[var(--mk-ink-2)]">Loading…</div>
               ) : pending.length ? (
                 pending.map((inv) => (
                   <div
                     key={inv.id}
-                    className="grid grid-cols-12 items-center px-3 py-2 text-sm"
+                    className="grid grid-cols-12 items-center border-b border-[var(--mk-rule)] px-3 py-2 text-[14px] tracking-tight text-[var(--mk-ink)] last:border-b-0"
                   >
-                    <div className="col-span-5 flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-900">{inv.email}</span>
+                    <div className="col-span-5 flex min-w-0 items-center gap-2">
+                      <Mail className="h-4 w-4 shrink-0 text-[var(--mk-ink-2)]" />
+                      <span className="truncate">{inv.email}</span>
                     </div>
-                    <div className="col-span-2 capitalize text-gray-900">
+                    <div className="col-span-2 capitalize">
                       {inv.status}
                     </div>
-                    <div className="col-span-3 text-gray-900">
+                    <div className="col-span-3 text-[var(--mk-ink-2)]">
                       {inv.expiresAt
                         ? new Date(inv.expiresAt).toLocaleString()
                         : "—"}
                     </div>
-                    <div className="col-span-2 flex gap-2 text-gray-900">
+                    <div className="col-span-2 flex gap-2">
                       {inv.status === "pending" && (
                         <>
                           <button
-                            className="px-2 py-1 border rounded hover:bg-gray-50"
+                            className="grid h-8 w-8 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
                             onClick={() => onResend(inv.id)}
                             title="Resend"
+                            aria-label="Resend invite"
                           >
-                            <RotateCcw className="w-4 h-4" />
+                            <RotateCcw className="h-4 w-4" />
                           </button>
                           <button
-                            className="px-2 py-1 border rounded hover:bg-gray-50"
+                            className="grid h-8 w-8 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
                             onClick={() => onRevoke(inv.id)}
                             title="Revoke"
+                            aria-label="Revoke invite"
                           >
-                            <Ban className="w-4 h-4" />
+                            <Ban className="h-4 w-4" />
                           </button>
                         </>
                       )}
@@ -190,12 +198,13 @@ export default function LayerInviteModal({
                   </div>
                 ))
               ) : (
-                <div className="p-4 text-gray-500">No invites yet</div>
+                <div className="p-4 text-[14px] tracking-tight text-[var(--mk-ink-2)]">No invites yet</div>
               )}
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      </Window>
     </div>
   );
 }

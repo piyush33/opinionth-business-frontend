@@ -4,19 +4,11 @@ import type React from "react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import Link from "next/link";
 import Image from "next/image";
 import {
-  Search,
-  Bell,
   MessageCircle,
-  UserIcon,
-  ChevronDown,
   ArrowLeft,
   X,
-  Home,
-  Compass,
-  Plus,
   Heart,
   Share,
   Bookmark,
@@ -32,6 +24,8 @@ import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
 import axios from "axios";
 import ZoomPanImage from "@/components/ZoomPanImage";
+import AppNav from "@/components/app/AppNav";
+import { PixelLabel, Window, btn, tag } from "@/components/app/ui";
 
 // Types
 interface CardData {
@@ -332,7 +326,6 @@ export default function CardExpansionPage() {
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [searchTerm, setSearchTerm] = useState("");
   const [showComments, setShowComments] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Popup states
   const [isNotificationsPopupOpen, setIsNotificationsPopupOpen] =
@@ -767,26 +760,32 @@ export default function CardExpansionPage() {
     }
   }, [card]);
 
+  const navProps = {
+    active: null,
+    search: {
+      value: searchTerm,
+      onChange: setSearchTerm,
+      placeholder: "Search posts...",
+    },
+    unreadCount,
+    onNotifications: () => setIsNotificationsPopupOpen(true),
+    onInbox: () => setIsInboxPopupOpen(true),
+    onSettings: () => setIsSettingsPopupOpen(true),
+  } as const;
+
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-black">
-        <header className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md">
-          <div className="flex items-center justify-between px-4 py-3">
-            <button
-              onClick={() => router.back()}
-              className="p-2 text-white hover:bg-white/10 rounded-full"
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </button>
-            <button className="p-2 text-white hover:bg-white/10 rounded-full">
-              <MoreHorizontal className="w-6 h-6" />
-            </button>
-          </div>
-        </header>
-
-        <div className="pt-16 flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+      <div className="min-h-screen bg-[var(--mk-paper)] text-[var(--mk-ink)]">
+        <AppNav {...navProps} />
+        <div className="flex min-h-screen flex-col items-center justify-center gap-4 pt-16">
+          <div
+            className="h-10 w-10 animate-spin border-2 border-[var(--mk-ink)] border-t-transparent motion-reduce:animate-none"
+            aria-hidden
+          />
+          <span className={tag} role="status">
+            Loading card…
+          </span>
         </div>
       </div>
     );
@@ -795,678 +794,377 @@ export default function CardExpansionPage() {
   // Error state
   if (error || !card || !userProfile) {
     return (
-      <div className="min-h-screen bg-black text-white">
-        <header className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md">
-          <div className="flex items-center justify-between px-4 py-3">
-            <button
-              onClick={() => router.back()}
-              className="p-2 text-white hover:bg-white/10 rounded-full"
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </button>
-          </div>
-        </header>
-
-        <div className="pt-16 flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h2 className="text-xl font-bold mb-4">
-              {error ? "Error" : "No Card Selected"}
-            </h2>
-            <p className="text-gray-400 mb-4">
-              {error || "Please select a card to view"}
-            </p>
-            <button
-              onClick={() =>
-                error ? window.location.reload() : router.push("/home")
-              }
-              className="px-6 py-2 bg-white text-black rounded-full font-medium"
-            >
-              {error ? "Retry" : "Go Home"}
-            </button>
-          </div>
+      <div className="min-h-screen bg-[var(--mk-paper)] text-[var(--mk-ink)]">
+        <AppNav {...navProps} />
+        <div className="flex min-h-screen items-center justify-center px-4 pt-16">
+          <Window title="card://error" className="w-full max-w-sm">
+            <div className="p-6 text-center">
+              <h2 className="mb-2 text-xl font-bold tracking-[-0.03em]">
+                {error ? "Error" : "No Card Selected"}
+              </h2>
+              <p className="mb-5 text-[14px] tracking-tight text-[var(--mk-ink-2)]">
+                {error || "Please select a card to view"}
+              </p>
+              <div className="flex justify-center gap-2">
+                <button
+                  onClick={() => router.back()}
+                  className={`${btn.plain} px-4 py-2 text-[14px]`}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </button>
+                <button
+                  onClick={() =>
+                    error ? window.location.reload() : router.push("/home")
+                  }
+                  className={`${btn.primary} px-4 py-2 text-[14px]`}
+                >
+                  {error ? "Retry" : "Go Home"}
+                </button>
+              </div>
+            </div>
+          </Window>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen text-white">
-      {/* Desktop Navbar */}
-      <nav className="hidden md:block fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <Link href="/explore" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">C</span>
-                </div>
-                <span className="font-bold text-xl text-gray-900">
-                  Collabrr
-                </span>
-              </Link>
-            </div>
+  const iconBtn =
+    "grid h-9 w-9 shrink-0 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] transition-colors hover:bg-[var(--mk-indigo-soft)]";
 
-            <div className="flex items-center space-x-1">
-              {[
-                { name: "Home", href: "/home" },
-                { name: "Explore", href: "/explore" },
-                { name: "Create", href: "/create" },
-              ].map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="px-4 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-
-            <div className="flex-1 max-w-md mx-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search posts..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border-0 rounded-full text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsNotificationsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200 relative"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
-                )}
-              </button>
-
-              <button
-                onClick={() => setIsInboxPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200 relative"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></span>
-              </button>
-
-              <Link
-                href="/profile"
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
-              >
-                <UserIcon className="w-5 h-5" />
-              </Link>
-
-              <button
-                onClick={() => setIsSettingsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
-              >
-                <ChevronDown className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/80 via-black/40 to-transparent backdrop-blur-sm">
-        <div className="flex items-center justify-between px-4 py-3">
-          <button
-            onClick={() => router.back()}
-            className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <button
-            onClick={handleMoreClick}
-            className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
-          >
-            <MoreHorizontal className="w-6 h-6" />
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsMobileMenuOpen(false)}
+  const authorRow = (size: number) => (
+    <button
+      type="button"
+      className="flex items-center gap-3 text-left transition-colors hover:text-[var(--mk-indigo-deep)]"
+      onClick={handleUserClick}
+    >
+      <span
+        className="grid shrink-0 place-items-center overflow-hidden rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-indigo-soft)]"
+        style={{ width: size, height: size }}
+      >
+        {card.picture ? (
+          <Image
+            src={card.picture || "/placeholder.svg"}
+            alt={card.username}
+            width={size}
+            height={size}
+            className="h-full w-full object-cover"
           />
-          <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-xl">
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-900">Menu</span>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                  <X className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              {[
-                { name: "Home", href: "/home", icon: Home },
-                { name: "Explore", href: "/explore", icon: Compass },
-                { name: "Create", href: "/create", icon: Plus },
-                { name: "Profile", href: "/profile", icon: UserIcon },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Icon className="w-5 h-5 text-gray-600" />
-                    <span className="text-gray-900">{item.name}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+        ) : (
+          <span className="text-[14px] font-bold text-[var(--mk-indigo-deep)]">
+            {card.username.charAt(0).toUpperCase()}
+          </span>
+        )}
+      </span>
+      <span>
+        <span className="block text-[14px] font-bold tracking-[-0.01em]">
+          {card.username}
+        </span>
+        <span className={tag}>View profile</span>
+      </span>
+    </button>
+  );
+
+  const comments_ = (
+    <CommentSection
+      comments={comments}
+      newComment={newComment}
+      setNewComment={setNewComment}
+      replyingTo={replyingTo}
+      setReplyingTo={setReplyingTo}
+      replyText={replyText}
+      setReplyText={setReplyText}
+      onAddComment={handleAddComment}
+      onAddReply={handleAddReply}
+      currentUser={userProfile}
+    />
+  );
+
+  const feedGrid = (
+    <MasonryGrid>
+      {feedCards.map((item) => (
+        <Card
+          key={item.id}
+          user={item.username}
+          title={item.title}
+          description={item.description}
+          text={item.text}
+          image={item.image}
+          picture={item.picture}
+          reposted={item.reposted}
+          onClick={() => handleCardClick(item)}
+          onUserTagClick={handleUserTagClick}
+          onCardTagClick={() => {}}
+          cardData={item}
+        />
+      ))}
+    </MasonryGrid>
+  );
+
+  const actionBtn =
+    "flex items-center gap-1.5 rounded-[4px] px-2 py-1.5 text-[var(--mk-ink)] transition-colors hover:bg-[var(--mk-indigo-soft)]";
+
+  return (
+    <div className="min-h-screen bg-[var(--mk-paper)] text-[var(--mk-ink)]">
+      <AppNav {...navProps} />
 
       {/* Main Content */}
-      <main className="md:pt-20 bg-white">
+      <main className="pt-[7.5rem] md:pt-20">
         {/* Desktop Layout */}
-        <div className="hidden md:block container mx-auto px-4 py-8 max-w-7xl">
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 mb-12">
+        <div className="container mx-auto hidden max-w-7xl px-4 py-8 md:block">
+          <div className="mb-4 flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className={iconBtn}
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-[18px] w-[18px]" />
+            </button>
+            <span className={tag}>Back to feed</span>
+          </div>
+
+          <Window title={`card://${card.id}`} className="mb-12">
             <div className="flex h-[600px]">
               {card.image ? (
-                <>
-                  {/* Image Layout */}
-                  <div className="w-1/2 relative bg-gray-50">
-                    <div className="absolute inset-0">
-                      <ZoomPanImage
-                        src={card.image!}
-                        alt={card.title}
-                        // optional tweaks:
-                        minScale={0.5}
-                        maxScale={10}
-                      />
-                    </div>
+                /* Image Layout */
+                <div className="relative w-1/2 border-r border-[var(--mk-ink)] bg-[var(--mk-paper)]">
+                  <div className="absolute inset-0">
+                    <ZoomPanImage
+                      src={card.image!}
+                      alt={card.title}
+                      // optional tweaks:
+                      minScale={0.5}
+                      maxScale={10}
+                    />
                   </div>
-                  <div className="w-1/2 flex flex-col">
-                    <div className="p-6 border-b border-gray-100 flex-shrink-0">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h1 className="text-xl font-bold text-gray-900 mb-2">
-                            {card.title}
-                          </h1>
-                          <p className="text-gray-600 text-sm mb-3">
-                            {card.description}
-                          </p>
-                          {card.text && (
-                            <p className="text-gray-700 text-sm">{card.text}</p>
-                          )}
-                        </div>
-                        <button
-                          onClick={handleMoreClick}
-                          className="ml-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-all duration-200 flex-shrink-0"
-                        >
-                          <MoreHorizontal className="w-5 h-5" />
-                        </button>
-                      </div>
-                      <div
-                        className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity duration-200"
-                        onClick={handleUserClick}
-                      >
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center overflow-hidden">
-                          {card.picture ? (
-                            <Image
-                              src={card.picture || "/placeholder.svg"}
-                              alt={card.username}
-                              width={40}
-                              height={40}
-                              className="object-cover"
-                            />
-                          ) : (
-                            <span className="text-white font-semibold text-sm">
-                              {card.username.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900 text-sm">
-                            {card.username}
-                          </p>
-                          <p className="text-xs text-gray-500">View profile</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-6">
-                      <CommentSection
-                        comments={comments}
-                        newComment={newComment}
-                        setNewComment={setNewComment}
-                        replyingTo={replyingTo}
-                        setReplyingTo={setReplyingTo}
-                        replyText={replyText}
-                        setReplyText={setReplyText}
-                        onAddComment={handleAddComment}
-                        onAddReply={handleAddReply}
-                        currentUser={userProfile}
-                      />
-                    </div>
-                  </div>
-                </>
+                </div>
               ) : (
-                <>
-                  {/* Text-only Layout */}
-                  <div className="w-1/2 flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
-                    <div className="flex-1 overflow-y-auto p-8">
-                      {card.text && (
-                        <div className="space-y-4">
-                          <div className="text-sm text-gray-500 uppercase tracking-wide font-medium">
-                            Content
-                          </div>
-                          <div className="prose prose-gray max-w-none">
-                            <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">
-                              {card.text}
-                            </p>
-                          </div>
-                        </div>
+                /* Text-only Layout */
+                <div className="mk-grid flex w-1/2 flex-col border-r border-[var(--mk-ink)] bg-[var(--mk-paper)]">
+                  <div className="flex-1 overflow-y-auto p-8">
+                    {card.text && (
+                      <div className="space-y-4">
+                        <PixelLabel>CONTENT</PixelLabel>
+                        <p className="whitespace-pre-wrap text-lg leading-relaxed tracking-[-0.01em] text-[var(--mk-ink)]">
+                          {card.text}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex w-1/2 flex-col">
+                <div className="flex-shrink-0 border-b border-[var(--mk-ink)] p-6">
+                  <div className="mb-4 flex items-start justify-between">
+                    <div className="flex-1">
+                      <h1
+                        className={`mk-display mb-2 ${
+                          card.image ? "text-[1.5rem]" : "text-[1.85rem]"
+                        }`}
+                      >
+                        {card.title}
+                      </h1>
+                      <p
+                        className={`tracking-[-0.01em] text-[var(--mk-ink-2)] ${
+                          card.image ? "mb-3 text-[14px]" : "text-[15px] leading-relaxed"
+                        }`}
+                      >
+                        {card.description}
+                      </p>
+                      {card.image && card.text && (
+                        <p className="text-[14px] tracking-[-0.01em]">
+                          {card.text}
+                        </p>
                       )}
                     </div>
+                    <button
+                      onClick={handleMoreClick}
+                      className={`${iconBtn} ml-4`}
+                      aria-label="More options"
+                    >
+                      <MoreHorizontal className="h-[18px] w-[18px]" />
+                    </button>
                   </div>
-
-                  <div className="w-1/2 flex flex-col">
-                    <div className="p-6 border-b border-gray-100 flex-shrink-0">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h1 className="text-2xl font-bold text-gray-900 mb-3">
-                            {card.title}
-                          </h1>
-                          <p className="text-gray-600 text-base leading-relaxed">
-                            {card.description}
-                          </p>
-                        </div>
-                        <button
-                          onClick={handleMoreClick}
-                          className="ml-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-all duration-200 flex-shrink-0"
-                        >
-                          <MoreHorizontal className="w-5 h-5" />
-                        </button>
-                      </div>
-                      <div
-                        className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity duration-200"
-                        onClick={handleUserClick}
-                      >
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center overflow-hidden">
-                          {card.picture ? (
-                            <Image
-                              src={card.picture || "/placeholder.svg"}
-                              alt={card.username}
-                              width={40}
-                              height={40}
-                              className="object-cover"
-                            />
-                          ) : (
-                            <span className="text-white font-semibold text-sm">
-                              {card.username.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900 text-sm">
-                            {card.username}
-                          </p>
-                          <p className="text-xs text-gray-500">View profile</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-6">
-                      <CommentSection
-                        comments={comments}
-                        newComment={newComment}
-                        setNewComment={setNewComment}
-                        replyingTo={replyingTo}
-                        setReplyingTo={setReplyingTo}
-                        replyText={replyText}
-                        setReplyText={setReplyText}
-                        onAddComment={handleAddComment}
-                        onAddReply={handleAddReply}
-                        currentUser={userProfile}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
+                  {authorRow(40)}
+                </div>
+                <div className="flex-1 overflow-y-auto p-6">{comments_}</div>
+              </div>
             </div>
-          </div>
+          </Window>
 
           {/* Related Cards Section */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-              Related Posts
-            </h2>
-            <MasonryGrid>
-              {feedCards.map((item) => (
-                <Card
-                  key={item.id}
-                  user={item.username}
-                  title={item.title}
-                  description={item.description}
-                  text={item.text}
-                  image={item.image}
-                  picture={item.picture}
-                  reposted={item.reposted}
-                  onClick={() => handleCardClick(item)}
-                  onUserTagClick={handleUserTagClick}
-                  onCardTagClick={() => {}}
-                  cardData={item}
-                />
-              ))}
-            </MasonryGrid>
+            <div className="mb-6 flex items-center justify-between border-b border-[var(--mk-ink)] pb-3">
+              <h2 className="text-2xl font-bold tracking-[-0.03em]">
+                Related Posts
+              </h2>
+              <PixelLabel color="var(--mk-cyan-deep)">FEED</PixelLabel>
+            </div>
+            {feedGrid}
           </div>
         </div>
 
         {/* Mobile Layout */}
-        <div className="md:hidden">
-          {card.image ? (
-            /* Image-based mobile layout */
-            <div className="relative w-full h-screen">
-              <Image
-                src={card.image || "/placeholder.svg"}
-                alt={card.title}
-                fill
-                className="object-cover"
-                priority
-                onError={(e) => {
-                  e.currentTarget.src = "/placeholder.svg?height=800&width=600";
-                }}
-              />
+        <div className="px-4 pb-8 md:hidden">
+          <div className="mb-3 flex items-center justify-between">
+            <button
+              onClick={() => router.back()}
+              className={iconBtn}
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-[18px] w-[18px]" />
+            </button>
+            <button
+              onClick={handleMoreClick}
+              className={iconBtn}
+              aria-label="More options"
+            >
+              <MoreHorizontal className="h-[18px] w-[18px]" />
+            </button>
+          </div>
 
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent h-1/3 pointer-events-none" />
+          <Window title={`card://${card.id}`}>
+            {card.image && (
+              /* Image-based mobile layout */
+              <div className="relative h-[60vh] w-full border-b border-[var(--mk-ink)] bg-[var(--mk-paper)]">
+                <Image
+                  src={card.image || "/placeholder.svg"}
+                  alt={card.title}
+                  fill
+                  className="object-cover"
+                  priority
+                  onError={(e) => {
+                    e.currentTarget.src =
+                      "/placeholder.svg?height=800&width=600";
+                  }}
+                />
+              </div>
+            )}
 
-              <div className="absolute bottom-0 left-0 right-0 p-4 space-y-4">
-                <div
-                  className="flex items-center space-x-3 cursor-pointer"
-                  onClick={handleUserClick}
-                >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center overflow-hidden">
-                    {card.picture ? (
-                      <Image
-                        src={card.picture || "/placeholder.svg"}
-                        alt={card.username}
-                        width={40}
-                        height={40}
-                        className="object-cover"
-                      />
-                    ) : (
-                      <span className="text-white font-semibold text-sm">
-                        {card.username.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white text-sm">
-                      {card.username}
-                    </p>
-                  </div>
-                </div>
+            <div className="space-y-4 p-4">
+              {authorRow(card.image ? 40 : 48)}
 
-                <div className="space-y-2">
-                  <h1 className="text-white font-bold text-lg leading-tight">
-                    {card.title}
-                  </h1>
-                  <p className="text-white/90 text-sm leading-relaxed">
-                    {card.description}
+              <div className="space-y-2">
+                <h1 className="mk-display text-[1.6rem]">{card.title}</h1>
+                <p className="text-[15px] leading-relaxed tracking-[-0.01em] text-[var(--mk-ink-2)]">
+                  {card.description}
+                </p>
+              </div>
+
+              {card.text &&
+                (card.image ? (
+                  <p className="text-[14px] leading-relaxed tracking-[-0.01em]">
+                    {card.text}
                   </p>
-                  {card.text && (
-                    <p className="text-white/80 text-sm leading-relaxed">
+                ) : (
+                  <div className="rounded-[5px] border border-[var(--mk-rule)] bg-[var(--mk-paper)] p-4">
+                    <p className="m-0 whitespace-pre-wrap text-[15px] leading-relaxed tracking-[-0.01em]">
                       {card.text}
                     </p>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center space-x-6">
-                    <button
-                      onClick={(e) => handleLike(e, card)}
-                      className="flex items-center space-x-2 text-white hover:scale-110 transition-transform"
-                    >
-                      <Heart
-                        className={`w-7 h-7 ${
-                          isLiked(card.id) ? "fill-red-500 text-red-500" : ""
-                        }`}
-                      />
-                      <span className="text-sm font-medium">{likesCount}</span>
-                    </button>
-
-                    <button
-                      onClick={() => setShowComments(true)}
-                      className="flex items-center space-x-2 text-white hover:scale-110 transition-transform"
-                    >
-                      <MessageCircle className="w-7 h-7" />
-                      <span className="text-sm font-medium">
-                        {comments.length}
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={handleShare}
-                      className="text-white hover:scale-110 transition-transform"
-                    >
-                      <Share className="w-7 h-7" />
-                    </button>
                   </div>
-
-                  <div className="flex items-center space-x-4">
-                    {card.weblink && (
-                      <a
-                        href={card.weblink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-white hover:scale-110 transition-transform"
-                      >
-                        <ExternalLink className="w-6 h-6" />
-                      </a>
-                    )}
-
-                    <button
-                      onClick={(e) => handleSave(e, card)}
-                      className="text-white hover:scale-110 transition-transform"
-                    >
-                      <Bookmark
-                        className={`w-6 h-6 ${
-                          isSaved(card.id) ? "fill-white" : ""
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
+                ))}
             </div>
-          ) : (
-            /* Text-only mobile layout */
-            <div className="bg-white">
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 pt-16 pb-6">
-                <div className="p-4 space-y-4">
-                  {/* User info */}
-                  <div
-                    className="flex items-center space-x-3 cursor-pointer"
-                    onClick={handleUserClick}
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between border-t border-[var(--mk-ink)] px-2 py-2">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={(e) => handleLike(e, card)}
+                  className={actionBtn}
+                  aria-label={isLiked(card.id) ? "Unlike" : "Like"}
+                  aria-pressed={isLiked(card.id)}
+                >
+                  <Heart
+                    className={`h-6 w-6 ${
+                      isLiked(card.id)
+                        ? "fill-[var(--mk-indigo)] text-[var(--mk-indigo)]"
+                        : ""
+                    }`}
+                  />
+                  <span className="text-[14px] font-semibold">{likesCount}</span>
+                </button>
+
+                <button
+                  onClick={() => setShowComments(true)}
+                  className={actionBtn}
+                  aria-label="Comments"
+                >
+                  <MessageCircle className="h-6 w-6" />
+                  <span className="text-[14px] font-semibold">
+                    {comments.length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={handleShare}
+                  className={actionBtn}
+                  aria-label="Share"
+                >
+                  <Share className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1">
+                {card.weblink && (
+                  <a
+                    href={card.weblink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={actionBtn}
+                    aria-label="Open link"
                   >
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center overflow-hidden">
-                      {card.picture ? (
-                        <Image
-                          src={card.picture || "/placeholder.svg"}
-                          alt={card.username}
-                          width={48}
-                          height={48}
-                          className="object-cover"
-                        />
-                      ) : (
-                        <span className="text-white font-semibold text-base">
-                          {card.username.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 text-base">
-                        {card.username}
-                      </p>
-                      <p className="text-sm text-gray-500">View profile</p>
-                    </div>
-                  </div>
+                    <ExternalLink className="h-5 w-5" />
+                  </a>
+                )}
 
-                  {/* Title and Description */}
-                  <div className="space-y-3">
-                    <h1 className="text-gray-900 font-bold text-2xl leading-tight">
-                      {card.title}
-                    </h1>
-                    <p className="text-gray-700 text-base leading-relaxed">
-                      {card.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Text Content - Only show if exists */}
-              {card.text && (
-                <div className="p-4 bg-white">
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <div className="prose prose-gray max-w-none">
-                      <p className="text-gray-800 text-base leading-relaxed whitespace-pre-wrap m-0">
-                        {card.text}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="p-4 bg-white border-t border-gray-100 sticky bottom-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-6">
-                    <button
-                      onClick={(e) => handleLike(e, card)}
-                      className="flex items-center space-x-2 text-gray-700 hover:text-red-500 transition-colors"
-                    >
-                      <Heart
-                        className={`w-7 h-7 ${
-                          isLiked(card.id) ? "fill-red-500 text-red-500" : ""
-                        }`}
-                      />
-                      <span className="text-sm font-medium">{likesCount}</span>
-                    </button>
-
-                    <button
-                      onClick={() => setShowComments(true)}
-                      className="flex items-center space-x-2 text-gray-700 hover:text-blue-500 transition-colors"
-                    >
-                      <MessageCircle className="w-7 h-7" />
-                      <span className="text-sm font-medium">
-                        {comments.length}
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={handleShare}
-                      className="text-gray-700 hover:text-purple-500 transition-colors"
-                    >
-                      <Share className="w-7 h-7" />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    {card.weblink && (
-                      <a
-                        href={card.weblink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-700 hover:text-purple-500 transition-colors"
-                      >
-                        <ExternalLink className="w-6 h-6" />
-                      </a>
-                    )}
-
-                    <button
-                      onClick={(e) => handleSave(e, card)}
-                      className="text-gray-700 hover:text-blue-500 transition-colors"
-                    >
-                      <Bookmark
-                        className={`w-6 h-6 ${
-                          isSaved(card.id) ? "fill-current" : ""
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
+                <button
+                  onClick={(e) => handleSave(e, card)}
+                  className={actionBtn}
+                  aria-label={isSaved(card.id) ? "Unsave" : "Save"}
+                  aria-pressed={isSaved(card.id)}
+                >
+                  <Bookmark
+                    className={`h-5 w-5 ${
+                      isSaved(card.id) ? "fill-[var(--mk-ink)]" : ""
+                    }`}
+                  />
+                </button>
               </div>
             </div>
-          )}
+          </Window>
 
           {/* More to Explore Section */}
-          <div className="p-4  bg-white border-t border-gray-200">
-            <h3 className="text-black font-semibold text-lg mb-6 mt-6 text-center">
-              More to explore
-            </h3>
-            <MasonryGrid>
-              {feedCards.map((item) => (
-                <Card
-                  key={item.id}
-                  user={item.username}
-                  title={item.title}
-                  description={item.description}
-                  text={item.text}
-                  image={item.image}
-                  picture={item.picture}
-                  reposted={item.reposted}
-                  onClick={() => handleCardClick(item)}
-                  onUserTagClick={handleUserTagClick}
-                  onCardTagClick={() => {}}
-                  cardData={item}
-                />
-              ))}
-            </MasonryGrid>
+          <div className="mt-8">
+            <div className="mb-4 flex items-center justify-between border-b border-[var(--mk-ink)] pb-3">
+              <h3 className="text-lg font-bold tracking-[-0.03em]">
+                More to explore
+              </h3>
+              <PixelLabel color="var(--mk-cyan-deep)">FEED</PixelLabel>
+            </div>
+            {feedGrid}
           </div>
         </div>
       </main>
 
       {/* Mobile Comments Modal */}
       {showComments && (
-        <div className="md:hidden fixed inset-0 z-50 bg-black">
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+        <div className="fixed inset-0 z-50 bg-[var(--mk-paper)] md:hidden">
+          <div className="flex h-full flex-col">
+            <div className="flex items-center justify-between border-b border-[var(--mk-ink)] bg-white px-4 py-3">
               <button
                 onClick={() => setShowComments(false)}
-                className="text-white hover:bg-white/10 p-2 rounded-full"
+                className={iconBtn}
+                aria-label="Close comments"
               >
-                <X className="w-6 h-6" />
+                <X className="h-[18px] w-[18px]" />
               </button>
-              <h2 className="text-white font-semibold">Comments</h2>
-              <div className="w-10" />
+              <h2 className={tag}>{`card://${card.id}/comments`}</h2>
+              <div className="w-9" />
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
-              <CommentSection
-                comments={comments}
-                newComment={newComment}
-                setNewComment={setNewComment}
-                replyingTo={replyingTo}
-                setReplyingTo={setReplyingTo}
-                replyText={replyText}
-                setReplyText={setReplyText}
-                onAddComment={handleAddComment}
-                onAddReply={handleAddReply}
-                currentUser={userProfile}
-              />
+            <div className="flex-1 overflow-y-auto bg-white p-4">
+              {comments_}
             </div>
           </div>
         </div>

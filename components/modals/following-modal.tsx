@@ -5,6 +5,7 @@ import { X, Users, Search, UserMinus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { Window, btn, field } from "@/components/app/ui";
 
 interface FollowingModalProps {
   isOpen: boolean;
@@ -136,95 +137,97 @@ export default function FollowingModal({
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-[var(--mk-ink)]/40"
         onClick={onClose}
       ></div>
 
-      <div className="absolute right-4 top-20 w-[calc(100%-2rem)] max-w-md max-h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+      <Window
+        title={`following://${username}`}
+        className="absolute right-4 top-20 flex max-h-[600px] w-[calc(100%-2rem)] max-w-md flex-col"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50">
-          <div className="flex items-center space-x-3">
-            <Users className="w-6 h-6 text-purple-600" />
-            <h3 className="font-semibold text-gray-900 text-lg">
-              {following.length} Following
+        <div className="flex items-center justify-between border-b border-[var(--mk-ink)] px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Users className="h-5 w-5 text-[var(--mk-indigo)]" />
+            <h3 className="text-[18px] font-bold tracking-[-0.03em] text-[var(--mk-ink)]">
+              <span className="tabular-nums">{following.length}</span> Following
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-colors"
+            aria-label="Close"
+            className="grid h-9 w-9 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
           >
-            <X className="w-5 h-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="border-b border-[var(--mk-rule)] p-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--mk-ink-2)]" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search following..."
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 border-0 rounded-xl text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
+              aria-label="Search following"
+              className={`${field} pl-9`}
             />
           </div>
         </div>
 
         {/* Following List */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="space-y-4">
+            <div>
               {[...Array(5)].map((_, i) => (
                 <div
                   key={i}
-                  className="flex items-center space-x-3 animate-pulse"
+                  className="flex items-center gap-3 border-b border-[var(--mk-rule)] px-4 py-3"
                 >
-                  <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                  <div className="h-10 w-10 rounded-[3px] bg-[var(--mk-rule)]"></div>
                   <div className="flex-1">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    <div className="mb-2 h-4 w-3/4 rounded-[3px] bg-[var(--mk-rule)]"></div>
+                    <div className="h-3 w-1/2 rounded-[3px] bg-[var(--mk-rule)]"></div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="space-y-3">
+            <div>
               {filteredFollowing.map((person) => (
                 <div
                   key={person.id}
-                  className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-xl transition-colors group"
+                  className="flex items-center gap-3 border-b border-[var(--mk-rule)] px-4 py-3 transition-colors hover:bg-[var(--mk-indigo-soft)]"
                 >
                   <button
                     onClick={() => handleUserClick(person)}
-                    className="flex items-center space-x-3 flex-1"
+                    className="flex min-w-0 flex-1 items-center gap-3"
                   >
-                    <div className="relative">
-                      {person.image ? (
-                        <Image
-                          src={
-                            person.image ||
-                            "/placeholder.svg?height=48&width=48"
-                          }
-                          alt={person.name}
-                          width={48}
-                          height={48}
-                          className="rounded-full ring-2 ring-gray-100 group-hover:ring-purple-200 transition-all duration-200"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
-                          <span className="text-white font-bold text-xs">
-                            {person.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-medium text-gray-900 text-sm">
+                    {person.image ? (
+                      <Image
+                        src={
+                          person.image ||
+                          "/placeholder.svg?height=48&width=48"
+                        }
+                        alt={person.name}
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 shrink-0 rounded-[3px] border border-[var(--mk-ink)] object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] border border-[var(--mk-ink)] bg-[var(--mk-indigo)]">
+                        <span className="text-[13px] font-bold text-white">
+                          {person.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1 text-left">
+                      <p className="truncate text-[14px] font-semibold tracking-tight text-[var(--mk-ink)]">
                         {person.name}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="truncate text-[12.5px] tracking-tight text-[var(--mk-ink-2)]">
                         @{person.username}
                       </p>
                     </div>
@@ -233,9 +236,9 @@ export default function FollowingModal({
                   {isOwnProfile && (
                     <button
                       onClick={() => handleUnfollow(person)}
-                      className="flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-700 rounded-full text-xs font-medium transition-all duration-200"
+                      className={`${btn.plain} px-2.5 py-1 text-[12.5px]`}
                     >
-                      <UserMinus className="w-3 h-3" />
+                      <UserMinus className="h-3.5 w-3.5" />
                       <span>Unfollow</span>
                     </button>
                   )}
@@ -245,15 +248,15 @@ export default function FollowingModal({
           )}
 
           {filteredFollowing.length === 0 && !isLoading && (
-            <div className="text-center py-8">
-              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm">
+            <div className="py-10 text-center">
+              <Users className="mx-auto mb-3 h-10 w-10 text-[var(--mk-rule)]" />
+              <p className="text-[14px] tracking-tight text-[var(--mk-ink-2)]">
                 {searchTerm ? "No following found" : "Not following anyone yet"}
               </p>
             </div>
           )}
         </div>
-      </div>
+      </Window>
     </div>
   );
 }

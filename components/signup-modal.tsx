@@ -5,6 +5,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import axios from "axios";
 import { OrgApi, OrgSummary } from "@/utils/api";
+import { Window, btn, field } from "@/components/app/ui";
 
 interface SignUpModalProps {
   closeModal: () => void;
@@ -80,39 +81,41 @@ export default function SignUpModal({
   const handleKeyPress = (e: any) => e.key === "Enter" && handleSignUp();
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Sign Up</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--mk-ink)]/40 p-4">
+      <Window title="account://new" className="flex max-h-[90vh] w-full max-w-md flex-col">
+        <div className="flex items-center justify-between border-b border-[var(--mk-rule)] px-6 py-4">
+          <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[var(--mk-ink)]">Sign Up</h2>
           <button
             onClick={closeModal}
-            className="text-gray-400 hover:text-gray-600"
+            aria-label="Close"
+            className="grid h-9 w-9 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
             disabled={isLoading}
           >
-            <X className="w-6 h-6" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
+        <div className="overflow-y-auto">
         <div className="p-6">
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div className="mb-4 rounded-[4px] border border-[var(--mk-amber)] bg-[var(--mk-amber-soft)] p-3 text-[14px] tracking-tight text-[var(--mk-ink)]">
               {error}
             </div>
           )}
           {success && (
-            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            <div className="mb-4 rounded-[4px] border border-[var(--mk-green)] bg-[var(--mk-green-soft)] p-3 text-[14px] tracking-tight text-[var(--mk-ink)]">
               Account created! You can now log in.
             </div>
           )}
 
-          <div className="space-y-4 text-gray-900">
+          <div className="space-y-3">
             <input
               type="text"
               placeholder="Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="w-full px-4 py-3 border rounded-md text-gray-900"
+              className={field}
               disabled={isLoading || success}
             />
             <input
@@ -121,7 +124,7 @@ export default function SignUpModal({
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="w-full px-4 py-3 border rounded-md"
+              className={field}
               disabled={isLoading || success}
             />
             <input
@@ -130,7 +133,7 @@ export default function SignUpModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="w-full px-4 py-3 border rounded-md"
+              className={field}
               disabled={isLoading || success}
             />
             <input
@@ -139,16 +142,17 @@ export default function SignUpModal({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="w-full px-4 py-3 border rounded-md"
+              className={field}
               disabled={isLoading || success}
             />
           </div>
 
           {/* Optional: create a workspace now */}
-          <div className="mt-6 border-t pt-4">
-            <label className="flex items-center gap-2 text-gray-900">
+          <div className="mt-6 border-t border-[var(--mk-rule)] pt-4">
+            <label className="flex items-center gap-2 text-[14px] font-medium tracking-tight text-[var(--mk-ink)]">
               <input
                 type="checkbox"
+                className="h-4 w-4 accent-[var(--mk-indigo)]"
                 checked={makeWorkspace}
                 onChange={(e) => setMakeWorkspace(e.target.checked)}
               />
@@ -157,13 +161,13 @@ export default function SignUpModal({
             {makeWorkspace && (
               <div className="mt-3 space-y-3">
                 <input
-                  className="w-full px-3 py-2 border rounded"
+                  className={field}
                   placeholder="Workspace name (e.g. Acme Inc.)"
                   value={wsName}
                   onChange={(e) => setWsName(e.target.value)}
                 />
                 <input
-                  className="w-full px-3 py-2 border rounded"
+                  className={field}
                   placeholder="Workspace slug (e.g. acme)"
                   value={wsSlug}
                   onChange={(e) => setWsSlug(e.target.value)}
@@ -172,12 +176,13 @@ export default function SignUpModal({
             )}
           </div>
         </div>
+        </div>
 
-        <div className="p-6 border-t">
+        <div className="border-t border-[var(--mk-ink)] p-6">
           <button
             onClick={handleSignUp}
             disabled={isLoading || success}
-            className="w-full py-3 bg-blue-600 text-white rounded-md"
+            className={`${btn.primary} w-full py-3 text-[15px]`}
           >
             {isLoading
               ? "Creating Account..."
@@ -186,7 +191,7 @@ export default function SignUpModal({
               : "Sign Up"}
           </button>
         </div>
-      </div>
+      </Window>
     </div>
   );
 }

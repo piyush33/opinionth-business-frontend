@@ -14,6 +14,7 @@ import {
 import Image from "next/image";
 import axios from "axios";
 import NewMessagePopup from "./new-message-popup";
+import { Window, btn, field, tag } from "@/components/app/ui";
 
 interface InboxPopupProps {
   isOpen: boolean;
@@ -172,23 +173,27 @@ export default function InboxPopup({ isOpen, onClose }: InboxPopupProps) {
     <>
       <div className="fixed inset-0 z-50 overflow-hidden">
         <div
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          className="absolute inset-0 bg-[var(--mk-ink)]/40"
           onClick={onClose}
         ></div>
 
-        <div className="absolute right-4 top-20 w-[calc(100%-2rem)] max-w-md h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+        <Window
+          title="inbox://messages"
+          className="absolute right-4 top-20 flex h-[600px] w-[calc(100%-2rem)] max-w-md flex-col"
+        >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-purple-50">
+          <div className="flex items-center justify-between border-b border-[var(--mk-rule)] px-4 py-3">
             {selectedConversation ? (
               <>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3">
                   <button
                     onClick={() => setSelectedConversation(null)}
-                    className="p-1 text-gray-600 hover:text-gray-900 hover:bg-white/50 rounded-full transition-colors"
+                    aria-label="Back to conversations"
+                    className="grid h-8 w-8 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
                   >
-                    <ArrowLeft className="w-5 h-5" />
+                    <ArrowLeft className="h-4 w-4" />
                   </button>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-2.5">
                     {userInConversation(selectedConversation).image ? (
                       <Image
                         src={
@@ -198,37 +203,38 @@ export default function InboxPopup({ isOpen, onClose }: InboxPopupProps) {
                         alt={userInConversation(selectedConversation).name}
                         width={32}
                         height={32}
-                        className="rounded-full ring-2 ring-white"
+                        className="h-8 w-8 rounded-[3px] border border-[var(--mk-ink)] object-cover"
                       />
                     ) : (
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
-                        <span className="text-white font-bold text-xs">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-[3px] border border-[var(--mk-ink)] bg-[var(--mk-indigo)]">
+                        <span className="text-xs font-bold text-white">
                           {userInConversation(selectedConversation)
                             .name.charAt(0)
                             .toUpperCase()}
                         </span>
                       </div>
                     )}
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-bold tracking-[-0.02em] text-[var(--mk-ink)]">
                       {userInConversation(selectedConversation).name}
                     </span>
                   </div>
                 </div>
-                <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-colors">
-                  <MoreHorizontal className="w-4 h-4" />
+                <button aria-label="More options" className="grid h-8 w-8 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]">
+                  <MoreHorizontal className="h-4 w-4" />
                 </button>
               </>
             ) : (
               <>
-                <div className="flex items-center space-x-2">
-                  <MessageCircle className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">Messages</h3>
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4 text-[var(--mk-ink)]" />
+                  <h3 className="font-bold tracking-[-0.03em] text-[var(--mk-ink)]">Messages</h3>
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-1 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-colors"
+                  aria-label="Close inbox"
+                  className="grid h-8 w-8 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </button>
               </>
             )}
@@ -236,9 +242,9 @@ export default function InboxPopup({ isOpen, onClose }: InboxPopupProps) {
 
           {selectedConversation ? (
             /* Conversation View */
-            <div className="flex flex-col flex-1">
+            <div className="flex min-h-0 flex-1 flex-col">
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 space-y-3 overflow-y-auto bg-[var(--mk-paper)] p-4">
                 {selectedConversation.messages.map((msg, index) => (
                   <div
                     key={index}
@@ -249,18 +255,18 @@ export default function InboxPopup({ isOpen, onClose }: InboxPopupProps) {
                     }`}
                   >
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                      className={`max-w-xs rounded-[5px] border border-[var(--mk-ink)] px-3.5 py-2 lg:max-w-md ${
                         msg.sender.username === user?.username
-                          ? "bg-blue-500 text-white rounded-br-md"
-                          : "bg-gray-100 text-gray-900 rounded-bl-md"
+                          ? "bg-[var(--mk-indigo)] text-white"
+                          : "bg-white text-[var(--mk-ink)]"
                       }`}
                     >
-                      <p className="text-sm">{msg.content}</p>
+                      <p className="text-[14px] tracking-tight">{msg.content}</p>
                       <span
-                        className={`text-xs mt-1 block ${
+                        className={`mt-1 block text-[11px] tracking-tight ${
                           msg.sender.username === user?.username
-                            ? "text-blue-100"
-                            : "text-gray-500"
+                            ? "text-white/75"
+                            : "text-[var(--mk-ink-2)]"
                         }`}
                       >
                         {calculateTimeAgo(msg.createdAt)}
@@ -271,47 +277,48 @@ export default function InboxPopup({ isOpen, onClose }: InboxPopupProps) {
               </div>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-gray-100 bg-gray-50">
-                <div className="flex items-center space-x-2">
+              <div className="border-t border-[var(--mk-ink)] p-3">
+                <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Type a message..."
-                    className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`${field} flex-1 py-2 text-[14px]`}
                   />
                   <button
                     onClick={sendMessage}
                     disabled={!message.trim()}
-                    className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Send message"
+                    className={`${btn.primary} h-10 w-10 disabled:cursor-not-allowed`}
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="h-4 w-4" />
                   </button>
                 </div>
               </div>
             </div>
           ) : (
             /* Conversations List */
-            <div className="flex flex-col flex-1">
+            <div className="flex min-h-0 flex-1 flex-col">
               {/* New Message Button */}
-              <div className="p-4 border-b border-gray-100">
+              <div className="border-b border-[var(--mk-rule)] p-4">
                 <button
                   onClick={() => setShowNewMessagePopup(true)}
-                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className={`${btn.primary} w-full py-2.5 text-[14px]`}
                 >
                   New Message
                 </button>
               </div>
 
               {/* Search */}
-              <div className="p-4 border-b border-gray-100">
+              <div className="border-b border-[var(--mk-rule)] p-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--mk-ink-2)]" />
                   <input
                     type="text"
                     placeholder="Search conversations..."
-                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border-0 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`${field} py-2 pl-9 text-[14px]`}
                   />
                 </div>
               </div>
@@ -319,23 +326,23 @@ export default function InboxPopup({ isOpen, onClose }: InboxPopupProps) {
               {/* Conversations */}
               <div className="flex-1 overflow-y-auto">
                 {isLoading ? (
-                  <div className="p-4 space-y-4">
+                  <div>
                     {[...Array(3)].map((_, i) => (
                       <div
                         key={i}
-                        className="flex items-center space-x-3 animate-pulse"
+                        className="flex items-center gap-3 border-b border-[var(--mk-rule)] px-4 py-3"
                       >
-                        <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                        <div className="h-10 w-10 rounded-[4px] bg-[var(--mk-paper)]"></div>
                         <div className="flex-1">
-                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                          <div className="mb-2 h-3.5 w-3/4 rounded-[2px] bg-[var(--mk-paper)]"></div>
+                          <div className="h-3 w-1/2 rounded-[2px] bg-[var(--mk-paper)]"></div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="p-2">
-                    <h4 className="text-sm font-medium text-gray-500 px-2 mb-2">
+                  <div>
+                    <h4 className={`${tag} border-b border-[var(--mk-rule)] bg-[var(--mk-paper)] px-4 py-2`}>
                       Recent
                     </h4>
                     {conversations.map((conversation, index) => {
@@ -346,9 +353,9 @@ export default function InboxPopup({ isOpen, onClose }: InboxPopupProps) {
                         <div
                           key={index}
                           onClick={() => setSelectedConversation(conversation)}
-                          className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors"
+                          className="flex cursor-pointer items-center gap-3 border-b border-[var(--mk-rule)] px-4 py-3 transition-colors hover:bg-[var(--mk-indigo-soft)]"
                         >
-                          <div className="relative">
+                          <div className="relative shrink-0">
                             {otherUser.image ? (
                               <Image
                                 src={
@@ -358,27 +365,27 @@ export default function InboxPopup({ isOpen, onClose }: InboxPopupProps) {
                                 alt={otherUser.name}
                                 width={48}
                                 height={48}
-                                className="rounded-full"
+                                className="h-10 w-10 rounded-[4px] border border-[var(--mk-ink)] object-cover"
                               />
                             ) : (
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
-                                <span className="text-white font-bold text-xs">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-indigo)]">
+                                <span className="text-xs font-bold text-white">
                                   {otherUser.name.charAt(0).toUpperCase()}
                                 </span>
                               </div>
                             )}
-                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                            <div className="absolute -bottom-1 -right-1 h-3 w-3 border border-[var(--mk-ink)] bg-[var(--mk-green)]"></div>
                           </div>
-                          <div className="flex-1 min-w-0">
+                          <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between">
-                              <p className="font-medium text-gray-900 text-sm truncate">
+                              <p className="truncate text-[14px] font-semibold tracking-tight text-[var(--mk-ink)]">
                                 {otherUser.name}
                               </p>
-                              <span className="text-xs text-gray-500">
+                              <span className={`${tag} ml-2 shrink-0`}>
                                 {calculateTimeAgo(conversation.lastMessageAt)}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-600 truncate">
+                            <p className="truncate text-[13px] tracking-tight text-[var(--mk-ink-2)]">
                               {lastMessage?.content}
                             </p>
                           </div>
@@ -390,7 +397,7 @@ export default function InboxPopup({ isOpen, onClose }: InboxPopupProps) {
               </div>
             </div>
           )}
-        </div>
+        </Window>
       </div>
 
       {/* New Message Popup */}

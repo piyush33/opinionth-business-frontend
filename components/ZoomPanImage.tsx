@@ -188,7 +188,7 @@ export default function ZoomPanImage({
     <div
       ref={containerRef}
       className={clsx(
-        "relative w-full h-full overflow-hidden rounded-xl bg-gray-100",
+        "relative w-full h-full overflow-hidden rounded-[4px] bg-[var(--mk-paper)]",
         "select-none",
         className
       )}
@@ -214,57 +214,57 @@ export default function ZoomPanImage({
 
       {/* Toolbar */}
       <div className="absolute bottom-3 right-3 z-20">
-        <div className="flex items-center gap-1 rounded-xl bg-white/90 backdrop-blur px-1.5 py-1 border border-gray-200 shadow">
+        <div className="flex items-center gap-1 rounded-[4px] bg-white px-1.5 py-1 border border-[var(--mk-ink)] shadow-[2px_2px_0_var(--mk-ink)]">
           <button
             onClick={zoomOut}
-            className="p-2 rounded-lg hover:bg-gray-100"
+            className="p-2 rounded-[3px] hover:bg-[var(--mk-indigo-soft)]"
             title="Zoom out"
           >
-            <ZoomOut className="w-4 h-4 text-gray-700" />
+            <ZoomOut className="w-4 h-4 text-[var(--mk-ink)]" />
           </button>
           <button
             onClick={zoomIn}
-            className="p-2 rounded-lg hover:bg-gray-100"
+            className="p-2 rounded-[3px] hover:bg-[var(--mk-indigo-soft)]"
             title="Zoom in"
           >
-            <ZoomIn className="w-4 h-4 text-gray-700" />
+            <ZoomIn className="w-4 h-4 text-[var(--mk-ink)]" />
           </button>
-          <div className="px-2 text-xs font-medium text-gray-700 tabular-nums">
+          <div className="px-2 text-xs font-medium text-[var(--mk-ink)] tabular-nums">
             {(scale * 100).toFixed(0)}%
           </div>
           <button
             onClick={fit}
-            className="p-2 rounded-lg hover:bg-gray-100"
+            className="p-2 rounded-[3px] hover:bg-[var(--mk-indigo-soft)]"
             title="Fit to view"
           >
-            <RotateCcw className="w-4 h-4 text-gray-700" />
+            <RotateCcw className="w-4 h-4 text-[var(--mk-ink)]" />
           </button>
           <button
             onClick={oneToOne}
-            className="p-2 rounded-lg hover:bg-gray-100"
+            className="p-2 rounded-[3px] hover:bg-[var(--mk-indigo-soft)]"
             title="Actual size (100%)"
           >
             1:1
           </button>
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-lg hover:bg-gray-100"
+            className="p-2 rounded-[3px] hover:bg-[var(--mk-indigo-soft)]"
             title={isFs ? "Exit fullscreen" : "Fullscreen"}
           >
             {isFs ? (
-              <Minimize2 className="w-4 h-4 text-gray-700" />
+              <Minimize2 className="w-4 h-4 text-[var(--mk-ink)]" />
             ) : (
-              <Maximize2 className="w-4 h-4 text-gray-700" />
+              <Maximize2 className="w-4 h-4 text-[var(--mk-ink)]" />
             )}
           </button>
           <a
             href={src}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 rounded-lg hover:bg-gray-100"
+            className="p-2 rounded-[3px] hover:bg-[var(--mk-indigo-soft)]"
             title="Open original"
           >
-            <ExternalLink className="w-4 h-4 text-gray-700" />
+            <ExternalLink className="w-4 h-4 text-[var(--mk-ink)]" />
           </a>
         </div>
       </div>

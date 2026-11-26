@@ -6,25 +6,14 @@ import { lookupFeedCard } from "@/lib/feed";
 import { toast } from "sonner";
 import Link from "next/link";
 import {
-  Search,
-  Bell,
-  MessageCircle,
-  User,
-  ChevronDown,
   Edit,
   Share,
   MoreHorizontal,
   Grid3X3,
   Heart,
   Bookmark,
-  Users,
   Camera,
   SparklesIcon as Bubbles,
-  Menu,
-  X,
-  Home,
-  Compass,
-  Plus,
 } from "lucide-react";
 import Image from "next/image";
 import Card from "@/components/card";
@@ -34,6 +23,8 @@ import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
 import FollowersModal from "@/components/modals/followers-modal";
 import FollowingModal from "@/components/modals/following-modal";
+import AppNav from "@/components/app/AppNav";
+import { PixelLabel, Window, btn, tag } from "@/components/app/ui";
 
 interface CardItem {
   id: number;
@@ -64,7 +55,6 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("opinion");
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Profile data states
   const [createdPosts, setCreatedPosts] = useState<CardItem[]>([]);
@@ -295,10 +285,10 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--mk-paper)]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-[3px] border-2 border-[var(--mk-rule)] border-t-[var(--mk-indigo)]"></div>
+          <p className="tracking-tight text-[var(--mk-ink-2)]">Loading...</p>
         </div>
       </div>
     );
@@ -320,229 +310,30 @@ export default function ProfilePage() {
     router.push(`/event/${cardId}`);
   };
 
+  const iconBtn =
+    "grid h-9 w-9 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-white text-[var(--mk-ink)] hover:bg-[var(--mk-indigo-soft)]";
+  const statCell = "border-b border-r border-[var(--mk-ink)] px-4 py-3 text-left";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-      {/* Desktop Navbar - Hidden on Mobile */}
-      <nav className="hidden md:block fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center space-x-4">
-              <Link href="/explore" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">C</span>
-                </div>
-                <span className="font-bold text-xl text-gray-900">
-                  Collabrr
-                </span>
-              </Link>
-            </div>
-
-            {/* Navigation Links */}
-            <div className="flex items-center space-x-1">
-              {[
-                { name: "Home", href: "/home", key: "home" },
-                { name: "Explore", href: "/explore", key: "explore" },
-                { name: "Create", href: "/create", key: "create" },
-              ].map((item) => (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  className="px-4 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-
-            {/* Search Bar */}
-            <div className="flex-1 max-w-md mx-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search your posts..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border-0 rounded-full text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
-                />
-              </div>
-            </div>
-
-            {/* Action Icons */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsNotificationsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200 relative"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
-                )}
-              </button>
-
-              <button
-                onClick={() => setIsInboxPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200 relative"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></span>
-              </button>
-
-              <Link
-                href="/profile"
-                className="p-2 text-purple-600 bg-purple-100 rounded-full transition-all duration-200"
-              >
-                <User className="w-5 h-5" />
-              </Link>
-
-              <button
-                onClick={() => setIsSettingsPopupOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
-              >
-                <ChevronDown className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Header - Hidden on Desktop */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
-        <div className="px-4 py-3 space-y-3">
-          {/* Top Row - Logo and Menu */}
-          <div className="flex items-center justify-between">
-            <Link href="/explore" className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-blue-600 rounded-md flex items-center justify-center">
-                <span className="text-white font-bold text-xs">C</span>
-              </div>
-              <span className="font-bold text-lg text-gray-900">Profile</span>
-            </Link>
-
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <Menu className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search your posts..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-0 rounded-full text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
-            />
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsMobileMenuOpen(false)}
-          ></div>
-          <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-xl">
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-900">Menu</span>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                  <X className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              <Link
-                href="/home"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Home className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Home</span>
-              </Link>
-              <Link
-                href="/explore"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Compass className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Explore</span>
-              </Link>
-              <Link
-                href="/create"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Plus className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Create</span>
-              </Link>
-              <Link
-                href="/profile"
-                className="flex items-center space-x-3 p-3 bg-gray-100 rounded-lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <User className="w-5 h-5 text-purple-600" />
-                <span className="text-purple-700 font-medium">Profile</span>
-              </Link>
-              <button
-                onClick={() => {
-                  setIsNotificationsPopupOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
-              >
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Notifications</span>
-                {unreadCount > 0 && (
-                  <span className="ml-auto w-2 h-2 bg-red-500 rounded-full"></span>
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  setIsInboxPopupOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg w-full text-left"
-              >
-                <MessageCircle className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Messages</span>
-                <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></span>
-              </button>
-              <Link
-                href="/login"
-                className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg"
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  localStorage.removeItem("user");
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                <User className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900">Logout</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen bg-[var(--mk-paper)] text-[var(--mk-ink)]">
+      <AppNav
+        active="profile"
+        search={{ value: searchTerm, onChange: setSearchTerm, placeholder: "Search your posts..." }}
+        unreadCount={unreadCount}
+        onNotifications={() => setIsNotificationsPopupOpen(true)}
+        onInbox={() => setIsInboxPopupOpen(true)}
+        onSettings={() => setIsSettingsPopupOpen(true)}
+      />
 
       {/* Main Content */}
       <main className="pt-34 md:pt-20 px-4 pb-8">
         <div className="max-w-6xl mx-auto">
           {/* Profile Header */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-sm border border-white/20 p-4 sm:p-8 mb-8">
-            <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
+          <Window title={`profile://${user.username}`} className="mb-8">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:flex-row lg:items-start lg:gap-8">
               {/* Profile Picture */}
-              <div className="relative group">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden ring-4 ring-white shadow-2xl">
+              <div className="relative group self-center lg:self-start">
+                <div className="h-24 w-24 overflow-hidden rounded-[4px] border border-[var(--mk-ink)] sm:h-32 sm:w-32">
                   {user.image ? (
                     <Image
                       src={
@@ -554,132 +345,130 @@ export default function ProfilePage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center">
-                      <span className="text-white font-bold text-2xl">
+                    <div className="flex h-full w-full items-center justify-center bg-[var(--mk-indigo)]">
+                      <span className="mk-display text-[2rem] text-white">
                         {user.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                 </div>
-                <button className="absolute bottom-2 right-2 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-purple-700 transition-colors opacity-0 group-hover:opacity-100">
+                <button
+                  aria-label="Change photo"
+                  className={`absolute bottom-1.5 right-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 ${iconBtn} h-8 w-8`}
+                >
                   <Camera className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Profile Info */}
-              <div className="flex-1 text-center lg:text-left w-full">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
+              <div className="w-full flex-1 text-center lg:text-left">
+                <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                    <PixelLabel className="mb-3 justify-center lg:justify-start">Profile</PixelLabel>
+                    <h1 className="mk-display text-[2rem] text-[var(--mk-ink)] sm:text-[2.6rem]">
                       {user.name}
                     </h1>
-                    <p className="text-gray-600 text-base sm:text-lg mb-2">
+                    <p className="mt-2 text-[15px] font-semibold tracking-tight text-[var(--mk-indigo)]">
                       @{user.username}
                     </p>
                     {user.tagline && (
-                      <p className="text-gray-700 mb-4">{user.tagline}</p>
+                      <p className="mt-2 max-w-xl text-[15px] tracking-[-0.01em] text-[var(--mk-ink-2)]">{user.tagline}</p>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-center lg:justify-end space-x-2 sm:space-x-3 mt-4 lg:mt-0">
+                  <div className="flex items-center justify-center gap-2 lg:justify-end">
                     <button
                       onClick={handleEditProfile}
-                      className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors text-sm"
+                      className={`${btn.plain} px-3.5 py-1.5 text-[14px]`}
                     >
-                      <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <Edit className="w-4 h-4" />
                       <span>Edit</span>
                     </button>
-                    <button className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors">
+                    <button aria-label="Share profile" className={iconBtn}>
                       <Share className="w-4 h-4" />
                     </button>
-                    <button className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors">
+                    <button aria-label="More options" className={iconBtn}>
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                {/* Stats Grid - Responsive */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4 mb-6">
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-purple-200">
-                    <div className="text-xl sm:text-2xl font-bold text-purple-700">
+                {/* Stats: ruled grid */}
+                <div className="grid grid-cols-2 border-l border-t border-[var(--mk-ink)] bg-white sm:grid-cols-5">
+                  <div className={statCell}>
+                    <span className="block mk-display text-[1.8rem] tabular-nums text-[var(--mk-ink)]">
                       {profileStats.totalPosts}
-                    </div>
-                    <div className="text-xs text-purple-600 font-medium">
-                      Posts
-                    </div>
+                    </span>
+                    <span className={`${tag} mt-1 block`}>Posts</span>
                   </div>
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-blue-200">
-                    <div className="text-xl sm:text-2xl font-bold text-blue-700">
-                      {profileStats.totalViews}
-                    </div>
-                    <div className="text-xs text-blue-600 font-medium">
-                      Views
-                    </div>
-                  </div>
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-orange-200">
-                    <div className="text-xl sm:text-2xl font-bold text-orange-700">
-                      {profileStats.engagementRate.toFixed(1)}%
-                    </div>
-                    <div className="text-xs text-orange-600 font-medium">
-                      Engagement
-                    </div>
-                  </div>
-                </div>
-
-                {/* Followers/Following */}
-                <div className="flex items-center justify-center lg:justify-start space-x-6 text-gray-600">
                   <button
                     onClick={() => setShowFollowersModal(true)}
-                    className="flex items-center space-x-2 hover:text-gray-900 transition-colors"
+                    className={`${statCell} transition-colors hover:bg-[var(--mk-indigo-soft)]`}
                   >
-                    <Users className="w-4 h-4" />
-                    <span className="font-semibold">{followers.length}</span>
-                    <span>followers</span>
+                    <span className="block mk-display text-[1.8rem] tabular-nums text-[var(--mk-indigo)]">
+                      {followers.length}
+                    </span>
+                    <span className={`${tag} mt-1 block`}>Followers</span>
                   </button>
                   <button
                     onClick={() => setShowFollowingModal(true)}
-                    className="flex items-center space-x-2 hover:text-gray-900 transition-colors"
+                    className={`${statCell} transition-colors hover:bg-[var(--mk-indigo-soft)]`}
                   >
-                    <Users className="w-4 h-4" />
-                    <span className="font-semibold">{following.length}</span>
-                    <span>following</span>
+                    <span className="block mk-display text-[1.8rem] tabular-nums text-[var(--mk-indigo)]">
+                      {following.length}
+                    </span>
+                    <span className={`${tag} mt-1 block`}>Following</span>
                   </button>
+                  <div className={statCell}>
+                    <span className="block mk-display text-[1.8rem] tabular-nums text-[var(--mk-ink)]">
+                      {profileStats.totalViews}
+                    </span>
+                    <span className={`${tag} mt-1 block`}>Views</span>
+                  </div>
+                  <div className={`${statCell} col-span-2 sm:col-span-1`}>
+                    <span className="block mk-display text-[1.8rem] tabular-nums text-[var(--mk-cyan-deep)]">
+                      {profileStats.engagementRate.toFixed(1)}%
+                    </span>
+                    <span className={`${tag} mt-1 block`}>Engagement</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </Window>
 
-          {/* Tabs - Responsive */}
-          <div className="flex justify-center">
-            <div className="flex justify-center bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-1 sm:p-2 mb-8 overflow-hidden max-w-[630px]">
-              <div className="flex gap-6 md:gap-20 flex-nowrap overflow-x-auto scrollbar-hide">
-                {tabs.map((tab) => {
-                  const IconComponent = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-6 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 ${
-                        activeTab === tab.id
-                          ? "bg-white shadow-lg text-purple-700 border border-purple-200"
-                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+          {/* Tabs */}
+          <div className="mb-8 flex justify-center">
+            <div
+              role="tablist"
+              className="mk-hard-sm flex max-w-full gap-1 overflow-x-auto rounded-[6px] border border-[var(--mk-ink)] bg-white p-1 scrollbar-hide"
+            >
+              {tabs.map((tab) => {
+                const IconComponent = tab.icon;
+                const selected = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    role="tab"
+                    aria-selected={selected}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex flex-shrink-0 items-center gap-2 rounded-[4px] px-3 py-2 text-[14px] font-semibold tracking-tight transition-colors sm:px-5 ${
+                      selected
+                        ? "bg-[var(--mk-ink)] text-white"
+                        : "text-[var(--mk-ink-2)] hover:bg-[var(--mk-indigo-soft)]"
+                    }`}
+                  >
+                    <IconComponent className="w-4 h-4 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{tab.name}</span>
+                    <span
+                      className={`text-[12px] tabular-nums ${
+                        selected ? "text-white/70" : "text-[var(--mk-ink-2)]"
                       }`}
                     >
-                      <IconComponent className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="whitespace-nowrap">{tab.name}</span>
-                      <span
-                        className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs ${
-                          activeTab === tab.id
-                            ? "bg-purple-100 text-purple-700"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {tab.count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -687,12 +476,12 @@ export default function ProfilePage() {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[...Array(8)].map((_, index) => (
-                <div key={index} className="animate-pulse">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="h-48 bg-gray-200"></div>
+                <div key={index}>
+                  <div className="overflow-hidden rounded-[5px] border border-[var(--mk-rule)] bg-white">
+                    <div className="h-48 bg-[var(--mk-paper)]"></div>
                     <div className="p-4">
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      <div className="mb-2 h-4 w-3/4 rounded-[3px] bg-[var(--mk-rule)]"></div>
+                      <div className="h-3 w-1/2 rounded-[3px] bg-[var(--mk-rule)]"></div>
                     </div>
                   </div>
                 </div>
@@ -717,14 +506,14 @@ export default function ProfilePage() {
               ))}
             </MasonryGrid>
           ) : (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Grid3X3 className="w-12 h-12 text-gray-400" />
+            <div className="mk-hard-sm mx-auto max-w-md rounded-[6px] border border-[var(--mk-ink)] bg-white px-6 py-12 text-center">
+              <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-indigo-soft)]">
+                <Grid3X3 className="h-8 w-8 text-[var(--mk-indigo)]" />
               </div>
-              <div className="text-gray-400 text-lg mb-2">
+              <div className="mb-2 text-[18px] font-bold tracking-[-0.03em] text-[var(--mk-ink)]">
                 No {activeTab} posts yet
               </div>
-              <div className="text-gray-500 text-sm mb-4">
+              <div className="mb-4 text-[14px] tracking-tight text-[var(--mk-ink-2)]">
                 {activeTab === "created"
                   ? "Start creating amazing content!"
                   : `You haven't ${activeTab} any posts yet.`}
@@ -732,7 +521,7 @@ export default function ProfilePage() {
               {activeTab === "created" && (
                 <Link
                   href="/create"
-                  className="inline-flex items-center space-x-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className={`${btn.primary} px-4 py-2 text-[14px]`}
                 >
                   <span>Create Your First Post</span>
                 </Link>

@@ -11,6 +11,7 @@ import axios from "axios";
 import { api, OrgApi, InviteApi, Membership, OrgSummary } from "@/utils/api";
 import SignUpModal from "@/components/signup-modal";
 import DomainOrgModal from "@/components/modals/domainOrgModal";
+import { Window, btn, field, tag } from "@/components/app/ui";
 
 // Keep your types
 type CreateOrgPayload = {
@@ -434,32 +435,33 @@ function OrgCreateModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h3 className="text-black text-xl font-semibold mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--mk-ink)]/40 p-4">
+      <Window title="account://new" className="w-full max-w-md">
+        <div className="p-6">
+        <h3 className="mb-4 text-[20px] font-bold tracking-[-0.03em] text-[var(--mk-ink)]">
           Create a workspace
         </h3>
         {err && (
-          <div className="mb-3 p-2 bg-red-100 text-red-700 rounded">{err}</div>
+          <div className="mb-3 rounded-[4px] border border-[var(--mk-amber)] bg-[var(--mk-amber-soft)] p-2 text-[14px] tracking-tight text-[var(--mk-ink)]">{err}</div>
         )}
 
         <input
-          className="text-black w-full mb-3 px-3 py-2 border rounded"
+          className={`${field} mb-3`}
           placeholder="Workspace name"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <input
-          className="text-black w-full mb-3 px-3 py-2 border rounded"
+          className={`${field} mb-3`}
           placeholder="Workspace slug (e.g. acme)"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
         />
 
-        <div className="mb-3">
-          <label className="text-black mr-3 font-medium">Join policy</label>
+        <div className="mb-3 flex items-center">
+          <label className={`${tag} mr-3`}>Join policy</label>
           <select
-            className="text-black border rounded px-3 py-2"
+            className="rounded-[4px] border border-[var(--mk-ink)] bg-white px-3 py-2 text-[14px] tracking-tight text-[var(--mk-ink)]"
             value={policy}
             onChange={(e) => setPolicy(e.target.value as any)}
           >
@@ -471,11 +473,11 @@ function OrgCreateModal({
         {policy === "domain" && (
           <>
             {autoDomain && !showAdvanced ? (
-              <div className="mb-4 text-sm text-gray-700">
-                We’ll allow anyone with <b>{autoDomain}</b> to join
+              <div className="mb-4 text-[14px] tracking-tight text-[var(--mk-ink-2)]">
+                We’ll allow anyone with <b className="text-[var(--mk-ink)]">{autoDomain}</b> to join
                 automatically.{" "}
                 <button
-                  className="underline"
+                  className="font-semibold text-[var(--mk-indigo)] underline underline-offset-4"
                   onClick={() => setShowAdvanced(true)}
                 >
                   Add more domains
@@ -483,7 +485,7 @@ function OrgCreateModal({
               </div>
             ) : (
               <textarea
-                className="text-black w-full mb-4 px-3 py-2 border rounded"
+                className={`${field} mb-4`}
                 rows={3}
                 placeholder={`Allowed domains (comma or newline separated)\ne.g. ${
                   autoDomain ?? "yourcompany.com"
@@ -499,18 +501,19 @@ function OrgCreateModal({
           <button
             onClick={create}
             disabled={loading}
-            className="px-4 py-2 bg-purple-600 text-white rounded"
+            className={`${btn.primary} px-4 py-2 text-[14px]`}
           >
             {loading ? "Creating..." : "Create"}
           </button>
           <button
             onClick={onClose}
-            className="text-black px-4 py-2 border rounded"
+            className={`${btn.plain} px-4 py-2 text-[14px]`}
           >
             Cancel
           </button>
         </div>
-      </div>
+        </div>
+      </Window>
     </div>
   );
 }
