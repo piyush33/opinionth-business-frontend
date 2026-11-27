@@ -14,6 +14,10 @@ const pixel = Silkscreen({
 });
 
 export const metadata: Metadata = {
+  // One address for the site: www.collabrr.io and collabrr.io both serve it,
+  // so tell search engines which one is canonical.
+  alternates: { canonical: "https://collabrr.io/" },
+  applicationName: "Collabrr",
   title: "Collabrr · Where complex discussions live",
   description:
     "When a thread outgrows chat and the meeting would span three time zones, Collabrr gives the discussion a home: questions, claims, evidence, risks and decisions as linked cards your team develops asynchronously, with the reasoning kept.",
@@ -33,6 +37,37 @@ export const metadata: Metadata = {
   },
 };
 
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://collabrr.io/#organization",
+      name: "Collabrr",
+      url: "https://collabrr.io/",
+      logo: "https://collabrr.io/icon.png",
+      sameAs: ["https://medium.com/@blue___gene"],
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://collabrr.io/#website",
+      name: "Collabrr",
+      url: "https://collabrr.io/",
+      publisher: { "@id": "https://collabrr.io/#organization" },
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: "Collabrr",
+      url: "https://collabrr.io/",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      description:
+        "The reasoning layer between quick chat and finished docs. Distributed teams think through complex decisions together, asynchronously, as linked cards: questions, claims, evidence, risks and decisions.",
+      publisher: { "@id": "https://collabrr.io/#organization" },
+    },
+  ],
+};
+
 export default async function Page({
   searchParams,
 }: {
@@ -50,6 +85,12 @@ export default async function Page({
 
   return (
     <div className={pixel.variable}>
+      <script
+        type="application/ld+json"
+        // Structured data so search engines know this is the official site,
+        // with its name, logo and profiles.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
       <Landing />
     </div>
   );
