@@ -10,6 +10,8 @@ const pixel = Silkscreen({ subsets: ["latin"], weight: ["400"], variable: "--fon
 export const metadata: Metadata = {
   title: "Log in · Collabrr",
   description: "Log in to your Collabrr workspace.",
+  // Keep the sign-in page out of search results so "collabrr" finds the homepage.
+  robots: { index: false, follow: true },
 };
 
 export const dynamic = "force-dynamic";
