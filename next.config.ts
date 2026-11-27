@@ -6,6 +6,19 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
   },
 
+  // One address for the site: send www.collabrr.io to collabrr.io, keeping
+  // the path and query, with a permanent redirect search engines follow.
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.collabrr.io" }],
+        destination: "https://collabrr.io/:path*",
+        permanent: true,
+      },
+    ];
+  },
+
   async rewrites() {
     return [
       {
