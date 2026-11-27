@@ -1773,8 +1773,13 @@ export default function EventPage() {
             </div>
           ) : (
             <div className="space-y-14">
-              {groupedCards.map((group, groupIndex) => {
-                if (group.items.length === 0) return null;
+              {/* Sections are listed newest phase first. Number them in
+                  workflow order among the phases shown, so the earliest phase
+                  (e.g. Seed) is §1 and empty phases don't leave gaps. */}
+              {groupedCards
+                .filter((group) => group.items.length > 0)
+                .map((group, index, shown) => {
+                  const sectionNo = shown.length - index;
 
                 return (
                   <div key={group.title}>
@@ -1783,7 +1788,7 @@ export default function EventPage() {
                       id={phaseAnchorId(group.title)}
                       className="mb-6 flex scroll-mt-28 items-center gap-3 border-b border-[var(--mk-ink)] pb-3"
                     >
-                      <PixelLabel>{`§${groupIndex + 1} ${group.title}`}</PixelLabel>
+                      <PixelLabel>{`§${sectionNo} ${group.title}`}</PixelLabel>
                       <span className="ml-auto text-[12px] font-semibold tabular-nums tracking-tight text-[var(--mk-ink-2)]">
                         {group.items.length} {group.items.length === 1 ? "card" : "cards"}
                       </span>
