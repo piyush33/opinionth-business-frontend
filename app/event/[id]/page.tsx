@@ -1348,6 +1348,17 @@ export default function EventPage() {
       {/* Main Content */}
       <main className="mk-grid px-4 pb-24 pt-32 md:pt-24">
         <div className="max-w-7xl mx-auto">
+          <button
+            onClick={() =>
+              // Opened straight from a shared link: nothing to go back to, so go to Explore.
+              window.history.length > 1 ? router.back() : router.push("/explore")
+            }
+            className={`${btn.plain} mb-4 px-3 py-1.5 text-[14px]`}
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </button>
           {/* Sophisticated Collection Header */}
           <div className="mb-8">
             <div className="mk-hard overflow-hidden rounded-[6px] bg-white">
@@ -1375,10 +1386,16 @@ export default function EventPage() {
                       <button
                         type="button"
                         onClick={() => setShowSummary(true)}
-                        className="mk-display text-left text-[2.2rem] transition-colors hover:text-[var(--mk-indigo)] sm:text-[3rem]"
+                        className="mk-display group inline-flex items-baseline gap-3 text-left text-[2.2rem] transition-colors hover:text-[var(--mk-indigo)] sm:text-[3rem]"
                         title="Open space summary"
                       >
-                        {headerSummary.topic}
+                        <span>{headerSummary.topic}</span>
+                        <span
+                          aria-hidden
+                          className="inline-flex shrink-0 self-start -mt-[0.04em] opacity-70 transition group-hover:rotate-12 group-hover:opacity-100 motion-reduce:transition-none"
+                        >
+                          <PixelIcon name="spark" color="var(--mk-indigo)" className="h-7 w-7 sm:h-8 sm:w-8" />
+                        </span>
                       </button>
                     </h1>
                   ) : headerLoading ? (

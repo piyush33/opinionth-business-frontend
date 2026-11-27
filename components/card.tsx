@@ -220,7 +220,9 @@ export default function Card({
         ))}
       <div
         id={`card-${cardData?.id}`}
-        className={`relative z-[4] flex flex-col overflow-hidden rounded-[5px] border bg-white transition-[transform,box-shadow] ease-out motion-reduce:transition-none ${
+        className={`relative z-[4] flex flex-col overflow-hidden rounded-[5px] border transition-[transform,box-shadow,background-color] ease-out motion-reduce:transition-none ${
+          showActions && isHovered ? "bg-[var(--mk-indigo-soft)]" : "bg-white"
+        } ${
           selected
             ? "border-[var(--mk-indigo)] shadow-[4px_4px_0_var(--mk-indigo)] -translate-x-0.5 -translate-y-0.5"
             : `border-[var(--mk-ink)] ${
