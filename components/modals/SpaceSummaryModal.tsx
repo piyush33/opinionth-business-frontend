@@ -12,6 +12,10 @@ import {
   CornerDownRight,
 } from "lucide-react";
 import { runAiJob, signatureOf } from "@/lib/ai/client";
+import AskAI from "@/components/ai/AskAI";
+import SectionBox from "@/components/ai/SectionBox";
+import ConvergeButton from "@/components/ai/ConvergeButton";
+import type { CardSuggestion } from "@/components/ai/CardSuggestionHover";
 
 export type SummaryCardInput = {
   id: number;
@@ -54,6 +58,16 @@ type Props = {
   cards: SummaryCardInput[];
   onJumpToPhase: (phase: string) => void;
   onJumpToCard: (id: number) => void;
+  /** Space category, for the "Ask this space" chat. */
+  category?: string;
+  /** The space's id, for Ask AI. */
+  layerId?: number | null;
+  /** Open Create prefilled with a card made from the chat, linked via `anchorId`. */
+  onDraft?: (anchorId: number, card: CardSuggestion, phase?: string) => void;
+  /** Open points to converge on, per phase label; a Converge button shows where there are any. */
+  convergeCountByPhase?: Map<string, number>;
+  /** Open Converge for one phase. */
+  onConverge?: (phase: string) => void;
 };
 
 const STORAGE_PREFIX = "spaceSummary:v1:";
@@ -163,6 +177,11 @@ export default function SpaceSummaryModal({
   cards,
   onJumpToPhase,
   onJumpToCard,
+  category,
+  layerId,
+  onDraft,
+  convergeCountByPhase,
+  onConverge,
 }: Props) {
   const { data, loading, error, load, storageKey } = summary;
   const [minimized, setMinimized] = useState(false);
@@ -170,11 +189,15 @@ export default function SpaceSummaryModal({
   // Height of the page's fixed top bar, so the navbar stays sharp and usable.
   const [topOffset, setTopOffset] = useState(64);
   const panelRef = useRef<HTMLDivElement>(null);
+  // Two views: the summary, or the Ask AI chat alone. Sending a message
+  // opens the chat; "Back" returns to the summary, keeping the chat.
+  const [view, setView] = useState<"summary" | "chat">("summary");
 
   const titleById = useMemo(
     () => new Map(cards.map((c) => [c.id, c.title || `Card #${c.id}`])),
     [cards],
   );
+
 
   // Fetch when opened (or when space content changes while open)
   useEffect(() => {
@@ -185,6 +208,7 @@ export default function SpaceSummaryModal({
     if (!open) {
       setMinimized(false);
       setClosing(false);
+      setView("summary");
     }
   }, [open]);
 
@@ -212,15 +236,24 @@ export default function SpaceSummaryModal({
     }, 220);
   }, [onClose]);
 
+  // Escape closes. The latest handleClose is read through a ref, so a parent
+  // re-render (a new onClose) doesn't re-run this.
+  const closeRef = useRef(handleClose);
+  closeRef.current = handleClose;
   useEffect(() => {
     if (!open || minimized) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
+      if (e.key === "Escape") closeRef.current();
     };
     window.addEventListener("keydown", onKey);
-    panelRef.current?.focus();
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, minimized, handleClose]);
+  }, [open, minimized]);
+
+  // Move focus into the panel only when it opens (or is restored), never on
+  // later re-renders, or it would pull focus out of the Ask AI input.
+  useEffect(() => {
+    if (open && !minimized) panelRef.current?.focus();
+  }, [open, minimized]);
 
   if (!open) return null;
 
@@ -280,7 +313,7 @@ export default function SpaceSummaryModal({
             </span>
             <div className="leading-tight">
               <div className="text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-ink-2)]">
-                Summary
+                {view === "chat" ? "Ask AI" : "Summary"}
               </div>
               <div className="text-xs text-[var(--mk-ink-2)]">
                 {data
@@ -321,8 +354,12 @@ export default function SpaceSummaryModal({
         </div>
 
         {/* Body */}
-        <div className="ai-scroll relative z-10 mt-4 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-7">
-          {loading && !data && <SummarySkeleton cards={cards.length} phases={phases.length} />}
+        <div className="relative z-10 mt-4 flex min-h-0 flex-1 flex-col gap-3 px-5 pb-5 sm:px-7">
+          {loading && !data && (
+            <div className="ai-scroll min-h-0 flex-1 overflow-y-auto">
+              <SummarySkeleton cards={cards.length} phases={phases.length} />
+            </div>
+          )}
 
           {error && !loading && (
             <div className="rounded-[5px] border border-[var(--mk-ink)] bg-white mt-2 p-5 text-sm text-[var(--mk-ink)]">
@@ -337,7 +374,16 @@ export default function SpaceSummaryModal({
           )}
 
           {data && (
-            <div className={`space-y-5 ${loading ? "opacity-60 transition-opacity" : ""}`}>
+            <>
+            {/* Two separate boxes: the summary, and the Ask AI chat with its
+                input. One is open at a time; each header bar switches. */}
+            <SectionBox
+              label="Summary"
+              hint={<span className="font-semibold text-[var(--mk-ink)]">{data.topic}</span>}
+              open={view === "summary"}
+              onToggle={() => setView(view === "summary" ? "chat" : "summary")}
+            >
+            <div className={`ai-scroll space-y-5 p-4 sm:p-5 ${loading ? "opacity-60 transition-opacity" : ""}`}>
               {/* Topic */}
               <section className="ai-rise" style={{ animationDelay: "40ms" }}>
                 <h2
@@ -407,6 +453,13 @@ export default function SpaceSummaryModal({
                                   {count} {count === 1 ? "card" : "cards"}
                                 </span>
                               </div>
+                              {onConverge && (convergeCountByPhase?.get(p.phase) ?? 0) > 0 && (
+                                <ConvergeButton
+                                  count={convergeCountByPhase!.get(p.phase)!}
+                                  onClick={() => onConverge(p.phase)}
+                                  className="ml-auto px-2 py-1 text-[12px]"
+                                />
+                              )}
                               <button
                                 onClick={() => jumpPhase(p.phase)}
                                 className="flex flex-shrink-0 items-center gap-1 rounded-[4px] px-2 py-1 text-xs font-semibold text-[var(--mk-indigo)] transition hover:bg-[var(--mk-indigo-soft)] hover:opacity-100"
@@ -457,8 +510,24 @@ export default function SpaceSummaryModal({
                 Auto-generated from the cards you can see. It can be wrong; check the cards.
               </p>
             </div>
+            </SectionBox>
+
+            <AskAI
+              layerId={layerId}
+              box={{ open: view === "chat", onToggle: () => setView(view === "chat" ? "summary" : "chat") }}
+              initialScope="space"
+              cards={cards}
+              category={category}
+              topic={data.topic}
+              onJumpToCard={onJumpToCard}
+              onDraft={onDraft}
+              startersInComposer
+              onSend={() => setView("chat")}
+            />
+            </>
           )}
         </div>
+
       </div>
     </div>
   );

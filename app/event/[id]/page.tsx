@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import {
   ExternalLink,
+  GitMerge,
   Plus,
   Bell,
   MessageCircle,
@@ -44,6 +45,10 @@ import SettingsPopup from "@/components/popups/settings-popup";
 import NotificationsPopup from "@/components/popups/notifications-popup";
 import MasonryGrid from "@/components/masonry-grid";
 import LayerInviteModal from "@/components/modals/LayerInviteModal";
+import ConvergePanel from "@/components/ai/ConvergePanel";
+import ConvergeButton from "@/components/ai/ConvergeButton";
+import { useConvergence, ACROSS } from "@/lib/ai/useConvergence";
+import ConvergeTimerDock from "@/components/ai/ConvergeTimerDock";
 import CardSuggestionHover, {
   type CardSuggestion,
 } from "@/components/ai/CardSuggestionHover";
@@ -201,6 +206,8 @@ export default function EventPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  // Converge panel: closed (false), the whole space (null) or one phase (its label).
+  const [convergeScope, setConvergeScope] = useState<string | null | false>(false);
   const [orgId, setOrgId] = useState<number | null>(null);
   const [layerId, setLayerId] = useState<number>(0);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -977,7 +984,7 @@ export default function EventPage() {
 
   // "Draft this card" from an AI suggestion: open Create prefilled, linked
   // into this space through the hovered card (same as handleCreate).
-  const draftFromSuggestion = (cardId: number, s: CardSuggestion) => {
+  const draftFromSuggestion = (cardId: number, s: CardSuggestion, phase?: string) => {
     const item = homeFeed.find((c) => c.id === cardId);
     if (!item) return;
     if (item.lock && item.username !== user?.username) {
@@ -988,6 +995,7 @@ export default function EventPage() {
       "selectedCard",
       JSON.stringify({
         ...item,
+        ...(phase ? { phase } : {}),
         roleTypes: s.roleTypes.length ? s.roleTypes : item.roleTypes,
       }),
     );
@@ -1233,6 +1241,16 @@ export default function EventPage() {
     auto: summaryHeaderOn,
   });
   const headerSummary = summaryHeaderOn ? spaceSummary.data : null;
+
+  // Converge: open points per phase and the votes on them (shared state).
+  const convergence = useConvergence({
+    layerId,
+    cards: summaryInput.cards,
+    phases: summaryInput.phases,
+    category: collectionCategory.name,
+    topic: headerSummary?.topic,
+    username: user?.username,
+  });
   const headerLoading = summaryHeaderOn && !spaceSummary.data && !spaceSummary.error;
 
   const phaseAnchorId = (title: string) => `phase-${slugify(title)}`;
@@ -1386,16 +1404,30 @@ export default function EventPage() {
                       <button
                         type="button"
                         onClick={() => setShowSummary(true)}
-                        className="mk-display group inline-flex items-baseline gap-3 text-left text-[2.2rem] transition-colors hover:text-[var(--mk-indigo)] sm:text-[3rem]"
+                        className="mk-display group inline text-left text-[2.2rem] transition-colors hover:text-[var(--mk-indigo)] sm:text-[3rem]"
                         title="Open space summary"
                       >
-                        <span>{headerSummary.topic}</span>
-                        <span
-                          aria-hidden
-                          className="inline-flex shrink-0 self-start -mt-[0.04em] opacity-70 transition group-hover:rotate-12 group-hover:opacity-100 motion-reduce:transition-none"
-                        >
-                          <PixelIcon name="spark" color="var(--mk-indigo)" className="h-7 w-7 sm:h-8 sm:w-8" />
-                        </span>
+                        {/* The spark flows with the text and stays glued to the
+                            last word, so it sits right after the title however
+                            it wraps, raised like a superscript. */}
+                        {(() => {
+                          const words = headerSummary.topic.trim().split(/\s+/);
+                          const last = words.pop();
+                          return (
+                            <>
+                              {words.length > 0 && `${words.join(" ")} `}
+                              <span className="whitespace-nowrap">
+                                {last}
+                                <span
+                                  aria-hidden
+                                  className="ml-2 inline-block align-top opacity-70 transition group-hover:rotate-12 group-hover:opacity-100 motion-reduce:transition-none"
+                                >
+                                  <PixelIcon name="spark" color="var(--mk-indigo)" className="h-7 w-7 sm:h-8 sm:w-8" />
+                                </span>
+                              </span>
+                            </>
+                          );
+                        })()}
                       </button>
                     </h1>
                   ) : headerLoading ? (
@@ -1429,6 +1461,14 @@ export default function EventPage() {
                     <button onClick={() => setShowSummary(true)} className={`${btn.plain} px-3.5 py-1.5 text-[14px]`} title="Summary of this space" aria-label="Open space summary">
                       <PixelIcon name="spark" color="var(--mk-indigo)" className="h-3.5 w-3.5" /> Summary
                     </button>
+                    {/* Converge, only when there's something to converge on */}
+                    {convergence.points.length > 0 && (
+                      <ConvergeButton
+                        count={convergence.points.length}
+                        onClick={() => setConvergeScope(null)}
+                        className="px-3.5 py-1.5 text-[14px]"
+                      />
+                    )}
                     <button onClick={() => setShowInvite(true)} className={`${btn.primary} px-3.5 py-1.5 text-[14px]`}>
                       Invite
                     </button>
@@ -1789,6 +1829,13 @@ export default function EventPage() {
                       className="mb-6 flex scroll-mt-28 items-center gap-3 border-b border-[var(--mk-ink)] pb-3"
                     >
                       <PixelLabel>{`§${sectionNo} ${group.title}`}</PixelLabel>
+                      {(convergence.countByPhase.get(group.title) ?? 0) > 0 && (
+                        <ConvergeButton
+                          count={convergence.countByPhase.get(group.title)!}
+                          onClick={() => setConvergeScope(group.title)}
+                          className="px-2.5 py-1 text-[12.5px]"
+                        />
+                      )}
                       <span className="ml-auto text-[12px] font-semibold tabular-nums tracking-tight text-[var(--mk-ink-2)]">
                         {group.items.length} {group.items.length === 1 ? "card" : "cards"}
                       </span>
@@ -1856,6 +1903,16 @@ export default function EventPage() {
         </div>
       </main>
 
+      {/* Convergence timers under 24h, floating above "Add a card".
+          A converged point (or one whose card was posted) drops out. */}
+      <ConvergeTimerDock
+        items={convergence.points
+          .filter((p) => convergence.timers[p.id] && convergence.tallyOf(p).winner == null)
+          .map((p) => ({ point: p, timer: convergence.timers[p.id] }))}
+        onOpen={(p) => setConvergeScope(p.phase === ACROSS ? null : p.phase)}
+        onTimer={(id, op) => convergence.timer(id, op)}
+      />
+
       {/* Add a card */}
       <button
         onClick={handleCreate}
@@ -1897,6 +1954,23 @@ export default function EventPage() {
         cards={summaryInput.cards}
         onJumpToPhase={jumpToPhaseSection}
         onJumpToCard={jumpToCardFromSummary}
+        category={collectionCategory.name}
+        layerId={layerId}
+        onDraft={draftFromSuggestion}
+        convergeCountByPhase={convergence.countByPhase}
+        onConverge={(phase) => setConvergeScope(phase)}
+      />
+
+      <ConvergePanel
+        open={convergeScope !== false}
+        phase={convergeScope || null}
+        convergence={convergence}
+        onClose={() => setConvergeScope(false)}
+        cards={summaryInput.cards}
+        category={collectionCategory.name}
+        topic={headerSummary?.topic}
+        onJumpToCard={jumpToCardFromSummary}
+        onDraft={(anchorId, card, phase) => draftFromSuggestion(anchorId, card, phase)}
       />
 
       {showInvite && (

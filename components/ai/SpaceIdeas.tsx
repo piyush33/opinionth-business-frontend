@@ -22,6 +22,8 @@ import { withCardRefs } from "@/components/ai/cardRefs";
 import Card from "@/components/card";
 import { PixelIcon } from "@/components/marketing/Bitmap";
 import { PixelLabel, btn } from "@/components/app/ui";
+import AskAI from "@/components/ai/AskAI";
+import SectionBox from "@/components/ai/SectionBox";
 
 export type SpaceIdea = {
   kind: string;
@@ -171,6 +173,10 @@ export function SpaceIdeasButton({
  * as every card below, on the same column grid, with the space it would
  * start beside it.
  */
+// Height cap for whichever box is open: the screen minus the top bar, the
+// panel's header and the other box's header bar and input, so both boxes fit.
+const BOX_MAX_H = "max-h-[max(14rem,calc(100vh-21rem))]";
+
 export default function SpaceIdeasPanel({
   category,
   categoryName,
@@ -188,6 +194,9 @@ export default function SpaceIdeasPanel({
 }) {
   const { data, loading, error, load } = useSpaceIdeas(category, true);
   const [pick, setPick] = useState(0);
+  // Two views: the suggested space, or the Ask AI chat about it alone.
+  // Sending a message opens the chat; "Back" returns, keeping the chat.
+  const [view, setView] = useState<"idea" | "chat">("idea");
   const [step, setStep] = useState(0);
 
   useEffect(() => {
@@ -200,15 +209,25 @@ export default function SpaceIdeasPanel({
   useEffect(() => setPick(0), [data?.generatedAt]);
 
   const ideas = data?.ideas ?? [];
+  // New ideas (e.g. "Fresh ideas") start a new chat: show the idea again.
+  useEffect(() => setView("idea"), [data?.generatedAt]);
+
+  // On opening, bring the panel up under the top bar so both boxes have room.
+  const sectionRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    sectionRef.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+  }, []);
   const idea = ideas.length ? ideas[pick % ideas.length] : null;
   const refs = (text: string) => withCardRefs(text, onOpenCard);
   const phaseName = (id: string) => phaseLabel?.(id) ?? getPhaseById(id)?.name ?? id;
 
   return (
     <section
+      ref={sectionRef}
       id="space-ideas"
       aria-label={`Suggested new space for ${category.name}`}
-      className="ai-fade-in mb-4 md:mb-6 px-2 md:px-0"
+      className="ai-fade-in mb-4 scroll-mt-20 px-2 md:mb-6 md:px-0"
     >
       {/* Section header: what this is, what it read, and the controls */}
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -228,8 +247,22 @@ export default function SpaceIdeasPanel({
         </button>
       </div>
 
+      {/* Two separate boxes: the suggested space with its actions, and the Ask
+          AI chat with its input. One is open at a time; each header bar switches. */}
+      {/* Stacked: the open box expands, the other collapses to its header bar.
+          The open box's content is capped to the screen height (scrolling
+          inside), so the Ask AI box is always in view without page scrolling. */}
+      <div className="flex flex-col gap-3">
+      <SectionBox
+        label="Suggested space"
+        hint={<span className="font-semibold text-[var(--mk-ink)]">{idea?.spaceTopic || idea?.title}</span>}
+        open={view === "idea"}
+        onToggle={() => setView(view === "idea" ? "chat" : "idea")}
+        bodyClassName={BOX_MAX_H}
+        containScroll={false}
+      >
       {/* Same columns as the card grid below: card in one, context across the rest */}
-      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 items-start gap-6 p-4 md:grid-cols-3 lg:grid-cols-4">
         <div className="min-w-0">
           {idea ? (
             <div key={`${data?.generatedAt}-${pick}`} className="ai-fade-in">
@@ -273,7 +306,7 @@ export default function SpaceIdeasPanel({
           )}
         </div>
 
-        <div className="min-w-0 md:sticky md:top-20 md:col-span-2 lg:col-span-3">
+        <div className="min-w-0 md:col-span-2 lg:col-span-3">
           <div className="mk-hard rounded-[6px] bg-white p-5 sm:p-6">
             {!idea && !error && (
               <div className="flex min-h-[14rem] flex-col justify-center gap-3" aria-live="polite">
@@ -308,6 +341,7 @@ export default function SpaceIdeasPanel({
 
             {idea && (
               <div key={`${data?.generatedAt}-${pick}`} className="ai-fade-in flex flex-col gap-4">
+                <div className="flex flex-col gap-4">
                 <div>
                   <span className="mb-2 inline-flex items-center gap-1.5 rounded-[3px] border border-[var(--mk-amber)] bg-[var(--mk-amber-soft)] px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-amber)]">
                     <Compass className="h-3.5 w-3.5" />
@@ -400,7 +434,10 @@ export default function SpaceIdeasPanel({
                     {ideas.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => setPick((p) => p + 1)}
+                        onClick={() => {
+                          setPick((p) => p + 1);
+                          setView("idea");
+                        }}
                         className={`${btn.plain} px-3 py-2 text-[14px]`}
                         title="Show another idea"
                       >
@@ -430,10 +467,50 @@ export default function SpaceIdeasPanel({
                         : "Built from the cards you can see. It can be wrong."}
                   </span>
                 </div>
+
+                </div>
+
               </div>
             )}
           </div>
         </div>
+      </div>
+      </SectionBox>
+
+      {idea && (
+          <AskAI
+                      key={`${data?.generatedAt}-${pick}`}
+                      initialScope="idea"
+                      box={{
+                        open: view === "chat",
+                        onToggle: () => setView(view === "chat" ? "idea" : "chat"),
+                        // Long chats scroll inside the box, so the page keeps its shape.
+                        bodyClassName: BOX_MAX_H,
+                        // At the end of the chat, keep scrolling the page.
+                        containScroll: false,
+                      }}
+                      startersInComposer
+                      onSend={() => setView("chat")}
+                      cards={[]}
+                      category={category.name}
+                      idea={{ ...idea, category: category.name }}
+                      onJumpToCard={onOpenCard}
+                      useCardLabel="Start space with this card"
+                      onUseCard={(c) =>
+                        onStart(
+                          {
+                            ...idea,
+                            title: c.title,
+                            description: c.description,
+                            text: c.text,
+                            seedPhase: c.phase ?? idea.seedPhase,
+                            roleTypes: c.roleTypes.length ? c.roleTypes : idea.roleTypes,
+                          },
+                          category,
+                        )
+                      }
+                    />
+      )}
       </div>
     </section>
   );
