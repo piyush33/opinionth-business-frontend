@@ -106,7 +106,16 @@ const FAQ = [
 const MEDIUM = "https://medium.com/@blue___gene";
 
 // From the founder's Medium (newest first).
+const POINT_OF_ACTION = "https://medium.com/@blue___gene/thinking-at-the-point-of-action-with-ai-1d3c5d6c4d39";
+
 const ESSAYS = [
+  {
+    theme: "The thesis",
+    title: "Thinking at the Point of Action — with AI",
+    dek: "AI is most useful in group thinking when it is tied to the card, the space and the open question in front of you.",
+    meta: "Nov 2026 · 11 min read",
+    href: POINT_OF_ACTION,
+  },
   {
     theme: "The vision",
     title: "Meetings Are Compressed Reasoning",
@@ -398,6 +407,94 @@ export default function Landing() {
           </div>
         </Section>
 
+        {/* Thesis: thinking at the point of action */}
+        <section id="point-of-action" className="mk-scan relative scroll-mt-16 overflow-hidden bg-[var(--mk-ink)] text-white">
+          <DitherBand color="var(--mk-ink)" flip className="bg-[var(--mk-paper)]" />
+          <div className={`${wrap} py-20 sm:py-24`}>
+            <div className="max-w-3xl">
+              <Label tone="light">Our thesis</Label>
+              <h2 className="mk-display mt-4 text-[2.4rem] sm:text-[3.4rem]">Thinking at the point of action.</h2>
+              <p className="mt-6 text-[17px] leading-[1.6] tracking-[-0.01em] text-white/75 sm:text-[18px]">
+                AI helps a team think when it acts at the exact moment and at the exact grain of the thought: this card, this claim, this
+                open question, one step at a time. So in Collabrr, the AI lives on the card you&apos;re reading, in the summary you&apos;re
+                skimming and beside the point being argued, already looking at the right thing.
+              </p>
+            </div>
+
+            <div className="mt-12 grid gap-4 lg:grid-cols-2">
+              <div className="border border-white/20 bg-black/30 p-6">
+                <p className="mk-pixel text-[10px] text-white/50">Beside the work</p>
+                <ul className="mt-4 grid gap-3 text-[15px] leading-relaxed tracking-tight text-white/60">
+                  {[
+                    "A chat pane you travel to, then explain the context again.",
+                    "Edits come back in bundles, to approve all at once in a diff.",
+                    "Part of your attention always goes to operating the tool.",
+                  ].map((t) => (
+                    <li key={t} className="flex gap-3">
+                      <span aria-hidden className="mt-[9px] inline-block h-1.5 w-1.5 shrink-0 bg-white/40" />
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="border border-[#8fe3f3]/60 bg-black/30 p-6">
+                <p className="mk-pixel flex items-center gap-2 text-[10px] text-[#8fe3f3]">
+                  <PixelIcon name="spark" color="#8fe3f3" className="h-3 w-3" />
+                  At the point of action
+                </p>
+                <ul className="mt-4 grid gap-3 text-[15px] leading-relaxed tracking-tight text-white/90">
+                  {[
+                    "Ask AI on the card, the summary or the open point, with no trip.",
+                    "One card, one claim, one vote at a time, each with its reason beside it.",
+                    "The tool fades into the background and your attention stays on the thinking.",
+                  ].map((t) => (
+                    <li key={t} className="flex gap-3">
+                      <Check className="mt-1 h-4 w-4 shrink-0 text-[#8fe3f3]" />
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-12 grid items-end gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+              <div>
+                <p className="mk-pixel text-[10px] text-white/50">Start at the grain, then build outward</p>
+                <ol className="mt-4 flex flex-wrap items-center gap-2 text-[14px] font-semibold tracking-tight">
+                  {["This card", "This space", "Every space", "The world"].map((t, i) => (
+                    <li key={t} className="flex items-center gap-2">
+                      {i > 0 && <ArrowRight aria-hidden className="h-4 w-4 text-white/40" />}
+                      <span className="rounded-[4px] border border-white/30 bg-white/5 px-3 py-1.5">{t}</span>
+                    </li>
+                  ))}
+                </ol>
+                <blockquote className="mt-8 border-l-2 border-[#8fe3f3] pl-5 text-[1.35rem] font-bold leading-snug tracking-[-0.03em] sm:text-[1.6rem]">
+                  The more judgment a change contains, the smaller its unit should be.
+                </blockquote>
+                <p className="mt-4 max-w-xl text-[15px] leading-relaxed tracking-tight text-white/60">
+                  Chat is scratch; a card is a commitment. A person turns a reply into a card and posts it. People converge by
+                  vote, and the AI maps the disagreement but never decides.
+                </p>
+              </div>
+              <a
+                href={POINT_OF_ACTION}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block border border-white/30 bg-white p-5 text-[var(--mk-ink)] shadow-[4px_4px_0_#8fe3f3] transition hover:-translate-y-0.5"
+              >
+                <span className="mk-pixel text-[10px] text-[var(--mk-cyan)]">Essay · Medium</span>
+                <span className="mt-2 block text-[1.25rem] font-bold leading-tight tracking-[-0.035em] group-hover:text-[var(--mk-indigo)]">
+                  Thinking at the Point of Action — with AI
+                </span>
+                <span className="mt-3 flex items-center gap-1.5 text-[14px] font-semibold tracking-tight">
+                  Read the full essay <ArrowUpRight className="h-4 w-4" />
+                </span>
+              </a>
+            </div>
+          </div>
+          <DitherBand color="var(--mk-ink)" className="bg-white" />
+        </section>
+
         {/* Use cases */}
         <Section id="use-cases" className="border-t border-[var(--mk-ink)] bg-white">
           <div className="max-w-3xl">
@@ -674,6 +771,7 @@ export default function Landing() {
               <a href="#design-partners" className="hover:text-[#8fe3f3]">Design partners</a>
               <a href="#how" className="hover:text-[#8fe3f3]">How it works</a>
               <a href="#ai" className="hover:text-[#8fe3f3]">AI</a>
+              <a href="#point-of-action" className="hover:text-[#8fe3f3]">Thesis</a>
               <a href={MEDIUM} target="_blank" rel="noopener noreferrer" className="hover:text-[#8fe3f3]">Essays on Medium</a>
             </div>
           </div>
