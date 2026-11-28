@@ -9,6 +9,7 @@ const LINKS = [
   { href: "#problem", label: "Why" },
   { href: "#how", label: "How it works" },
   { href: "#ai", label: "AI" },
+  { href: "#point-of-action", label: "Thesis" },
   { href: "#use-cases", label: "Use cases" },
   { href: "#compare", label: "Compare" },
   { href: "#essays", label: "Essays" },
