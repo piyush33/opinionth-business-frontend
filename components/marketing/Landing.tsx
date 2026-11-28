@@ -111,9 +111,9 @@ const POINT_OF_ACTION = "https://medium.com/@blue___gene/thinking-at-the-point-o
 const ESSAYS = [
   {
     theme: "The thesis",
-    title: "Thinking at the Point of Action, With AI",
-    dek: "AI helps group thinking most at the exact moment and grain of the thought: this card, this claim, one step at a time.",
-    meta: "Nov 2026 · 14 min read",
+    title: "Thinking at the Point of Action — with AI",
+    dek: "AI is most useful in group thinking when it is tied to the card, the space and the open question in front of you.",
+    meta: "Nov 2026 · 11 min read",
     href: POINT_OF_ACTION,
   },
   {
@@ -484,7 +484,7 @@ export default function Landing() {
               >
                 <span className="mk-pixel text-[10px] text-[var(--mk-cyan)]">Essay · Medium</span>
                 <span className="mt-2 block text-[1.25rem] font-bold leading-tight tracking-[-0.035em] group-hover:text-[var(--mk-indigo)]">
-                  Thinking at the Point of Action, With AI
+                  Thinking at the Point of Action — with AI
                 </span>
                 <span className="mt-3 flex items-center gap-1.5 text-[14px] font-semibold tracking-tight">
                   Read the full essay <ArrowUpRight className="h-4 w-4" />
