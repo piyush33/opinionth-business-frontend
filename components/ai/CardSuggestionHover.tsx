@@ -6,12 +6,16 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Sparkles, X, Shuffle, Compass, PenLine, Tag } from "lucide-react";
+import AskAI from "@/components/ai/AskAI";
+import SectionBox from "@/components/ai/SectionBox";
 import { getRoleTypeById } from "@/lib/phases";
 import { runAiJob, signatureOf } from "@/lib/ai/client";
 import { withCardRefs } from "@/components/ai/cardRefs";
 import type { SummaryCardInput } from "@/components/modals/SpaceSummaryModal";
 
 export type CardSuggestion = {
+  /** Phase id chosen by the AI for cards made in Ask AI; suggestions use the hovered card's phase. */
+  phase?: string;
   title: string;
   description: string;
   text: string;
@@ -32,7 +36,7 @@ type Props = {
   phases: string[];
   cards: SummaryCardInput[];
   disabled?: boolean;
-  onDraft: (cardId: number, suggestion: CardSuggestion) => void;
+  onDraft: (cardId: number, suggestion: CardSuggestion, phase?: string) => void;
 };
 
 export const SUGGEST_MIN_CARDS = 3;
@@ -152,6 +156,13 @@ export default function CardSuggestionHover({
   const showT = useRef<number | undefined>(undefined);
   const hideT = useRef<number | undefined>(undefined);
   const popRef = useRef<HTMLDivElement>(null);
+  // "Ask AI": a one-off thinking chat that starts from the shown suggestion.
+  // Its input sits at the bottom of the popover; once you focus it, the
+  // popover is pinned (only ✕ or Escape closes it).
+  // Two views: the suggested card (with Draft), or the Ask AI chat alone.
+  // Sending a message opens the chat; "Back" returns, keeping the chat.
+  const [view, setView] = useState<"card" | "chat">("card");
+  const pinnedRef = useRef(false);
 
   const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
   const active = !disabled && canHover && cards.length >= SUGGEST_MIN_CARDS;
@@ -167,6 +178,8 @@ export default function CardSuggestionHover({
   // Close the open suggestion only (a hover on another card may be counting).
   const closePopover = useCallback(() => {
     window.clearTimeout(hideT.current);
+    pinnedRef.current = false;
+    setView("card");
     anchorRef.current = null;
     setAnchorId(null);
     setPos(null);
@@ -186,6 +199,7 @@ export default function CardSuggestionHover({
       return;
     }
     const onOver = (e: PointerEvent) => {
+      if (pinnedRef.current) return; // chatting: stay put
       if (e.pointerType && e.pointerType !== "mouse") return;
       const t = e.target as Element | null;
       if (!t?.closest) return;
@@ -237,6 +251,7 @@ export default function CardSuggestionHover({
     const onDown = (e: PointerEvent) => {
       const t = e.target as Element | null;
       if (t?.closest?.("[data-suggest-popover]")) return;
+      if (pinnedRef.current) return; // chatting: only ✕ or Escape closes
       hide();
     };
     const onKey = (e: KeyboardEvent) => {
@@ -326,7 +341,13 @@ export default function CardSuggestionHover({
   // Prefer the suggestion that builds on the hovered card.
   const related = list.findIndex((s) => s.relatedCardIds.includes(anchorId));
   const base = related >= 0 ? related : anchorId % Math.max(list.length, 1);
-  const s = list.length ? list[(base + pick) % list.length] : null;
+  const slot = list.length ? (base + pick) % list.length : 0;
+  const s = list.length ? list[slot] : null;
+
+  const openChat = () => {
+    pinnedRef.current = true;
+    window.clearTimeout(hideT.current);
+  };
 
   const roles = (s?.roleTypes ?? []).map(
     (id) => getRoleTypeById(id) ?? { id, name: id, description: "" },
@@ -354,16 +375,14 @@ export default function CardSuggestionHover({
         style={{ maxHeight: pos?.maxH }}
       >
         {/* Header, like the card's author row */}
-        <div className="flex shrink-0 items-center gap-3 p-4 pb-2">
+        <div className="flex shrink-0 items-center gap-3 p-4 pb-3">
           {/* Plain tile, like the Explore section and category icons */}
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[4px] border border-[var(--mk-ink)] bg-[var(--mk-indigo-soft)]">
             <Sparkles className="h-4 w-4 text-[var(--mk-indigo)]" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="truncate text-sm font-semibold text-[var(--mk-ink)]">
-                Suggested next card
-              </span>
+              <span className="truncate text-sm font-semibold text-[var(--mk-ink)]">Suggested next card</span>
               <span className="shrink-0 rounded-[3px] border border-[var(--mk-indigo)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.09em] text-[var(--mk-indigo)]">
                 AI
               </span>
@@ -380,115 +399,136 @@ export default function CardSuggestionHover({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {!s && (loading || (!data && !error)) && (
-            <div className="space-y-2.5 px-4 pb-4 pt-2" aria-live="polite">
-              <div className="ai-shimmer h-3 w-full rounded-[3px]" />
-              <div className="ai-shimmer h-3 w-11/12 rounded-[3px]" />
-              <div className="ai-shimmer h-3 w-3/4 rounded-[3px]" />
-              <div className="ai-shimmer mt-3 h-5 w-2/3 rounded-[3px]" />
-              <div className="flex items-center gap-2 pt-1 text-xs text-[var(--mk-ink-2)]">
-                <span className="ai-dots">
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                Reading the space…
-              </div>
-            </div>
-          )}
-
-          {!s && error && !loading && (
-            <div className="px-4 pb-4 pt-2 text-sm">
-              <div className="mb-2 font-medium text-[var(--mk-amber)]">{error}</div>
-              <button
-                type="button"
-                onClick={() => ensure(true)}
-                className="mk-btn rounded-[4px] bg-[var(--mk-ink)] px-3 py-1.5 text-xs font-semibold text-white"
-              >
-                Try again
-              </button>
-            </div>
-          )}
-
-          {!s && data && !loading && !error && (
-            <p className="px-4 pb-4 pt-2 text-sm text-[var(--mk-ink-2)]">
-              No suggestion for this phase yet.
-            </p>
-          )}
-
-          {s && (
-            <div key={`${anchorId}-${pick}`} className="ai-fade-in">
-              {roles.length > 0 && (
-                <div className="flex flex-wrap gap-2 px-4 pb-4">
-                  {roles.map((m) => (
-                    <span
-                      key={m.id}
-                      className="inline-flex items-center gap-1.5 rounded-[3px] border border-[var(--mk-cyan)] bg-[var(--mk-cyan-soft)] px-1.5 py-0.5 text-xs font-semibold text-[var(--mk-cyan-deep)]"
-                      title={m.description ? `${m.name}: ${m.description}` : m.name}
-                    >
-                      <Tag className="h-3.5 w-3.5" />
-                      {m.name}
-                    </span>
-                  ))}
+        {!s && (
+          <div className="min-h-0 flex-1 overflow-y-auto pb-2">
+            {(loading || (!data && !error)) && (
+              <div className="space-y-2.5 px-4 pb-4 pt-1" aria-live="polite">
+                <div className="ai-shimmer h-3 w-full rounded-[3px]" />
+                <div className="ai-shimmer h-3 w-11/12 rounded-[3px]" />
+                <div className="ai-shimmer h-3 w-3/4 rounded-[3px]" />
+                <div className="ai-shimmer mt-3 h-5 w-2/3 rounded-[3px]" />
+                <div className="flex items-center gap-2 pt-1 text-xs text-[var(--mk-ink-2)]">
+                  <span className="ai-dots">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  Reading the space…
                 </div>
-              )}
-
-              {s.text && (
-                <p className="mb-3 whitespace-pre-line break-words px-4 text-sm leading-relaxed text-[var(--mk-ink)]">
-                  {refs(s.text)}
-                </p>
-              )}
-
-              <div className="px-4 pb-1 pt-2">
-                <h3 className="mb-2 text-[1.15rem] font-bold leading-tight tracking-[-0.03em] text-[var(--mk-ink)]">{refs(s.title)}</h3>
-                {s.description && (
-                  <p className="mb-3 text-sm leading-relaxed text-[var(--mk-ink-2)]">{refs(s.description)}</p>
-                )}
               </div>
-
-              {s.rationale && (
-                <div className="mx-4 mb-1 flex gap-2 border-l-2 border-[var(--mk-indigo)] bg-[var(--mk-indigo-soft)] px-3 py-2 text-xs leading-relaxed text-[var(--mk-ink)]">
-                  <Compass className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--mk-indigo)]" />
-                  <span>{refs(s.rationale)}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Action row, where a card has like / repost / save */}
-        <div className="shrink-0 border-t border-[var(--mk-ink)] px-4 pb-3 pt-3">
-          {s && (
-            <div className="mb-2 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  onDraft(anchorId, s);
-                  hide();
-                }}
-                className="mk-btn inline-flex flex-1 items-center justify-center gap-1.5 rounded-[4px] bg-[var(--mk-indigo-soft)] px-3 py-2 text-sm font-semibold text-[var(--mk-indigo-deep)]"
-              >
-                <PenLine className="h-4 w-4" />
-                Draft this card
-              </button>
-              {list.length > 1 && (
+            )}
+            {error && !loading && (
+              <div className="px-4 pb-4 pt-1 text-sm">
+                <div className="mb-2 font-medium text-[var(--mk-amber)]">{error}</div>
                 <button
                   type="button"
-                  onClick={() => setPick((p) => p + 1)}
-                  className="mk-btn inline-flex items-center gap-1.5 rounded-[4px] bg-white px-3 py-2 text-sm font-semibold text-[var(--mk-ink)]"
-                  title="Show another suggestion"
+                  onClick={() => ensure(true)}
+                  className="mk-btn rounded-[4px] bg-[var(--mk-ink)] px-3 py-1.5 text-xs font-semibold text-white"
                 >
-                  <Shuffle className="h-4 w-4" />
-                  Another
+                  Try again
                 </button>
-              )}
-            </div>
-          )}
-          <div className="text-[11px] text-[var(--mk-ink-2)]">
-            Suggested from this space&apos;s cards. It can be wrong.
+              </div>
+            )}
+            {data && !loading && !error && (
+              <p className="px-4 pb-4 pt-1 text-sm text-[var(--mk-ink-2)]">No suggestion for this phase yet.</p>
+            )}
           </div>
-        </div>
+        )}
+
+        {/* Two separate boxes: the suggested card with its actions, and the
+            Ask AI chat with its input. One is open at a time; each header bar
+            switches. */}
+        {s && (
+          <div key={`${anchorId}-${pick}`} className="flex min-h-0 flex-1 flex-col gap-2.5 px-3 pb-3">
+            <SectionBox
+              label="Suggested card"
+              hint={<span className="font-semibold text-[var(--mk-ink)]">{s.title}</span>}
+              open={view === "card"}
+              onToggle={() => setView(view === "card" ? "chat" : "card")}
+              footer={
+                <div className="px-3 pb-3 pt-2.5">
+                  <div className="mb-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onDraft(anchorId, s);
+                        hide();
+                      }}
+                      className="mk-btn inline-flex flex-1 items-center justify-center gap-1.5 rounded-[4px] bg-[var(--mk-indigo-soft)] px-3 py-2 text-sm font-semibold text-[var(--mk-indigo-deep)]"
+                    >
+                      <PenLine className="h-4 w-4" />
+                      Draft this card
+                    </button>
+                    {list.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPick((p) => p + 1);
+                          setView("card");
+                        }}
+                        className="mk-btn grid h-9 w-9 shrink-0 place-items-center rounded-[4px] bg-white text-[var(--mk-ink)]"
+                        title="Show another suggestion"
+                        aria-label="Show another suggestion"
+                      >
+                        <Shuffle className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-[var(--mk-ink-2)]">Suggested from this space&apos;s cards. It can be wrong.</div>
+                </div>
+              }
+            >
+              <div className="pb-2 pt-3">
+                {roles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 px-3 pb-3">
+                    {roles.map((m) => (
+                      <span
+                        key={m.id}
+                        className="inline-flex items-center gap-1.5 rounded-[3px] border border-[var(--mk-cyan)] bg-[var(--mk-cyan-soft)] px-1.5 py-0.5 text-xs font-semibold text-[var(--mk-cyan-deep)]"
+                        title={m.description ? `${m.name}: ${m.description}` : m.name}
+                      >
+                        <Tag className="h-3.5 w-3.5" />
+                        {m.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {s.text && (
+                  <p className="mb-3 whitespace-pre-line break-words px-3 text-sm leading-relaxed text-[var(--mk-ink)]">{refs(s.text)}</p>
+                )}
+                <div className="px-3 pb-1 pt-1">
+                  <h3 className="mb-2 text-[1.15rem] font-bold leading-tight tracking-[-0.03em] text-[var(--mk-ink)]">{refs(s.title)}</h3>
+                  {s.description && <p className="mb-3 text-sm leading-relaxed text-[var(--mk-ink-2)]">{refs(s.description)}</p>}
+                </div>
+                {s.rationale && (
+                  <div className="mx-3 mb-1 flex gap-2 border-l-2 border-[var(--mk-indigo)] bg-[var(--mk-indigo-soft)] px-3 py-2 text-xs leading-relaxed text-[var(--mk-ink)]">
+                    <Compass className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--mk-indigo)]" />
+                    <span>{refs(s.rationale)}</span>
+                  </div>
+                )}
+              </div>
+            </SectionBox>
+
+            <AskAI
+              key={`${anchorId}:${card.phase}:${slot}`}
+              compact
+              box={{ open: view === "chat", onToggle: () => { openChat(); setView(view === "chat" ? "card" : "chat"); } }}
+              initialScope="card"
+              layerId={layerId}
+              cards={cards}
+              category={category}
+              anchorId={anchorId}
+              suggestion={s}
+              onJumpToCard={scrollToCard}
+              onEngage={openChat}
+              onSend={() => setView("chat")}
+              onDraft={(a, c) => {
+                onDraft(a, c, c.phase);
+                hide();
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>,
     document.body,
