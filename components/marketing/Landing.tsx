@@ -9,6 +9,7 @@ import MarketingNav, { Logo } from "./MarketingNav";
 import DesignPartnerForm from "./DesignPartnerForm";
 import { HeroSpace, LayersDiagram, DecisionFlow, ModesDiagram } from "./Visuals";
 import { DitherBand, LinkedCardsScreen, LogoBitmap, PixelIcon } from "./Bitmap";
+import PointOfActionDemo from "./PointOfActionDemo";
 
 const wrap = "mx-auto w-full max-w-6xl px-4 sm:px-6";
 const h2 = "mk-display text-[2.4rem] sm:text-[3.4rem]";
@@ -421,43 +422,11 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="mt-12 grid gap-4 lg:grid-cols-2">
-              <div className="border border-white/20 bg-black/30 p-6">
-                <p className="mk-pixel text-[10px] text-white/50">Beside the work</p>
-                <ul className="mt-4 grid gap-3 text-[15px] leading-relaxed tracking-tight text-white/60">
-                  {[
-                    "A chat pane you travel to, then explain the context again.",
-                    "Edits come back in bundles, to approve all at once in a diff.",
-                    "Part of your attention always goes to operating the tool.",
-                  ].map((t) => (
-                    <li key={t} className="flex gap-3">
-                      <span aria-hidden className="mt-[9px] inline-block h-1.5 w-1.5 shrink-0 bg-white/40" />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="border border-[#8fe3f3]/60 bg-black/30 p-6">
-                <p className="mk-pixel flex items-center gap-2 text-[10px] text-[#8fe3f3]">
-                  <PixelIcon name="spark" color="#8fe3f3" className="h-3 w-3" />
-                  At the point of action
-                </p>
-                <ul className="mt-4 grid gap-3 text-[15px] leading-relaxed tracking-tight text-white/90">
-                  {[
-                    "Ask AI on the card, the summary or the open point, with no trip.",
-                    "One card, one claim, one vote at a time, each with its reason beside it.",
-                    "The tool fades into the background and your attention stays on the thinking.",
-                  ].map((t) => (
-                    <li key={t} className="flex gap-3">
-                      <Check className="mt-1 h-4 w-4 shrink-0 text-[#8fe3f3]" />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            <div className="mt-12">
+              <PointOfActionDemo />
             </div>
 
-            <div className="mt-12 grid items-end gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="mt-16 grid gap-10 border-t border-white/15 pt-12 lg:grid-cols-[1fr_1fr] lg:items-start">
               <div>
                 <p className="mk-pixel text-[10px] text-white/50">Start at the grain, then build outward</p>
                 <ol className="mt-4 flex flex-wrap items-center gap-2 text-[14px] font-semibold tracking-tight">
@@ -468,7 +437,13 @@ export default function Landing() {
                     </li>
                   ))}
                 </ol>
-                <blockquote className="mt-8 border-l-2 border-[#8fe3f3] pl-5 text-[1.35rem] font-bold leading-snug tracking-[-0.03em] sm:text-[1.6rem]">
+                <p className="mt-5 max-w-md text-[15px] leading-relaxed tracking-tight text-white/60">
+                  Every answer starts from the card in front of you and widens only when you ask: the space, every space your team
+                  can see, then the web.
+                </p>
+              </div>
+              <div>
+                <blockquote className="border-l-2 border-[#8fe3f3] pl-5 text-[1.35rem] font-bold leading-snug tracking-[-0.03em] sm:text-[1.6rem]">
                   The more judgment a change contains, the smaller its unit should be.
                 </blockquote>
                 <p className="mt-4 max-w-xl text-[15px] leading-relaxed tracking-tight text-white/60">
@@ -476,20 +451,6 @@ export default function Landing() {
                   vote, and the AI maps the disagreement but never decides.
                 </p>
               </div>
-              <a
-                href={POINT_OF_ACTION}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group block border border-white/30 bg-white p-5 text-[var(--mk-ink)] shadow-[4px_4px_0_#8fe3f3] transition hover:-translate-y-0.5"
-              >
-                <span className="mk-pixel text-[10px] text-[var(--mk-cyan)]">Essay · Medium</span>
-                <span className="mt-2 block text-[1.25rem] font-bold leading-tight tracking-[-0.035em] group-hover:text-[var(--mk-indigo)]">
-                  Thinking at the Point of Action — with AI
-                </span>
-                <span className="mt-3 flex items-center gap-1.5 text-[14px] font-semibold tracking-tight">
-                  Read the full essay <ArrowUpRight className="h-4 w-4" />
-                </span>
-              </a>
             </div>
           </div>
           <DitherBand color="var(--mk-ink)" className="bg-white" />
